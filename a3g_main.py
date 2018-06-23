@@ -142,7 +142,8 @@ if __name__ == '__main__':
         shared_model = A3C_MLP(
             env.observation_space.shape[0], env.action_space, args.stack_frames)
     if args.model == 'CONV':
-        shared_model = A3C_CONV(args.stack_frames, env.action_space)
+        shared_model = A3C_CONV(
+            env.observation_space.shape[0], env.action_space, args.stack_frames)
     if args.load:
         saved_state = torch.load('{0}{1}.dat'.format(
             args.load_model_dir, args.env), map_location=lambda storage, loc: storage)

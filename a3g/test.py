@@ -40,7 +40,8 @@ def test(args, shared_model):
         player.model = A3C_MLP(
             player.env.observation_space.shape[0], player.env.action_space, args.stack_frames)
     if args.model == 'CONV':
-        player.model = A3C_CONV(args.stack_frames, player.env.action_space)
+        player.model = A3C_CONV(
+            player.env.observation_space.shape[0], player.env.action_space, args.stack_frames)
 
     player.state = player.env.reset()
     player.state = torch.from_numpy(player.state).float()

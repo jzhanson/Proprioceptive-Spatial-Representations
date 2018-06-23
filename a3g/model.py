@@ -9,9 +9,9 @@ from a3g.utils import norm_col_init, weights_init, weights_init_mlp
 
 
 class A3C_CONV(torch.nn.Module):
-    def __init__(self, num_inputs, action_space):
+    def __init__(self, num_inputs, action_space, n_frames):
         super(A3C_CONV, self).__init__()
-        self.conv1 = nn.Conv1d(num_inputs, 32, 3, stride=1, padding=1)
+        self.conv1 = nn.Conv1d(n_frames, 32, 3, stride=1, padding=1)
         self.lrelu1 = nn.LeakyReLU(0.1)
         self.conv2 = nn.Conv1d(32, 32, 3, stride=1, padding=1)
         self.lrelu2 = nn.LeakyReLU(0.1)
@@ -20,7 +20,10 @@ class A3C_CONV(torch.nn.Module):
         self.conv4 = nn.Conv1d(64, 64, 1, stride=1)
         self.lrelu4 = nn.LeakyReLU(0.1)
 
-        self.lstm = nn.LSTMCell(1600, 128)
+        dummy_input = Variable(torch.zeros(1, n_frames, num_inputs))
+        dummy_conv_output = self._convforward(dummy_input)
+
+        self.lstm = nn.LSTMCell(dummy_conv_output.nelement(), 128)
         num_outputs = action_space.shape[0]
         self.critic_linear = nn.Linear(128, 1)
         self.actor_linear = nn.Linear(128, num_outputs)
@@ -48,15 +51,19 @@ class A3C_CONV(torch.nn.Module):
 
         self.train()
 
-    def forward(self, inputs):
-        x, (hx, cx) = inputs
-
+    def _convforward(self, x):
         x = self.lrelu1(self.conv1(x))
         x = self.lrelu2(self.conv2(x))
         x = self.lrelu3(self.conv3(x))
         x = self.lrelu4(self.conv4(x))
+        return x
 
+    def forward(self, inputs):
+        x, (hx, cx) = inputs
+
+        x = self._convforward(x)
         x = x.view(x.size(0), -1)
+        
         hx, cx = self.lstm(x, (hx, cx))
         x = hx
 
