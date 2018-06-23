@@ -1,0 +1,6 @@
+*.pyc
+*~
+*_monitor/
+logs/*
+trained_models/*
+__pycache__

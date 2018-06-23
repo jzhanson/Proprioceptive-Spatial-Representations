@@ -42,18 +42,23 @@ SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted 
 MOTORS_TORQUE = 80
 SPEED_HIP     = 4
 SPEED_KNEE    = 6
+SPEED_ARM     = 4
+SPEED_ELBOW   = 6
 LIDAR_RANGE   = 160/SCALE
 
 INITIAL_RANDOM = 5
 
 HULL_POLY =[
-    (-5, -30), (-5, 30),
-    (5, 30), (5, -30),
+    (-7, -30), (-7, 30),
+    (7, 30), (7, -30),
     #(-30,+9), (+6,+9), (+34,+1),
     #(+34,-8), (-30,-8)
     ]
-LEG_DOWN = -16/SCALE
+LEG_DOWN = -30/SCALE
 LEG_W, LEG_H = 8/SCALE, 34/SCALE
+ARM_W, ARM_H = 6/SCALE, 28/SCALE
+ARM_UP = 30/SCALE
+HEAD_R = 12/SCALE
 
 VIEWPORT_W = 600
 VIEWPORT_H = 400
@@ -66,34 +71,58 @@ TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
 HULL_FD = fixtureDef(
-                shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
-                density=5.0,
-                friction=0.1,
-                categoryBits=0x0020,
-                maskBits=0x001,  # collide only with ground
-                restitution=0.0) # 0.99 bouncy
+    shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
+    density=5.0,
+    friction=0.1,
+    categoryBits=0x0020,
+    maskBits=0x001,  # collide only with ground
+    restitution=0.0) # 0.99 bouncy
 
 LEG_FD = fixtureDef(
-                    shape=polygonShape(box=(LEG_W/2, LEG_H/2)),
-                    density=1.0,
-                    restitution=0.0,
-                    categoryBits=0x0020,
-                    maskBits=0x001)
+    shape=polygonShape(box=(LEG_W/2, LEG_H/2)),
+    density=1.0,
+    restitution=0.0,
+    categoryBits=0x0020,
+    maskBits=0x001)
 
 LOWER_FD = fixtureDef(
-                    shape=polygonShape(box=(2*0.8*LEG_W/2, LEG_H/2)),
-                    density=1.0,
-                    restitution=0.0,
-                    categoryBits=0x0020,
-                    maskBits=0x001)
+    shape=polygonShape(box=(0.8*LEG_W/2, LEG_H/2)),
+    density=1.0,
+    restitution=0.0,
+    categoryBits=0x0020,
+    maskBits=0x001)
+
+ARM_FD = fixtureDef(
+    shape=polygonShape(box=(ARM_W/2, ARM_H/2)),
+    density=1.0,
+    restitution=0.0,
+    categoryBits=0x0020,
+    maskBits=0x001)
+
+UPPER_FD = fixtureDef(
+    shape=polygonShape(box=(0.8*LEG_W/2, LEG_H/2)),
+    density=1.0,
+    restitution=0.0,
+    categoryBits=0x0020,
+    maskBits=0x001)
+
+HEAD_FD = fixtureDef(
+    shape=circleShape(radius=HEAD_R),
+    density=1.0,
+    restitution=0.0,
+    categoryBits=0x0020,
+    maskBits=0x001)
 
 class ContactDetector(contactListener):
     def __init__(self, env):
         contactListener.__init__(self)
         self.env = env
     def BeginContact(self, contact):
-        if self.env.hull==contact.fixtureA.body or self.env.hull==contact.fixtureB.body:
-            self.env.game_over = True
+        # Die if head, hull, or arms touch ground
+        for fixt in [self.env.head, self.env.hull]+self.env.arms:
+            if fixt==contact.fixtureA.body or fixt==contact.fixtureB.body:
+                self.env.game_over = True
+                break
         for leg in [self.env.legs[1], self.env.legs[3]]:
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = True
@@ -102,7 +131,7 @@ class ContactDetector(contactListener):
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = False
 
-class BipedalWalker(gym.Env):
+class HumanoidWalker(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : FPS
@@ -138,8 +167,8 @@ class BipedalWalker(gym.Env):
 
         self.reset()
 
-        high = np.array([np.inf]*24)
-        self.action_space = spaces.Box(np.array([-1,-1,-1,-1]), np.array([+1,+1,+1,+1]))
+        high = np.array([np.inf]*32)
+        self.action_space = spaces.Box(np.array([-1,-1,-1,-1,-1,-1,-1,-1]), np.array([+1,+1,+1,+1,+1,+1,+1,+1]))
         self.observation_space = spaces.Box(-high, high)
 
     def seed(self, seed=None):
@@ -154,9 +183,13 @@ class BipedalWalker(gym.Env):
         self.terrain = []
         self.world.DestroyBody(self.hull)
         self.hull = None
+        self.world.DestroyBody(self.head)
+        self.head = None
         for leg in self.legs:
             self.world.DestroyBody(leg)
         self.legs = []
+        for arm in self.arms:
+            self.world.DestroyBody(arm)
         self.joints = []
 
     def _generate_terrain(self, hardcore):
@@ -312,11 +345,32 @@ class BipedalWalker(gym.Env):
         self.hull.color2 = (0.3,0.3,0.5)
         self.hull.ApplyForceToCenter((self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM), 0), True)
 
+        self.joints = []
+
+        self.head = self.world.CreateDynamicBody(
+            position = (init_x, init_y - ARM_H,),
+            angle = 0.,
+            fixtures = HEAD_FD,
+        )
+        self.head.color1 = (0.5,0.4,0.9)
+        self.head.color2 = (0.3,0.3,0.5)
+        rjd = revoluteJointDef(
+            bodyA=self.hull,
+            bodyB=self.head,
+            localAnchorA=(0, ARM_UP),
+            localAnchorB=(0, -HEAD_R),
+            enableLimit = True,
+            lowerAngle = -0.01,
+            upperAngle = 0.01,
+        )
+        self.world.CreateJoint(rjd)
+
+        self.arms = []
         self.legs = []
         self.joints = []
         for i in [-1,+1]:
             leg = self.world.CreateDynamicBody(
-                position = (init_x, init_y - LEG_H/2 - LEG_DOWN),
+                position = (init_x, init_y - LEG_H/2 - LEG_DOWN ),
                 angle = (i*0.05),
                 fixtures = LEG_FD
                 )
@@ -360,7 +414,52 @@ class BipedalWalker(gym.Env):
             self.legs.append(lower)
             self.joints.append(self.world.CreateJoint(rjd))
 
-        self.drawlist = self.terrain + self.legs + [self.hull]
+            arm = self.world.CreateDynamicBody(
+                position = (init_x, init_y + LEG_H/2 + LEG_DOWN ),
+                angle = (i*0.05),
+                fixtures = LEG_FD
+            )
+            arm.color1 = (0.6-i/10., 0.3-i/10., 0.5-i/10.)
+            arm.color2 = (0.4-i/10., 0.2-i/10., 0.3-i/10.)
+            rjd = revoluteJointDef(
+                bodyA=self.hull,
+                bodyB=arm,
+                localAnchorA=(0, ARM_UP),
+                localAnchorB=(0, ARM_H/2),
+                enableMotor=True,
+                enableLimit=True,
+                maxMotorTorque=MOTORS_TORQUE,
+                motorSpeed = i,
+                lowerAngle = -0.8,
+                upperAngle = 1.1,
+                )
+            self.arms.append(arm)
+            self.joints.append(self.world.CreateJoint(rjd))
+
+            upper = self.world.CreateDynamicBody(
+                position = (init_x, init_y + ARM_H*3/2 + ARM_UP),
+                angle = (i*0.05),
+                fixtures = UPPER_FD,
+                )
+            upper.color1 = (0.6-i/10., 0.3-i/10., 0.5-i/10.)
+            upper.color2 = (0.4-i/10., 0.2-i/10., 0.3-i/10.)
+            rjd = revoluteJointDef(
+                bodyA=arm,
+                bodyB=upper,
+                localAnchorA=(0, -ARM_H/2),
+                localAnchorB=(0, ARM_H/2),
+                enableMotor=True,
+                enableLimit=True,
+                maxMotorTorque=MOTORS_TORQUE,
+                motorSpeed = 1,
+                lowerAngle = -1.6,
+                upperAngle = -0.1,
+                )
+            upper.ground_contact = False
+            self.arms.append(upper)
+            self.joints.append(self.world.CreateJoint(rjd))
+
+        self.drawlist = self.terrain + self.legs + [self.hull, self.head] + self.arms
 
         class LidarCallback(Box2D.b2.rayCastCallback):
             def ReportFixture(self, fixture, point, normal, fraction):
@@ -371,25 +470,39 @@ class BipedalWalker(gym.Env):
                 return 0
         self.lidar = [LidarCallback() for _ in range(10)]
 
-        return self.step(np.array([0,0,0,0]))[0]
+        return self.step(np.array([0,0,0,0,0,0,0,0]))[0]
 
     def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
         control_speed = False  # Should be easier as well
         if control_speed:
-            self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
-            self.joints[1].motorSpeed = float(SPEED_KNEE * np.clip(action[1], -1, 1))
-            self.joints[2].motorSpeed = float(SPEED_HIP  * np.clip(action[2], -1, 1))
-            self.joints[3].motorSpeed = float(SPEED_KNEE * np.clip(action[3], -1, 1))
+            self.joints[0].motorSpeed = float(SPEED_HIP   * np.clip(action[0], -1, 1))
+            self.joints[1].motorSpeed = float(SPEED_KNEE  * np.clip(action[1], -1, 1))
+            self.joints[2].motorSpeed = float(SPEED_ARM   * np.clip(action[2], -1, 1))
+            self.joints[3].motorSpeed = float(SPEED_ELBOW * np.clip(action[3], -1, 1))
+            self.joints[4].motorSpeed = float(SPEED_HIP   * np.clip(action[4], -1, 1))
+            self.joints[5].motorSpeed = float(SPEED_KNEE  * np.clip(action[5], -1, 1))
+            self.joints[6].motorSpeed = float(SPEED_ARM   * np.clip(action[6], -1, 1))
+            self.joints[7].motorSpeed = float(SPEED_ELBOW * np.clip(action[7], -1, 1))
         else:
             self.joints[0].motorSpeed     = float(SPEED_HIP     * np.sign(action[0]))
             self.joints[0].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[0]), 0, 1))
             self.joints[1].motorSpeed     = float(SPEED_KNEE    * np.sign(action[1]))
             self.joints[1].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[1]), 0, 1))
-            self.joints[2].motorSpeed     = float(SPEED_HIP     * np.sign(action[2]))
+            self.joints[2].motorSpeed     = float(SPEED_ARM     * np.sign(action[2]))
             self.joints[2].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[2]), 0, 1))
-            self.joints[3].motorSpeed     = float(SPEED_KNEE    * np.sign(action[3]))
+            self.joints[3].motorSpeed     = float(SPEED_ELBOW   * np.sign(action[3]))
             self.joints[3].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[3]), 0, 1))
+            self.joints[4].motorSpeed     = float(SPEED_HIP     * np.sign(action[4]))
+            self.joints[4].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[4]), 0, 1))
+            self.joints[5].motorSpeed     = float(SPEED_KNEE    * np.sign(action[5]))
+            self.joints[5].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[5]), 0, 1))
+            self.joints[6].motorSpeed     = float(SPEED_ARM     * np.sign(action[6]))
+            self.joints[6].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[6]), 0, 1))
+            self.joints[7].motorSpeed     = float(SPEED_ELBOW   * np.sign(action[7]))
+            self.joints[7].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[7]), 0, 1))
+
+
 
         self.world.Step(1.0/FPS, 6*30, 2*30)
 
@@ -415,13 +528,21 @@ class BipedalWalker(gym.Env):
             self.joints[1].speed / SPEED_KNEE,
             1.0 if self.legs[1].ground_contact else 0.0,
             self.joints[2].angle,
-            self.joints[2].speed / SPEED_HIP,
+            self.joints[2].speed / SPEED_ARM,
             self.joints[3].angle + 1.0,
-            self.joints[3].speed / SPEED_KNEE,
-            1.0 if self.legs[3].ground_contact else 0.0
+            self.joints[3].speed / SPEED_ELBOW,
+            self.joints[4].angle,
+            self.joints[4].speed / SPEED_HIP,
+            self.joints[5].angle + 1.0,
+            self.joints[5].speed / SPEED_KNEE,
+            1.0 if self.legs[3].ground_contact else 0.0,
+            self.joints[6].angle,
+            self.joints[6].speed / SPEED_ARM,
+            self.joints[7].angle + 1.0,
+            self.joints[7].speed / SPEED_ELBOW,
             ]
         state += [l.fraction for l in self.lidar]
-        assert len(state)==24
+        assert len(state)==32
 
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
@@ -500,12 +621,12 @@ class BipedalWalker(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-class BipedalWalkerHardcore(BipedalWalker):
+class HumanoidWalkerHardcore(HumanoidWalker):
     hardcore = True
 
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    env = BipedalWalker()
+    env = HumanoidWalker()
     env.reset()
     steps = 0
     total_reward = 0
@@ -518,7 +639,7 @@ if __name__=="__main__":
     SUPPORT_KNEE_ANGLE = +0.1
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
-        s, r, done, info = env.step(a)
+        s, r, done, info = env.step(np.concatenate([a,a],0))
         total_reward += r
         if steps % 20 == 0 or done:
             print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
