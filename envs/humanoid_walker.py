@@ -430,8 +430,10 @@ class HumanoidWalker(gym.Env):
                 enableLimit=True,
                 maxMotorTorque=MOTORS_TORQUE,
                 motorSpeed = i,
-                lowerAngle = -0.8,
-                upperAngle = 1.1,
+                #lowerAngle = -0.8,
+                #upperAngle = 1.1,
+                lowerAngle = -np.pi,
+                upperAngle = np.pi,
                 )
             self.arms.append(arm)
             self.joints.append(self.world.CreateJoint(rjd))
@@ -452,7 +454,7 @@ class HumanoidWalker(gym.Env):
                 enableLimit=True,
                 maxMotorTorque=MOTORS_TORQUE,
                 motorSpeed = 1,
-                lowerAngle = -1.6,
+                lowerAngle = -0.2, #-1.6,
                 upperAngle = -0.1,
                 )
             upper.ground_contact = False
