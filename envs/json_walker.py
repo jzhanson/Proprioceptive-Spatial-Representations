@@ -505,7 +505,8 @@ class JSONWalkerHardcore(JSONWalker):
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
     #env = JSONWalker("box2d-json/BipedalWalker.json")
-    env = JSONWalker('box2d-json/HumanoidWalker.json')
+    #env = JSONWalker('box2d-json/HumanoidWalker.json')
+    env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
     env.reset()
     steps = 0
     total_reward = 0
