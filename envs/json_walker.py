@@ -121,8 +121,8 @@ class JSONWalker(gym.Env):
                 )
 
         num_joints = len(self.joint_defs.keys())
+        high = np.array( [np.inf]*(5*len(self.body_defs)+2*len(self.joint_defs)+10) )
 
-        high = np.array([np.inf]*24)
         self.action_space = spaces.Box(np.array([-1]*num_joints), np.array([+1]*num_joints))
         self.observation_space = spaces.Box(-high, high)
 
@@ -354,8 +354,6 @@ class JSONWalker(gym.Env):
                 lowerAngle=self.joint_defs[k]['LowerAngle'],
                 upperAngle=self.joint_defs[k]['UpperAngle']
             ))
-            print(k,self.joint_defs[k]['LowerAngle'], self.joint_defs[k]['UpperAngle'])
-            print(self.joint_defs[k]['EnableLimit'])
         self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
 
         # Make sure hull is last
