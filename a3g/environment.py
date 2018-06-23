@@ -5,12 +5,17 @@ from collections import deque
 from gym import spaces
 
 from envs.humanoid_walker import HumanoidWalker, HumanoidWalkerHardcore
+from envs.json_walker import JSONWalker, JSONWalkerHardcore
 
 def create_env(env_id, args):
     if env_id == 'HumanoidWalker-v0':
         env = HumanoidWalker()
     elif env_id == 'HumanoidWalkerHardcore-v0':
         env = HumanoidWalkerHardcore()
+    elif env_id.startswith('JSONWalker-'):
+        env = JSONWalker(env_id[len('JSONWalker-'):])
+    elif env_id.startswith('JSONWalkerHardcore-'):
+        env = JSONWalkerHardcore(env_id[len('JSONWalkerHardcore-'):])
     else:
         env = gym.make(env_id)
     env = frame_stack(env, args)
