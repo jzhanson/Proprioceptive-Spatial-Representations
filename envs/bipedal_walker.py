@@ -63,6 +63,9 @@ TERRAIN_GRASS    = 10    # low long are grass spots, in steps
 TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
+# Want hull to be centered
+GRID_EDGE = 4*LEG_H
+
 HULL_FD = fixtureDef(
                 shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
                 density=5.0,
@@ -91,12 +94,17 @@ class ContactDetector(contactListener):
         self.env = env
     def BeginContact(self, contact):
         if self.env.hull==contact.fixtureA.body or self.env.hull==contact.fixtureB.body:
+            self.env.hull.ground_contact = True
             self.env.game_over = True
-        for leg in [self.env.legs[1], self.env.legs[3]]:
+        # Want to be more general and check for ground_contact with both upper and lower leg
+        for leg in self.env.legs:
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = True
     def EndContact(self, contact):
-        for leg in [self.env.legs[1], self.env.legs[3]]:
+        if self.env.hull==contact.fixtureA.body or self.env.hull==contact.fixtureB.body:
+            # Should never get here because episode ends when hull contacts ground
+            self.env.hull.ground_contact = False
+        for leg in self.env.legs:
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = False
 
@@ -136,9 +144,8 @@ class BipedalWalker(gym.Env):
 
         self.reset()
 
-        high = np.array([np.inf]*24)
         self.action_space = spaces.Box(np.array([-1,-1,-1,-1]), np.array([+1,+1,+1,+1]))
-        self.observation_space = spaces.Box(-high, high)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(7, GRID_EDGE, GRID_EDGE))
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -441,7 +448,40 @@ class BipedalWalker(gym.Env):
             done   = True
         if pos[0] > (TERRAIN_LENGTH-TERRAIN_GRASS)*TERRAIN_STEP:
             done   = True
-        return np.array(state), reward, done, {}
+
+        # Project raw state into grid, center grid at hull
+        grid_state = np.zeros((7, GRID_EDGE, GRID_EDGE))
+        zero_x, zero_y = self.hull.position.x - GRID_EDGE/2, self.hull.position.y - GRID_EDGE/2
+
+        # 1. For every body b in body config, get position (bx, by) and
+        #   - Write angle of b to (0, bx, by)
+        #   - Write angvel of b to (1,bx,by) in G
+        #   - Write velx of b to (2,bx,by) in G
+        #   - Write vely of b to (3,bx,by) in G
+        #   - Write ground_contact of b to (4,bx,by) in G
+
+        for b in ([self.hull] + self.legs):
+            # Round to nearest integer coordinates here
+            grid_x, grid_y = round(b.position.x - zero_x), round(b.position.y - zero_y)
+            # Not sure if these scalings apply for hull only or hull and legs
+            grid_state[0, grid_x, grid_y] = b.angle
+            grid_state[1, grid_x, grid_y] = 2.0*b.angularVelocity/FPS
+            grid_state[2, grid_x, grid_y] = 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS
+            grid_state[3, grid_x, grid_y] = 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS
+            grid_state[4, grid_x, grid_y] = 1.0 if b.ground_contact else 0
+
+        # 2. For every joint j in body configuration:
+        #   - Get Position of Joint (jx, jy)
+        #   - Write angle of j to (5,jx,jy) in G
+        #   - Write speed of j to (6,jx,jy) in G
+
+        for j_index in len(self.joints):
+            j = self.joints[j_index]
+            grid_x, grid_y = round(j.position.x - zero_x), round(j.position.y - zero_y)
+            grid_state[5, grid_x, grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
+            grid_state[6, grid_x, grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
+
+        return grid_state, reward, done, {}
 
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering
