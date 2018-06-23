@@ -1,4 +1,4 @@
-import sys, math
+import sys, math, json, copy
 import numpy as np
 
 import Box2D
@@ -39,19 +39,7 @@ from gym.utils import colorize, seeding
 FPS    = 50
 SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
 
-MOTORS_TORQUE = 80
-SPEED_HIP     = 4
-SPEED_KNEE    = 6
 LIDAR_RANGE   = 160/SCALE
-
-INITIAL_RANDOM = 5
-
-HULL_POLY =[
-    (-30,+9), (+6,+9), (+34,+1),
-    (+34,-8), (-30,-8)
-    ]
-LEG_DOWN = -8/SCALE
-LEG_W, LEG_H = 8/SCALE, 34/SCALE
 
 VIEWPORT_W = 600
 VIEWPORT_H = 400
@@ -63,44 +51,23 @@ TERRAIN_GRASS    = 10    # low long are grass spots, in steps
 TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
-HULL_FD = fixtureDef(
-                shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
-                density=5.0,
-                friction=0.1,
-                categoryBits=0x0020,
-                maskBits=0x001,  # collide only with ground
-                restitution=0.0) # 0.99 bouncy
-
-LEG_FD = fixtureDef(
-                    shape=polygonShape(box=(LEG_W/2, LEG_H/2)),
-                    density=1.0,
-                    restitution=0.0,
-                    categoryBits=0x0020,
-                    maskBits=0x001)
-
-LOWER_FD = fixtureDef(
-                    shape=polygonShape(box=(0.8*LEG_W/2, LEG_H/2)),
-                    density=1.0,
-                    restitution=0.0,
-                    categoryBits=0x0020,
-                    maskBits=0x001)
 
 class ContactDetector(contactListener):
     def __init__(self, env):
         contactListener.__init__(self)
         self.env = env
     def BeginContact(self, contact):
-        if self.env.hull==contact.fixtureA.body or self.env.hull==contact.fixtureB.body:
-            self.env.game_over = True
-        for leg in [self.env.legs[1], self.env.legs[3]]:
-            if leg in [contact.fixtureA.body, contact.fixtureB.body]:
-                leg.ground_contact = True
+        for k in self.env.bodies:
+            if self.env.bodies[k] in [contact.fixtureA.body, contact.fixtureB.body]:
+                self.env.bodies[k].ground_contact = True
+                if not self.env.bodies[k].can_touch_ground:
+                    self.env.game_over = True
     def EndContact(self, contact):
-        for leg in [self.env.legs[1], self.env.legs[3]]:
-            if leg in [contact.fixtureA.body, contact.fixtureB.body]:
-                leg.ground_contact = False
+        for k in self.env.bodies:
+            if self.env.bodies[k] in [contact.fixtureA.body, contact.fixtureB.body]:
+                self.env.bodies[k].ground_contact = False
 
-class BipedalWalker(gym.Env):
+class JSONWalker(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : FPS
@@ -108,15 +75,34 @@ class BipedalWalker(gym.Env):
 
     hardcore = False
 
-    def __init__(self):
+    def __init__(self, jsonfile):
         self.seed()
         self.viewer = None
 
         self.world = Box2D.b2World()
         self.terrain = None
-        self.hull = None
 
         self.prev_shaping = None
+
+        # JSON loading
+        with open(jsonfile) as f:
+            self.jsondata = json.load(f)
+
+        self.fixture_defs = {}
+        self.body_defs    = {}
+        self.joint_defs   = {}
+
+        # Split the data so that we can create it later in order
+        for k in self.jsondata.keys():
+            if self.jsondata[k]['DataType'] == 'Fixture':
+                self.fixture_defs[k] = copy.deepcopy(self.jsondata[k])
+            elif self.jsondata[k]['DataType'] == 'DynamicBody':
+                self.body_defs[k] = copy.deepcopy(self.jsondata[k])
+            elif self.jsondata[k]['DataType'] == 'JointMotor':
+                self.joint_defs[k] = copy.deepcopy(self.jsondata[k])
+            else:
+                assert(False)
+
 
         self.fd_polygon = fixtureDef(
                         shape = polygonShape(vertices=
@@ -134,11 +120,13 @@ class BipedalWalker(gym.Env):
                     categoryBits=0x0001,
                 )
 
-        self.reset()
+        num_joints = len(self.joint_defs.keys())
 
         high = np.array([np.inf]*24)
-        self.action_space = spaces.Box(np.array([-1,-1,-1,-1]), np.array([+1,+1,+1,+1]))
+        self.action_space = spaces.Box(np.array([-1]*num_joints), np.array([+1]*num_joints))
         self.observation_space = spaces.Box(-high, high)
+
+        self.reset()
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -150,12 +138,12 @@ class BipedalWalker(gym.Env):
         for t in self.terrain:
             self.world.DestroyBody(t)
         self.terrain = []
-        self.world.DestroyBody(self.hull)
-        self.hull = None
-        for leg in self.legs:
-            self.world.DestroyBody(leg)
-        self.legs = []
-        self.joints = []
+
+        for k in self.bodies.keys():
+            self.world.DestroyBody(self.bodies[k])
+        self.bodies = {}
+        self.joints = {}
+        self.fixtures = {}
 
     def _generate_terrain(self, hardcore):
         GRASS, STUMP, STAIRS, PIT, _STATES_ = range(5)
@@ -300,65 +288,78 @@ class BipedalWalker(gym.Env):
         self._generate_terrain(self.hardcore)
         self._generate_clouds()
 
-        init_x = TERRAIN_STEP*TERRAIN_STARTPAD/2
-        init_y = TERRAIN_HEIGHT+2*LEG_H
-        self.hull = self.world.CreateDynamicBody(
-            position = (init_x, init_y),
-            fixtures = HULL_FD
-                )
-        self.hull.color1 = (0.5,0.4,0.9)
-        self.hull.color2 = (0.3,0.3,0.5)
-        self.hull.ApplyForceToCenter((self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM), 0), True)
+        # Process the fixtures
+        # PolygonShape: vertices
+        # EdgeShape: vertices
+        # CircleShape: radius 
+        # friction, density, restitution, maskBits, categoryBits
+        self.fixtures = {}
+        for k in self.fixture_defs.keys():
+            if self.fixture_defs[k]['FixtureShape']['Type'] == 'PolygonShape' or \
+               self.fixture_defs[k]['FixtureShape']['Type'] == 'EdgeShape':
+                fixture_shape = polygonShape(
+                    vertices=[ (x/SCALE,y/SCALE) 
+                               for x,y in self.fixture_defs[k]['FixtureShape']['Vertices']])
+            elif self.fixture_defs[k]['FixtureShape']['Type'] == 'CircleShape':
+                fixture_shape = circleShape(
+                    radius=self.fixture_defs[k]['FixtureShape']['Radius']/SCALE)
+            else:
+                print("Invalid fixture type: "+self.fixture_defs[k]['FixtureShape'])
+                assert(False)
+            self.fixtures[k] = fixtureDef(
+                shape=fixture_shape,
+                friction=self.fixture_defs[k]['Friction'],
+                density=self.fixture_defs[k]['Density'],
+                restitution=self.fixture_defs[k]['Restitution'],
+                maskBits=self.fixture_defs[k]['MaskBits'],
+                categoryBits=self.fixture_defs[k]['CategoryBits']
+            )
 
-        self.legs = []
-        self.joints = []
-        for i in [-1,+1]:
-            leg = self.world.CreateDynamicBody(
-                position = (init_x, init_y - LEG_H/2 - LEG_DOWN),
-                angle = (i*0.05),
-                fixtures = LEG_FD
-                )
-            leg.color1 = (0.6-i/10., 0.3-i/10., 0.5-i/10.)
-            leg.color2 = (0.4-i/10., 0.2-i/10., 0.3-i/10.)
-            rjd = revoluteJointDef(
-                bodyA=self.hull,
-                bodyB=leg,
-                localAnchorA=(0, LEG_DOWN),
-                localAnchorB=(0, LEG_H/2),
-                enableMotor=True,
-                enableLimit=True,
-                maxMotorTorque=MOTORS_TORQUE,
-                motorSpeed = i,
-                lowerAngle = -0.8,
-                upperAngle = 1.1,
-                )
-            self.legs.append(leg)
-            self.joints.append(self.world.CreateJoint(rjd))
+        
+        # Process the dynamic bodies
+        # position, angle,  fixture,
+        self.bodies = {}
+        for k in self.body_defs.keys():
+            self.bodies[k] = self.world.CreateDynamicBody(
+                position=[x/SCALE for x in self.body_defs[k]['Position']],
+                angle=self.body_defs[k]['Angle'],
+                fixtures=self.fixtures[self.body_defs[k]['FixtureName']]
+            )
+            self.bodies[k].color1 = self.body_defs[k]['Color1']
+            self.bodies[k].color2 = self.body_defs[k]['Color2']
+            self.bodies[k].can_touch_ground = self.body_defs[k]['CanTouchGround']
+            self.bodies[k].ground_contact = False
 
-            lower = self.world.CreateDynamicBody(
-                position = (init_x, init_y - LEG_H*3/2 - LEG_DOWN),
-                angle = (i*0.05),
-                fixtures = LOWER_FD
-                )
-            lower.color1 = (0.6-i/10., 0.3-i/10., 0.5-i/10.)
-            lower.color2 = (0.4-i/10., 0.2-i/10., 0.3-i/10.)
-            rjd = revoluteJointDef(
-                bodyA=leg,
-                bodyB=lower,
-                localAnchorA=(0, -LEG_H/2),
-                localAnchorB=(0, LEG_H/2),
-                enableMotor=True,
-                enableLimit=True,
-                maxMotorTorque=MOTORS_TORQUE,
-                motorSpeed = 1,
-                lowerAngle = -1.6,
-                upperAngle = -0.1,
-                )
-            lower.ground_contact = False
-            self.legs.append(lower)
-            self.joints.append(self.world.CreateJoint(rjd))
+            # Apply a force to the 'center' body
+            if k == 'Hull':
+                self.bodies[k].ApplyForceToCenter(
+                    (self.np_random.uniform(-self.body_defs[k]['InitialForceScale'], self.body_defs[k]['InitialForceScale']), 
+                     0), True)
+        self.body_state_order = copy.deepcopy(list(self.bodies.keys()))
 
-        self.drawlist = self.terrain + self.legs + [self.hull]
+        # Process the joint motors
+        # bodyA, bodyB, localAnchorA, localAnchorB, enableMotor, enableLimit,
+        # maxMotorTorque, motorSpeed, lowerAngle, upperAngle
+        self.joints = {}
+        for k in self.joint_defs.keys():
+            self.joints[k] = self.world.CreateJoint(revoluteJointDef(
+                bodyA=self.bodies[self.joint_defs[k]['BodyA']],
+                bodyB=self.bodies[self.joint_defs[k]['BodyB']],
+                localAnchorA=[x/SCALE for x in self.joint_defs[k]['LocalAnchorA']],
+                localAnchorB=[x/SCALE for x in self.joint_defs[k]['LocalAnchorB']],
+                enableMotor=self.joint_defs[k]['EnableMotor'],
+                enableLimit=self.joint_defs[k]['EnableLimit'],
+                maxMotorTorque=self.joint_defs[k]['MaxMotorTorque'],
+                motorSpeed=self.joint_defs[k]['MotorSpeed'],
+                lowerAngle=self.joint_defs[k]['LowerAngle'],
+                upperAngle=self.joint_defs[k]['UpperAngle']
+            ))
+            print(k,self.joint_defs[k]['LowerAngle'], self.joint_defs[k]['UpperAngle'])
+            print(self.joint_defs[k]['EnableLimit'])
+        self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
+
+        # Make sure hull is last
+        self.drawlist = self.terrain + list(self.bodies.values())
 
         class LidarCallback(Box2D.b2.rayCastCallback):
             def ReportFixture(self, fixture, point, normal, fraction):
@@ -369,30 +370,25 @@ class BipedalWalker(gym.Env):
                 return 0
         self.lidar = [LidarCallback() for _ in range(10)]
 
-        return self.step(np.array([0,0,0,0]))[0]
+        return self.step(np.array([0]*np.prod(self.action_space.shape)))[0]
 
     def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
         control_speed = False  # Should be easier as well
         if control_speed:
-            self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
-            self.joints[1].motorSpeed = float(SPEED_KNEE * np.clip(action[1], -1, 1))
-            self.joints[2].motorSpeed = float(SPEED_HIP  * np.clip(action[2], -1, 1))
-            self.joints[3].motorSpeed = float(SPEED_KNEE * np.clip(action[3], -1, 1))
+            for a in range(len(self.joint_action_order)):
+                k = self.joint_action_order[a]
+                self.joints[k].motorSpeed = float(self.joint_defs[k]['Speed'] * np.clip(action[a], -1, 1))
         else:
-            self.joints[0].motorSpeed     = float(SPEED_HIP     * np.sign(action[0]))
-            self.joints[0].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[0]), 0, 1))
-            self.joints[1].motorSpeed     = float(SPEED_KNEE    * np.sign(action[1]))
-            self.joints[1].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[1]), 0, 1))
-            self.joints[2].motorSpeed     = float(SPEED_HIP     * np.sign(action[2]))
-            self.joints[2].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[2]), 0, 1))
-            self.joints[3].motorSpeed     = float(SPEED_KNEE    * np.sign(action[3]))
-            self.joints[3].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[3]), 0, 1))
+            for a in range(len(self.joint_action_order)):
+                k = self.joint_action_order[a]
+                self.joints[k].motorSpeed = float(self.joint_defs[k]['Speed'] * np.sign(action[a]))
+                self.joints[k].maxMotorTorque = float(self.joint_defs[k]['MaxMotorTorque'] * np.clip(np.abs(action[a]), 0, 1))
 
         self.world.Step(1.0/FPS, 6*30, 2*30)
 
-        pos = self.hull.position
-        vel = self.hull.linearVelocity
+        pos = self.bodies['Hull'].position
+        vel = self.bodies['Hull'].linearVelocity
 
         for i in range(10):
             self.lidar[i].fraction = 1.0
@@ -402,24 +398,29 @@ class BipedalWalker(gym.Env):
                 pos[1] - math.cos(1.5*i/10.0)*LIDAR_RANGE)
             self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
 
-        state = [
-            self.hull.angle,        # Normal angles up to 0.5 here, but sure more is possible.
-            2.0*self.hull.angularVelocity/FPS,
-            0.3*vel.x*(VIEWPORT_W/SCALE)/FPS,  # Normalized to get -1..1 range
-            0.3*vel.y*(VIEWPORT_H/SCALE)/FPS,
-            self.joints[0].angle,   # This will give 1.1 on high up, but it's still OK (and there should be spikes on hiting the ground, that's normal too)
-            self.joints[0].speed / SPEED_HIP,
-            self.joints[1].angle + 1.0,
-            self.joints[1].speed / SPEED_KNEE,
-            1.0 if self.legs[1].ground_contact else 0.0,
-            self.joints[2].angle,
-            self.joints[2].speed / SPEED_HIP,
-            self.joints[3].angle + 1.0,
-            self.joints[3].speed / SPEED_KNEE,
-            1.0 if self.legs[3].ground_contact else 0.0
+        # State encoding:
+        # For every body:
+        #  angle, 2*angularVelocity/FPS, 0.3*velx*(VIEWPORT_W/SCALE)/FPS, 0.3*vely*(VIEWPORT_H/SCALE)/FPS, ground_contact
+        # For every joint:
+        #  angle, speed/SPEED
+        state = []
+        for i in range(len(self.body_state_order)):
+            k = self.body_state_order[i]
+            state += [
+                self.bodies[k].angle,
+                2.0*self.bodies[k].angularVelocity/FPS,
+                0.3*self.bodies[k].linearVelocity.x*(VIEWPORT_W/SCALE)/FPS,
+                0.3*self.bodies[k].linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
+                1.0 if self.bodies[k].ground_contact else 0.0
+            ]
+        for i in range(len(self.joint_action_order)):
+            k = self.joint_action_order[i]
+            state += [
+                self.joints[k].angle,
+                self.joints[k].speed / self.joint_defs[k]['Speed'],
             ]
         state += [l.fraction for l in self.lidar]
-        assert len(state)==24
+        assert len(state)==(5*len(self.body_state_order)+2*len(self.joint_action_order)+10)
 
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
@@ -431,8 +432,8 @@ class BipedalWalker(gym.Env):
             reward = shaping - self.prev_shaping
         self.prev_shaping = shaping
 
-        for a in action:
-            reward -= 0.00035 * MOTORS_TORQUE * np.clip(np.abs(a), 0, 1)
+        for i, a in enumerate(action):
+            reward -= 0.00035 * self.joint_defs[self.joint_action_order[i]]['MaxMotorTorque'] * np.clip(np.abs(a), 0, 1)
             # normalized to about -50.0 using heuristic, more optimal agent should spend less
 
         done = False
@@ -498,16 +499,17 @@ class BipedalWalker(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-class BipedalWalkerHardcore(BipedalWalker):
+class JSONWalkerHardcore(JSONWalker):
     hardcore = True
 
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    env = BipedalWalker()
+    #env = JSONWalker("box2d-json/BipedalWalker.json")
+    env = JSONWalker('box2d-json/HumanoidWalker.json')
     env.reset()
     steps = 0
     total_reward = 0
-    a = np.array([0.0, 0.0, 0.0, 0.0])
+    a = np.array([0.0]*env.action_space.shape[0])
     STAY_ON_ONE_LEG, PUT_OTHER_DOWN, PUSH_OFF = 1,2,3
     SPEED = 0.29  # Will fall forward on higher speed
     state = STAY_ON_ONE_LEG
@@ -516,7 +518,11 @@ if __name__=="__main__":
     SUPPORT_KNEE_ANGLE = +0.1
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
-        s, r, done, info = env.step(a)
+        env.render()
+        s, r, done, info = env.step(env.action_space.sample())
+        if done:
+            env.reset()
+        continue
         total_reward += r
         if steps % 20 == 0 or done:
             print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
