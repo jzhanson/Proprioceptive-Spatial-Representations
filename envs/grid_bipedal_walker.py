@@ -108,7 +108,7 @@ class ContactDetector(contactListener):
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = False
 
-class BipedalWalker(gym.Env):
+class GridBipedalWalker(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : FPS
@@ -431,7 +431,7 @@ class BipedalWalker(gym.Env):
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
         shaping  = 130*pos[0]/SCALE   # moving forward is a way to receive reward (normalized to get 300 on completion)
-        shaping -= 5.0*abs(state[0])  # keep head straight, other than that and falling, any behavior is unpunished
+        shaping -= 5.0*abs(self.hull.angle)  # keep head straight, other than that and falling, any behavior is unpunished
 
         reward = 0
         if self.prev_shaping is not None:
@@ -538,12 +538,12 @@ class BipedalWalker(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-class BipedalWalkerHardcore(BipedalWalker):
+class GridBipedalWalkerHardcore(GridBipedalWalker):
     hardcore = True
 
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    env = BipedalWalker()
+    env = GridBipedalWalker()
     env.reset()
     steps = 0
     total_reward = 0
