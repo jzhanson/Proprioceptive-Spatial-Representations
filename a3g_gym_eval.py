@@ -2,12 +2,13 @@ from __future__ import division
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
 import argparse
+import importlib
+
 import torch
 from torch.autograd import Variable
 
 from a3g.environment import create_env
 from a3g.utils import setup_logger
-from a3g.model import A3C_CONV, A3C_MLP
 from a3g.player_util import Agent
 
 import gym
@@ -106,10 +107,10 @@ env = create_env("{}".format(args.env), args)
 num_tests = 0
 reward_total_sum = 0
 player = Agent(None, env, args, None)
-if args.model == 'MLP':
-    player.model = A3C_MLP(env.observation_space.shape[0], env.action_space, args.stack_frames)
-if args.model == 'CONV':
-    player.model = A3C_CONV(env.observation_space.shape[0], env.action_space, args.stack_frames)
+
+AC = importlib.import_module(args.model_name)
+player.model = AC.ActorCritic(
+    env.observation_space, env.action_space, args.stack_frames)
 
 player.gpu_id = gpu_id
 if gpu_id >= 0:

@@ -1,12 +1,13 @@
 from __future__ import division
 from setproctitle import setproctitle as ptitle
 import numpy as np
+import importlib
+
 import torch
 from torch.autograd import Variable
 
 from a3g.environment import create_env
 from a3g.utils import setup_logger
-from a3g.model import A3C_CONV, A3C_MLP
 from a3g.player_util import Agent
 
 import time
@@ -36,12 +37,10 @@ def test(args, shared_model):
     reward_total_sum = 0
     player = Agent(None, env, args, None)
     player.gpu_id = gpu_id
-    if args.model == 'MLP':
-        player.model = A3C_MLP(
-            player.env.observation_space.shape[0], player.env.action_space, args.stack_frames)
-    if args.model == 'CONV':
-        player.model = A3C_CONV(
-            player.env.observation_space.shape[0], player.env.action_space, args.stack_frames)
+
+    AC = importlib.import_module(args.model_name)
+    player.model = AC.ActorCritic(
+        env.observation_space, env.action_space, args.stack_frames)
 
     player.state = player.env.reset()
     player.state = torch.from_numpy(player.state).float()

@@ -2,11 +2,12 @@ from __future__ import print_function, division
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
 import argparse
+import importlib
+
 import torch
 import torch.multiprocessing as mp
 
 from a3g.environment import create_env
-from a3g.model import A3C_MLP, A3C_CONV
 from a3g.train import train
 from a3g.test import test
 from a3g.shared_optim import SharedRMSprop, SharedAdam
@@ -100,8 +101,8 @@ parser.add_argument(
     metavar='LG',
     help='folder to save logs')
 parser.add_argument(
-    '--model',
-    default='MLP',
+    '--model-name',
+    default='models.mlp',
     metavar='M',
     help='Model type to use')
 parser.add_argument(
@@ -138,13 +139,14 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
         mp.set_start_method('spawn')
     env = create_env(args.env, args)
-    if args.model == 'MLP':
-        shared_model = A3C_MLP(
-            env.observation_space.shape[0], env.action_space, args.stack_frames)
-    if args.model == 'CONV':
-        shared_model = A3C_CONV(
-            env.observation_space.shape[0], env.action_space, args.stack_frames)
+    
+    # Create model
+    AC = importlib.import_module(args.model_name)
+    shared_model = AC.ActorCritic(
+        env.observation_space, env.action_space, args.stack_frames)
     if args.load:
+        print('Loading model from: {0}{1}.dat'.format(
+            args.load_model_dir, args.env))
         saved_state = torch.load('{0}{1}.dat'.format(
             args.load_model_dir, args.env), map_location=lambda storage, loc: storage)
         shared_model.load_state_dict(saved_state)

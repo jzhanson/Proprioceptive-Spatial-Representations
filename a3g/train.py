@@ -1,13 +1,15 @@
 from __future__ import division
 from setproctitle import setproctitle as ptitle
 import numpy as np
+import importlib
+
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
 
+
 from a3g.environment import create_env
 from a3g.utils import ensure_shared_grads
-from a3g.model import A3C_CONV, A3C_MLP
 from a3g.player_util import Agent
 
 import gym
@@ -29,12 +31,9 @@ def train(rank, args, shared_model, optimizer):
     env.seed(args.seed + rank)
     player = Agent(None, env, args, None)
     player.gpu_id = gpu_id
-    if args.model == 'MLP':
-        player.model = A3C_MLP(
-            player.env.observation_space.shape[0], player.env.action_space, args.stack_frames)
-    if args.model == 'CONV':
-        player.model = A3C_CONV(
-            player.env.observation_space.shape[0], player.env.action_space, args.stack_frames)
+    AC = importlib.import_module(args.model_name)
+    player.model = AC.ActorCritic(
+        env.observation_space, env.action_space, args.stack_frames)
 
     player.state = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
@@ -83,8 +82,7 @@ def train(rank, args, shared_model, optimizer):
             R = torch.zeros(1, 1)
         if not player.done:
             state = player.state
-            if args.model == 'CONV':
-                state = state.unsqueeze(0)
+            state = state.unsqueeze(0)
             value, _, _, _ = player.model(
                 (Variable(state), (player.hx, player.cx)))
             R = value.data
