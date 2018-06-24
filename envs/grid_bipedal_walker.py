@@ -145,7 +145,7 @@ class GridBipedalWalker(gym.Env):
         self.reset()
 
         self.action_space = spaces.Box(low=-1, high=1, shape=(1, GRID_EDGE, GRID_EDGE))
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(7, GRID_EDGE, GRID_EDGE))
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(9, GRID_EDGE, GRID_EDGE))
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
