@@ -19,10 +19,10 @@ class ActorCritic(torch.nn.Module):
         self.action_space      = action_space
 
         self.n_frames    = n_frames
-        self.num_inputs  = np.prod(observation_space.shape)
-        self.num_outputs = action_space.shape[0]
+        self.input_size  = np.prod(observation_space.shape)
+        self.output_size = action_space.shape[0]
 
-        self.fc1 = nn.Linear(self.num_inputs, 256)
+        self.fc1 = nn.Linear(self.input_size, 256)
         self.lrelu1 = nn.LeakyReLU(0.1)
         self.fc2 = nn.Linear(256, 256)
         self.lrelu2 = nn.LeakyReLU(0.1)
@@ -34,8 +34,8 @@ class ActorCritic(torch.nn.Module):
         self.m1 = self.n_frames * 128
         self.lstm = nn.LSTMCell(self.m1, 128)
         self.critic_linear = nn.Linear(128, 1)
-        self.actor_linear = nn.Linear(128, self.num_outputs)
-        self.actor_linear2 = nn.Linear(128, self.num_outputs)
+        self.actor_linear = nn.Linear(128, self.output_size)
+        self.actor_linear2 = nn.Linear(128, self.output_size)
 
         self.apply(weights_init_mlp)
         lrelu = nn.init.calculate_gain('leaky_relu')
@@ -61,6 +61,9 @@ class ActorCritic(torch.nn.Module):
 
     def forward(self, inputs):
         x, (hx, cx) = inputs
+
+        batch_size = x.size(0)
+        x = x.view(batch_size, self.n_frames, self.input_size)
 
         x = self.lrelu1(self.fc1(x))
         x = self.lrelu2(self.fc2(x))
