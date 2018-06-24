@@ -31,7 +31,7 @@ To train agent in BipedalWalker-v2 environment with 6 different worker processes
 *On a MacPro 2014 laptop traing typically takes 15-20mins to get to a winning solution*
 
 ```
-python main.py --workers 6 --env BipedalWalker-v2 --save-max True --model MLP --stack-frames 1
+python main.py --workers 6 --env BipedalWalker-v2 --save-max True --model-name models.mlp --stack-frames 1
 ```
 
 To train agent in BipedalWalkerHardcore-v2 environment with 64 different worker processes:
@@ -39,7 +39,7 @@ To train agent in BipedalWalkerHardcore-v2 environment with 64 different worker 
 *On a 72 cpu AWS EC2 c5.18xlarge instance training with 64 worker processes takes up to 48hrs to get to model that could solve the environment*
 
 ```
-python main.py --workers 64 --env BipedalWalkerHardcore-v2 --save-max True --model CONV --stack-frames 4
+python main.py --workers 64 --env BipedalWalkerHardcore-v2 --save-max True --model-name models.conv1d --stack-frames 4
 ```
 
 #A3C-GPU
@@ -47,7 +47,7 @@ python main.py --workers 64 --env BipedalWalkerHardcore-v2 --save-max True --mod
 To train agent in BipedalWalkerHardcore-v2 environment with 32 different worker processes with new A3C-GPU:
 
 ```
-python main.py --env BipedalWalkerHardcore-v2 --workers 32 --gpu-ids 0 1 2 3 --amsgrad True --model CONV --stack-frames 4
+python main.py --env BipedalWalkerHardcore-v2 --workers 32 --gpu-ids 0 1 2 3 --amsgrad True --model-name models.conv1d --stack-frames 4
 ```
 
 
@@ -58,7 +58,7 @@ Hit Ctrl C to end training session properly
 ## Evaluation
 To run a 100 episode gym evaluation with trained model
 ```
-python gym_eval.py --env BipedalWalkerHardcore-v2 --num-episodes 100 --stack-frames 4 --model CONV --new-gym-eval True
+python gym_eval.py --env BipedalWalkerHardcore-v2 --num-episodes 100 --stack-frames 4 --model-name models.conv1d --new-gym-eval True
 ```
 
 ## Project Reference
