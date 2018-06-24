@@ -321,6 +321,7 @@ class GridBipedalWalker(gym.Env):
         self.hull.color1 = (0.5,0.4,0.9)
         self.hull.color2 = (0.3,0.3,0.5)
         self.hull.ApplyForceToCenter((self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM), 0), True)
+        self.hull.ground_contact = False
 
         self.legs = []
         self.joints = []
@@ -344,6 +345,7 @@ class GridBipedalWalker(gym.Env):
                 lowerAngle = -0.8,
                 upperAngle = 1.1,
                 )
+            leg.ground_contact = False
             self.legs.append(leg)
             self.joints.append(self.world.CreateJoint(rjd))
 
@@ -482,8 +484,7 @@ class GridBipedalWalker(gym.Env):
             grid_state[1, grid_x, grid_y] = 2.0*b.angularVelocity/FPS
             grid_state[2, grid_x, grid_y] = 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS
             grid_state[3, grid_x, grid_y] = 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS
-            if b in [self.legs[1], self.legs[3]]:
-                grid_state[4, grid_x, grid_y] = 1.0
+            grid_state[4, grid_x, grid_y] = 1.0 if b.ground_contact else 0
 
         # 2. For every joint j in body configuration:
         #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
