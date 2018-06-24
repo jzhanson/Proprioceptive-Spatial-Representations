@@ -64,7 +64,7 @@ TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
 # Want hull to be centered
-GRID_EDGE = 4*LEG_H
+GRID_EDGE = int(4*LEG_H)
 
 HULL_FD = fixtureDef(
                 shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
@@ -450,7 +450,7 @@ class GridBipedalWalker(gym.Env):
             done   = True
 
         # Project raw state into grid, center grid at hull
-        grid_state = np.zeros((7, GRID_EDGE, GRID_EDGE))
+        grid_state = np.zeros((9, GRID_EDGE, GRID_EDGE))
         zero_x, zero_y = self.hull.position.x - GRID_EDGE/2, self.hull.position.y - GRID_EDGE/2
 
         # 1. For every body b in body config, get position (bx, by) and
@@ -468,18 +468,25 @@ class GridBipedalWalker(gym.Env):
             grid_state[1, grid_x, grid_y] = 2.0*b.angularVelocity/FPS
             grid_state[2, grid_x, grid_y] = 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS
             grid_state[3, grid_x, grid_y] = 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS
-            grid_state[4, grid_x, grid_y] = 1.0 if b.ground_contact else 0
+            if b in [self.legs[1], self.legs[3]]:
+                grid_state[4, grid_x, grid_y] = 1.0
 
         # 2. For every joint j in body configuration:
-        #   - Get Position of Joint (jx, jy)
-        #   - Write angle of j to (5,jx,jy) in G
-        #   - Write speed of j to (6,jx,jy) in G
+        #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
+        #   - Write angle of j to (5,Ajx,Ajy),(7,Bjx,Bjy) in G
+        #   - Write speed of j to (6,Ajx,Ajy),(8,Bjx,Bjy) in G
 
-        for j_index in len(self.joints):
+        for j_index in range(len(self.joints)):
             j = self.joints[j_index]
-            grid_x, grid_y = round(j.position.x - zero_x), round(j.position.y - zero_y)
-            grid_state[5, grid_x, grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
-            grid_state[6, grid_x, grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
+
+            # For each anchor position, write joint features
+            A_grid_x, A_grid_y = round(j.anchorA.x - zero_x), round(j.anchorA.y - zero_y)
+            B_grid_x, B_grid_y = round(j.anchorB.x - zero_x), round(j.anchorB.y - zero_y)
+        
+            grid_state[5, A_grid_x, A_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
+            grid_state[6, A_grid_x, A_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
+            grid_state[7, B_grid_x, B_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
+            grid_state[8, B_grid_x, B_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
 
         return grid_state, reward, done, {}
 
@@ -556,7 +563,11 @@ if __name__=="__main__":
     SUPPORT_KNEE_ANGLE = +0.1
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
+        env.render()
         s, r, done, info = env.step(a)
+        if done:
+            env.reset()
+        continue
         total_reward += r
         if steps % 20 == 0 or done:
             print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
