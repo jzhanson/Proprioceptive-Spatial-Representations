@@ -1,4 +1,6 @@
 from __future__ import division
+import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.nn.init as init
@@ -9,9 +11,17 @@ from a3g.utils import norm_col_init, weights_init, weights_init_mlp
 
 
 class ActorCritic(torch.nn.Module):
-    def __init__(self, num_inputs, action_space, n_frames):
+    def __init__(self, observation_space, action_space, n_frames):
         super(ActorCritic, self).__init__()
-        self.conv1 = nn.Conv1d(n_frames, 32, 3, stride=1, padding=1)
+
+        self.observation_space = observation_space
+        self.action_space      = action_space
+
+        self.n_frames    = n_frames
+        self.num_inputs  = np.prod(self.observation_space.shape)
+        self.num_outputs = self.action_space.shape[0]
+
+        self.conv1 = nn.Conv1d(self.n_frames, 32, 3, stride=1, padding=1)
         self.lrelu1 = nn.LeakyReLU(0.1)
         self.conv2 = nn.Conv1d(32, 32, 3, stride=1, padding=1)
         self.lrelu2 = nn.LeakyReLU(0.1)
@@ -20,14 +30,13 @@ class ActorCritic(torch.nn.Module):
         self.conv4 = nn.Conv1d(64, 64, 1, stride=1)
         self.lrelu4 = nn.LeakyReLU(0.1)
 
-        dummy_input = Variable(torch.zeros(1, n_frames, num_inputs))
+        dummy_input = Variable(torch.zeros(1, self.n_frames, self.num_inputs))
         dummy_conv_output = self._convforward(dummy_input)
 
         self.lstm = nn.LSTMCell(dummy_conv_output.nelement(), 128)
-        num_outputs = action_space.shape[0]
         self.critic_linear = nn.Linear(128, 1)
-        self.actor_linear = nn.Linear(128, num_outputs)
-        self.actor_linear2 = nn.Linear(128, num_outputs)
+        self.actor_linear = nn.Linear(128, self.num_outputs)
+        self.actor_linear2 = nn.Linear(128, self.num_outputs)
 
         self.apply(weights_init)
         lrelu_gain = nn.init.calculate_gain('leaky_relu')
