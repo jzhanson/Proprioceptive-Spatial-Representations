@@ -19,8 +19,8 @@ class ActorCritic(torch.nn.Module):
         self.action_space      = action_space
 
         self.n_frames    = n_frames
-        self.input_size  = np.prod(observation_space.shape)
-        self.output_size = action_space.shape[0]
+        self.input_size  = int(np.prod(self.observation_space.shape))
+        self.output_size = int(np.prod(self.action_space.shape))
 
         self.fc1 = nn.Linear(self.input_size, 256)
         self.lrelu1 = nn.LeakyReLU(0.1)
