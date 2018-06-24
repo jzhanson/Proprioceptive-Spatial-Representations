@@ -64,7 +64,7 @@ TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
 # Want hull to be centered
-GRID_EDGE = int(4*LEG_H)
+GRID_EDGE = int(4*(LEG_H - LEG_DOWN))
 
 HULL_FD = fixtureDef(
                 shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
@@ -144,7 +144,7 @@ class GridBipedalWalker(gym.Env):
 
         self.reset()
 
-        self.action_space = spaces.Box(np.array([-1,-1,-1,-1]), np.array([+1,+1,+1,+1]))
+        self.action_space = spaces.Box(low=-1, high=1, shape=(1, GRID_EDGE, GRID_EDGE))
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(7, GRID_EDGE, GRID_EDGE))
 
     def seed(self, seed=None):
@@ -376,25 +376,31 @@ class GridBipedalWalker(gym.Env):
                 return 0
         self.lidar = [LidarCallback() for _ in range(10)]
 
-        return self.step(np.array([0,0,0,0]))[0]
+        return self.step(np.zeros((1, GRID_EDGE, GRID_EDGE)))[0]
 
     def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
         control_speed = False  # Should be easier as well
-        if control_speed:
-            self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
-            self.joints[1].motorSpeed = float(SPEED_KNEE * np.clip(action[1], -1, 1))
-            self.joints[2].motorSpeed = float(SPEED_HIP  * np.clip(action[2], -1, 1))
-            self.joints[3].motorSpeed = float(SPEED_KNEE * np.clip(action[3], -1, 1))
-        else:
-            self.joints[0].motorSpeed     = float(SPEED_HIP     * np.sign(action[0]))
-            self.joints[0].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[0]), 0, 1))
-            self.joints[1].motorSpeed     = float(SPEED_KNEE    * np.sign(action[1]))
-            self.joints[1].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[1]), 0, 1))
-            self.joints[2].motorSpeed     = float(SPEED_HIP     * np.sign(action[2]))
-            self.joints[2].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[2]), 0, 1))
-            self.joints[3].motorSpeed     = float(SPEED_KNEE    * np.sign(action[3]))
-            self.joints[3].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[3]), 0, 1))
+
+        # Get joint torques from input grid
+        # These zeroes are different from the zeroes we use to calculate state after stepping the env
+        zero_x, zero_y = self.hull.position.x - GRID_EDGE/2, self.hull.position.y - GRID_EDGE/2
+
+        for j in range(len(self.joints)):
+            # Alternately, we can average the two anchor positions instead of just using anchorA
+            grid_x, grid_y = round(self.joints[j].anchorA.x - zero_x), round(self.joints[j].anchorB.y - zero_y)
+            if control_speed:
+                if j in [0, 2]:
+                    self.joints[j].motorSpeed = float(SPEED_HIP * np.clip(action[0, grid_x, grid_y], -1, 1))
+                else:
+                    self.joints[j].motorSpeed = float(SPEED_KNEE * np.clip(action[0, grid_x, grid_y], -1, 1))
+            else:
+                if j in [0, 2]:
+                    self.joints[j].motorSpeed = float(SPEED_HIP * np.sign(action[0, grid_x, grid_y]))
+                else:
+                    self.joints[j].motorSpeed = float(SPEED_KNEE * np.sign(action[0, grid_x, grid_y]))
+                self.joints[j].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[0, grid_x, grid_y]), 0, 1))
+
 
         self.world.Step(1.0/FPS, 6*30, 2*30)
 
@@ -482,7 +488,7 @@ class GridBipedalWalker(gym.Env):
             # For each anchor position, write joint features
             A_grid_x, A_grid_y = round(j.anchorA.x - zero_x), round(j.anchorA.y - zero_y)
             B_grid_x, B_grid_y = round(j.anchorB.x - zero_x), round(j.anchorB.y - zero_y)
-        
+
             grid_state[5, A_grid_x, A_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
             grid_state[6, A_grid_x, A_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
             grid_state[7, B_grid_x, B_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
@@ -554,7 +560,7 @@ if __name__=="__main__":
     env.reset()
     steps = 0
     total_reward = 0
-    a = np.array([0.0, 0.0, 0.0, 0.0])
+    a = np.zeros((1, GRID_EDGE, GRID_EDGE))
     STAY_ON_ONE_LEG, PUT_OTHER_DOWN, PUSH_OFF = 1,2,3
     SPEED = 0.29  # Will fall forward on higher speed
     state = STAY_ON_ONE_LEG
