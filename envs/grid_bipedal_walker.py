@@ -64,7 +64,7 @@ TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
 # Use a fixed grid size, scale positions into [0, 1] with 1 being 4*(LEG_H)-2*LEG_DOWN
-GRID_EDGE = 80
+GRID_EDGE = 40
 # Currently, make the scaling very large so never need to resize grid
 GRID_SCALE = int(8*(LEG_H))
 GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
@@ -389,6 +389,45 @@ class GridBipedalWalker(gym.Env):
 
         return self.step(np.zeros((1, GRID_EDGE, GRID_EDGE)))[0]
 
+    def _get_state(self):
+        # Project raw state into grid, center grid at hull
+        grid_state = np.zeros((9, GRID_EDGE, GRID_EDGE))
+        zero_x, zero_y = self.get_zeros()
+
+        # 1. For every body b in body config, get position (bx, by) and
+        #   - Write angle of b to (0, bx, by)
+        #   - Write angvel of b to (1,bx,by) in G
+        #   - Write velx of b to (2,bx,by) in G
+        #   - Write vely of b to (3,bx,by) in G
+        #   - Write ground_contact of b to (4,bx,by) in G
+        for b in ([self.hull] + self.legs):
+            # Round to nearest integer coordinates here
+            grid_x, grid_y = coord_to_grid(b.position.x, zero_x), coord_to_grid(b.position.y, zero_y)
+            # Not sure if these scalings apply for hull only or hull and legs
+            grid_state[0, grid_x, grid_y] = b.angle
+            grid_state[1, grid_x, grid_y] = 2.0*b.angularVelocity/FPS
+            grid_state[2, grid_x, grid_y] = 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS
+            grid_state[3, grid_x, grid_y] = 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS
+            grid_state[4, grid_x, grid_y] = 1.0 if b.ground_contact else 0
+
+        # 2. For every joint j in body configuration:
+        #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
+        #   - Write angle of j to (5,Ajx,Ajy),(7,Bjx,Bjy) in G
+        #   - Write speed of j to (6,Ajx,Ajy),(8,Bjx,Bjy) in G
+        for j_index in range(len(self.joints)):
+            j = self.joints[j_index]
+
+            # For each anchor position, write joint features
+            A_grid_x, A_grid_y = coord_to_grid(j.anchorA.x, zero_x), coord_to_grid(j.anchorA.y, zero_y)
+            B_grid_x, B_grid_y = coord_to_grid(j.anchorB.x, zero_x), coord_to_grid(j.anchorB.y, zero_y)
+
+            grid_state[5, A_grid_x, A_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
+            grid_state[6, A_grid_x, A_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
+            grid_state[7, B_grid_x, B_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
+            grid_state[8, B_grid_x, B_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
+
+        return grid_state
+
     def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
         control_speed = False  # Should be easier as well
@@ -469,45 +508,7 @@ class GridBipedalWalker(gym.Env):
         if pos[0] > (TERRAIN_LENGTH-TERRAIN_GRASS)*TERRAIN_STEP:
             done   = True
 
-        # Project raw state into grid, center grid at hull
-        grid_state = np.zeros((9, GRID_EDGE, GRID_EDGE))
-        zero_x, zero_y = self.get_zeros()
-
-        # 1. For every body b in body config, get position (bx, by) and
-        #   - Write angle of b to (0, bx, by)
-        #   - Write angvel of b to (1,bx,by) in G
-        #   - Write velx of b to (2,bx,by) in G
-        #   - Write vely of b to (3,bx,by) in G
-        #   - Write ground_contact of b to (4,bx,by) in G
-
-        for b in ([self.hull] + self.legs):
-            # Round to nearest integer coordinates here
-            grid_x, grid_y = coord_to_grid(b.position.x, zero_x), coord_to_grid(b.position.y, zero_y)
-            # Not sure if these scalings apply for hull only or hull and legs
-            grid_state[0, grid_x, grid_y] = b.angle
-            grid_state[1, grid_x, grid_y] = 2.0*b.angularVelocity/FPS
-            grid_state[2, grid_x, grid_y] = 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS
-            grid_state[3, grid_x, grid_y] = 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS
-            grid_state[4, grid_x, grid_y] = 1.0 if b.ground_contact else 0
-
-        # 2. For every joint j in body configuration:
-        #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
-        #   - Write angle of j to (5,Ajx,Ajy),(7,Bjx,Bjy) in G
-        #   - Write speed of j to (6,Ajx,Ajy),(8,Bjx,Bjy) in G
-
-        for j_index in range(len(self.joints)):
-            j = self.joints[j_index]
-
-            # For each anchor position, write joint features
-            A_grid_x, A_grid_y = coord_to_grid(j.anchorA.x, zero_x), coord_to_grid(j.anchorA.y, zero_y)
-            B_grid_x, B_grid_y = coord_to_grid(j.anchorB.x, zero_x), coord_to_grid(j.anchorB.y, zero_y)
-
-            grid_state[5, A_grid_x, A_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
-            grid_state[6, A_grid_x, A_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
-            grid_state[7, B_grid_x, B_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
-            grid_state[8, B_grid_x, B_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
-
-        return grid_state, reward, done, {}
+        return self._get_state(), reward, done, {}
 
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering
