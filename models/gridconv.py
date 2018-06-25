@@ -58,7 +58,7 @@ class ActorCritic(torch.nn.Module):
         return x
 
     def forward(self, inputs):
-        x, (hx, cx) = inputs
+        x, _ = inputs
 
         batch_size = x.size(0)
         x = x.view(batch_size, 
@@ -71,4 +71,10 @@ class ActorCritic(torch.nn.Module):
         actor_out = F.softsign(self.actor_linear(x)).view(batch_size, self.output_size)
         actor_out2 = self.actor_linear2(x).view(batch_size, self.output_size)
 
-        return critic_out, actor_out, actor_out2, (hx, cx)
+        return critic_out, actor_out, actor_out2, None
+
+    def initialize_memory(self):
+        return None
+
+    def reinitialize_memory(self, old_memory):
+        return None

@@ -81,3 +81,12 @@ class ActorCritic(torch.nn.Module):
         x = hx
 
         return self.critic_linear(x), F.softsign(self.actor_linear(x)), self.actor_linear2(x), (hx, cx)
+
+    def initialize_memory(self):
+        return (Variable(torch.zeros(1, 128)),
+                Variable(torch.zeros(1, 128)))
+
+    def reinitialize_memory(self, old_memory):
+        old_hx, old_cx = old_memory
+        return (Variable(old_hx.data),
+                Variable(old_cx.data))

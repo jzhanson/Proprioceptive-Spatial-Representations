@@ -13,8 +13,7 @@ class Agent(object):
         self.model = model
         self.env = env
         self.state = state
-        self.hx = None
-        self.cx = None
+        self.memory = None
         self.eps_len = 0
         self.args = args
         self.values = []
@@ -28,8 +27,8 @@ class Agent(object):
 
     def action_train(self):
         self.state = self.state.unsqueeze(0)
-        value, mu, sigma, (self.hx, self.cx) = self.model(
-            (Variable(self.state), (self.hx, self.cx)))
+        value, mu, sigma, self.memory = self.model(
+            (Variable(self.state), self.memory))
         mu = torch.clamp(mu, -1.0, 1.0)
         sigma = F.softplus(sigma) + 1e-5
         eps = torch.randn(mu.size())
@@ -69,19 +68,14 @@ class Agent(object):
             if self.done:
                 if self.gpu_id >= 0:
                     with torch.cuda.device(self.gpu_id):
-                        self.cx = Variable(torch.zeros(
-                            1, 128).cuda())
-                        self.hx = Variable(torch.zeros(
-                            1, 128).cuda())
+                        self.memory = self.model.initialize_memory()
                 else:
-                    self.cx = Variable(torch.zeros(1, 128))
-                    self.hx = Variable(torch.zeros(1, 128))
+                    self.memory = self.model.initialize_memory()
             else:
-                self.cx = Variable(self.cx.data)
-                self.hx = Variable(self.hx.data)
+                self.memory = self.model.reinitialize_memory(self.memory)
             self.state = self.state.unsqueeze(0)
-            value, mu, sigma, (self.hx, self.cx) = self.model(
-                (Variable(self.state), (self.hx, self.cx)))
+            value, mu, sigma, self.memory = self.model(
+                (Variable(self.state), self.memory))
         mu = torch.clamp(mu.data, -1.0, 1.0)
         action = mu.cpu().numpy()[0]
         state, self.reward, self.done, self.info = self.env.step(action)

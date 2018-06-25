@@ -51,14 +51,11 @@ def train(rank, args, shared_model, optimizer):
         if player.done:
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
-                    player.cx = Variable(torch.zeros(1, 128).cuda())
-                    player.hx = Variable(torch.zeros(1, 128).cuda())
+                    player.memory = player.model.initialize_memory()
             else:
-                player.cx = Variable(torch.zeros(1, 128))
-                player.hx = Variable(torch.zeros(1, 128))
+                player.memory = player.model.initialize_memory()
         else:
-            player.cx = Variable(player.cx.data)
-            player.hx = Variable(player.hx.data)
+            player.memory = player.model.reinitialize_memory(player.memory)
             
         for step in range(args.num_steps):
 
@@ -84,7 +81,7 @@ def train(rank, args, shared_model, optimizer):
             state = player.state
             state = state.unsqueeze(0)
             value, _, _, _ = player.model(
-                (Variable(state), (player.hx, player.cx)))
+                (Variable(state), player.memory))
             R = value.data
 
         player.values.append(Variable(R))
