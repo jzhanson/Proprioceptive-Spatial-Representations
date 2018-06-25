@@ -71,6 +71,9 @@ class ActorCritic(torch.nn.Module):
         return critic_out, actor_out, actor_out2, (hx, cx)
 
     def initialize_memory(self):
+        if next(self.parameters()).is_cuda:
+            return ([Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2]).cuda()) for i in range(4)],
+                    [Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2]).cuda()) for i in range(4)])
         return ([Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2])) for i in range(4)],
                 [Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2])) for i in range(4)])
 
