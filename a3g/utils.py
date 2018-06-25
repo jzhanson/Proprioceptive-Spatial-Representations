@@ -44,7 +44,7 @@ def ensure_shared_grads(model, shared_model, gpu=False):
 
 def weights_init(m):
     classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
+    if classname.find('Conv') != -1 and classname != 'ConvLSTM':
         weight_shape = list(m.weight.data.size())
         fan_in = np.prod(weight_shape[1:4])
         fan_out = np.prod(weight_shape[2:4]) * weight_shape[0]
