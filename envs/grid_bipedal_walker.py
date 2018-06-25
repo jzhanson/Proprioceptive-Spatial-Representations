@@ -583,65 +583,27 @@ class GridBipedalWalker(gym.Env):
                 big_square = self.viewer.draw_polygon(vertices)
                 big_square._color.vec4 = (0, 0, 0, 0.5)
 
-            for i in range(GRID_EDGE + 1):
-                vertical = [(zero_x + GRID_SQUARE_EDGE * i, zero_y), (zero_x + GRID_SQUARE_EDGE * i, zero_y + GRID_SCALE)]
-                horizontal = [(zero_x, zero_y + GRID_SQUARE_EDGE * i), (zero_x + GRID_SCALE, zero_y + GRID_SQUARE_EDGE * i)]
-                if show_grid:
+            if show_grid:
+                for i in range(GRID_EDGE + 1):
+                    vertical = [(zero_x + GRID_SQUARE_EDGE * i, zero_y), (zero_x + GRID_SQUARE_EDGE * i, zero_y + GRID_SCALE)]
+                    horizontal = [(zero_x, zero_y + GRID_SQUARE_EDGE * i), (zero_x + GRID_SCALE, zero_y + GRID_SQUARE_EDGE * i)]
                     self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
                     self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
 
-            for b in ([self.hull] + self.legs):
-                grid_x, grid_y = coord_to_grid(b.position.x, zero_x), coord_to_grid(b.position.y, zero_y)
-                lower_left_x, lower_left_y = zero_x + GRID_SQUARE_EDGE * grid_x, zero_y + GRID_SQUARE_EDGE * grid_y
-                vertices = [(lower_left_x, lower_left_y),
+            grid_channels_sum = np.sum(self._get_state(), axis=0)
+
+            for x in range(GRID_EDGE):
+                for y in range(GRID_EDGE):
+                    if grid_channels_sum[x, y] != 0:
+                        lower_left_x, lower_left_y = zero_x + GRID_SQUARE_EDGE * x, zero_y + GRID_SQUARE_EDGE * y
+                        vertices = [(lower_left_x, lower_left_y),
                             (lower_left_x + GRID_SQUARE_EDGE, lower_left_y),
                             (lower_left_x + GRID_SQUARE_EDGE, lower_left_y + GRID_SQUARE_EDGE),
                             (lower_left_x, lower_left_y + GRID_SQUARE_EDGE)]
-                filled_in_square = self.viewer.draw_polygon(vertices)
-                # Make half transparent
-                filled_in_square._color.vec4 = body_color
-                filled_in_squares.append((lower_left_x, lower_left_y))
-
-            # anchorA and anchorB overlap, render one to preserve transparency
-            for j in self.joints:
-                A_grid_x, A_grid_y = coord_to_grid(j.anchorA.x, zero_x), coord_to_grid(j.anchorA.y, zero_y)
-                A_lower_left_x, A_lower_left_y = zero_x + GRID_SQUARE_EDGE * A_grid_x, zero_y + GRID_SQUARE_EDGE * A_grid_y
-
-                A_vertices = [(A_lower_left_x, A_lower_left_y),
-                              (A_lower_left_x + GRID_SQUARE_EDGE, A_lower_left_y),
-                              (A_lower_left_x + GRID_SQUARE_EDGE, A_lower_left_y + GRID_SQUARE_EDGE),
-                              (A_lower_left_x, A_lower_left_y + GRID_SQUARE_EDGE)]
-                A_filled_in_square = self.viewer.draw_polygon(A_vertices)
-                A_filled_in_square._color.vec4 = joint_color
-                filled_in_squares.append((A_lower_left_x, A_lower_left_y))
-
-                '''
-                B_grid_x, B_grid_y = coord_to_grid(j.anchorB.x, zero_x), coord_to_grid(j.anchorB.y, zero_y)
-
-                B_lower_left_x, B_lower_left_y = zero_x + GRID_SQUARE_EDGE * B_grid_x, zero_y + GRID_SQUARE_EDGE * B_grid_y
-                B_vertices = [(B_lower_left_x, B_lower_left_y),
-                              (B_lower_left_x + GRID_SQUARE_EDGE, B_lower_left_y),
-                              (B_lower_left_x + GRID_SQUARE_EDGE, B_lower_left_y + GRID_SQUARE_EDGE),
-                              (B_lower_left_x, B_lower_left_y + GRID_SQUARE_EDGE)]
-
-                B_filled_in_square = self.viewer.draw_polygon(B_vertices)
-                B_filled_in_square._color.vec4 = (1, 1, 1, 0.5)
-                filled_in_squares.append((B_lower_left_x, B_lower_left_y))
-                '''
-
-            # Fill in all other squares with half-transparent black
-            '''
-            if fill_empty:
-                for x in range(GRID_EDGE):
-                    for y in range(GRID_EDGE):
-                        vertices = [(zero_x + GRID_SQUARE_EDGE * x, zero_y + GRID_SQUARE_EDGE * y),
-                                    (zero_x + GRID_SQUARE_EDGE * (x+1), zero_y + GRID_SQUARE_EDGE * y),
-                                    (zero_x + GRID_SQUARE_EDGE * (x+1), zero_y + GRID_SQUARE_EDGE * (y+1)),
-                                    (zero_x + GRID_SQUARE_EDGE * x, zero_y + GRID_SQUARE_EDGE * (y+1))]
-                        if vertices[0] not in filled_in_squares:
-                            filled_in_square = self.viewer.draw_polygon(vertices)
-                            filled_in_square._color.vec4 = (0, 0, 0, 0.5)
-            '''
+                        filled_in_square = self.viewer.draw_polygon(vertices)
+                        # Make half transparent
+                        filled_in_square._color.vec4 = body_color
+                        filled_in_squares.append((lower_left_x, lower_left_y))
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
