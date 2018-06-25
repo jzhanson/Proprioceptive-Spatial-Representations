@@ -439,9 +439,12 @@ class GridBipedalWalker(gym.Env):
         # These zeroes are different from the zeroes we use to calculate state after stepping the env
         zero_x, zero_y = self.get_zeros()
 
+        all_actions = []
         for j in range(len(self.joints)):
             # Alternately, we can average the two anchor positions instead of just using anchorA
             grid_x, grid_y = coord_to_grid(self.joints[j].anchorA.x, zero_x), coord_to_grid(self.joints[j].anchorB.y, zero_y)
+
+            all_actions.append(action[0,grid_x,grid_y])
             if control_speed:
                 if j in [0, 2]:
                     self.joints[j].motorSpeed = float(SPEED_HIP * np.clip(action[0, grid_x, grid_y], -1, 1))
@@ -497,7 +500,7 @@ class GridBipedalWalker(gym.Env):
             reward = shaping - self.prev_shaping
         self.prev_shaping = shaping
 
-        for a in np.reshape(action, (-1,)):
+        for a in all_actions:
             reward -= 0.00035 * MOTORS_TORQUE * np.clip(np.abs(a), 0, 1)
             # normalized to about -50.0 using heuristic, more optimal agent should spend less
 
