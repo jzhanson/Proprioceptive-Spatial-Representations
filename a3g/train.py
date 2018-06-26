@@ -42,6 +42,8 @@ def train(rank, args, shared_model, optimizer):
             player.state = player.state.cuda()
             player.model = player.model.cuda()
     player.model.train()
+
+    step_count = 0
     while True:
         if gpu_id >= 0:
             with torch.cuda.device(gpu_id):
@@ -114,3 +116,14 @@ def train(rank, args, shared_model, optimizer):
         ensure_shared_grads(player.model, shared_model, gpu=gpu_id >= 0)
         optimizer.step()
         player.clear_actions()
+
+        step_count += 1
+        if (step_count%1000) == 0:
+            print('Model weight/gradient L-inf norm:')
+            def _linf_norm(x):
+                return str(torch.max(torch.abs(x))[0].data.item())
+            for pname, param in player.model.named_parameters():
+                pgradnorm = str(0.)
+                if param.grad is not None:
+                    pgradnorm = _linf_norm(param.grad)
+                    print('\t'+pname+' '+_linf_norm(param)+'/'+pgradnorm)
