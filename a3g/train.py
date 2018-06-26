@@ -118,7 +118,7 @@ def train(rank, args, shared_model, optimizer):
         player.clear_actions()
 
         step_count += 1
-        if (step_count%1000) == 0:
+        if (step_count%100) == 0:
             print('Model weight/gradient L-inf norm:')
             def _linf_norm(x):
                 return str(torch.max(torch.abs(x))[0].data.item())
