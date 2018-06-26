@@ -64,7 +64,7 @@ TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
 # Use a fixed grid size, scale positions into [0, 1] with 1 being 4*(LEG_H)-2*LEG_DOWN
-GRID_EDGE = 32
+GRID_EDGE = 128
 # Currently, make the scaling very large so never need to resize grid
 GRID_SCALE = int(8*(LEG_H))
 GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
@@ -471,7 +471,7 @@ class GridBipedalWalker(gym.Env):
                 pos[1] - math.cos(1.5*i/10.0)*LIDAR_RANGE)
             self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
 
-        state = [
+        self._vec_state = [
             self.hull.angle,        # Normal angles up to 0.5 here, but sure more is possible.
             2.0*self.hull.angularVelocity/FPS,
             0.3*vel.x*(VIEWPORT_W/SCALE)/FPS,  # Normalized to get -1..1 range
@@ -487,8 +487,8 @@ class GridBipedalWalker(gym.Env):
             self.joints[3].speed / SPEED_KNEE,
             1.0 if self.legs[3].ground_contact else 0.0
             ]
-        state += [l.fraction for l in self.lidar]
-        assert len(state)==24
+        self._vec_state += [l.fraction for l in self.lidar]
+        assert len(self._vec_state)==24
 
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
@@ -624,7 +624,8 @@ if __name__=="__main__":
     env.reset()
     steps = 0
     total_reward = 0
-    a = np.zeros((1, GRID_EDGE, GRID_EDGE))
+    #a = np.zeros((1, GRID_EDGE, GRID_EDGE))
+    a = np.array([0.0]*4)
     STAY_ON_ONE_LEG, PUT_OTHER_DOWN, PUSH_OFF = 1,2,3
     SPEED = 0.29  # Will fall forward on higher speed
     state = STAY_ON_ONE_LEG
@@ -634,10 +635,17 @@ if __name__=="__main__":
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
         env.render()
-        s, r, done, info = env.step(a)
-        if done:
-            env.reset()
-        continue
+        
+        # Build the grid action
+        agrid = np.zeros((1, GRID_EDGE, GRID_EDGE))
+
+        zero_x, zero_y = env.get_zeros()
+        for j in range(len(env.joints)):
+            grid_x, grid_y = coord_to_grid(env.joints[j].anchorA.x, zero_x), coord_to_grid(env.joints[j].anchorB.y, zero_y)
+            agrid[0, grid_x, grid_y] = a[j]
+
+        _, r, done, info = env.step(agrid)
+        s = env._vec_state
         total_reward += r
         if steps % 20 == 0 or done:
             print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
