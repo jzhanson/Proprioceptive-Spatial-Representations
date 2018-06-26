@@ -63,15 +63,6 @@ TERRAIN_GRASS    = 10    # low long are grass spots, in steps
 TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
-# Use a fixed grid size, scale positions into [0, 1] with 1 being 4*(LEG_H)-2*LEG_DOWN
-GRID_EDGE = 32
-# Currently, make the scaling very large so never need to resize grid
-GRID_SCALE = int(8*(LEG_H)*0.6)
-GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
-
-def coord_to_grid(coord, zero):
-    return round((coord - zero) / GRID_SCALE * GRID_EDGE)
-
 HULL_FD = fixtureDef(
                 shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
                 density=5.0,
@@ -100,21 +91,16 @@ class ContactDetector(contactListener):
         self.env = env
     def BeginContact(self, contact):
         if self.env.hull==contact.fixtureA.body or self.env.hull==contact.fixtureB.body:
-            self.env.hull.ground_contact = True
             self.env.game_over = True
-        # Want to be more general and check for ground_contact with both upper and lower leg
-        for leg in self.env.legs:
+        for leg in [self.env.legs[1], self.env.legs[3]]:
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = True
     def EndContact(self, contact):
-        if self.env.hull==contact.fixtureA.body or self.env.hull==contact.fixtureB.body:
-            # Should never get here because episode ends when hull contacts ground
-            self.env.hull.ground_contact = False
-        for leg in self.env.legs:
+        for leg in [self.env.legs[1], self.env.legs[3]]:
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = False
 
-class GridBipedalWalker(gym.Env):
+class BipedalWalker(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : FPS
@@ -150,11 +136,9 @@ class GridBipedalWalker(gym.Env):
 
         self.reset()
 
-        self.action_space = spaces.Box(low=-1, high=1, shape=(4, GRID_EDGE, GRID_EDGE))
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(9, GRID_EDGE, GRID_EDGE))
-
-    def get_zeros(self):
-        return self.hull.position.x - GRID_SCALE / 2, self.hull.position.y - GRID_SCALE / 2
+        high = np.array([np.inf]*24)
+        self.action_space = spaces.Box(np.array([-1,-1,-1,-1]), np.array([+1,+1,+1,+1]))
+        self.observation_space = spaces.Box(-high, high)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -325,7 +309,6 @@ class GridBipedalWalker(gym.Env):
         self.hull.color1 = (0.5,0.4,0.9)
         self.hull.color2 = (0.3,0.3,0.5)
         self.hull.ApplyForceToCenter((self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM), 0), True)
-        self.hull.ground_contact = False
 
         self.legs = []
         self.joints = []
@@ -349,7 +332,6 @@ class GridBipedalWalker(gym.Env):
                 lowerAngle = -0.8,
                 upperAngle = 1.1,
                 )
-            leg.ground_contact = False
             self.legs.append(leg)
             self.joints.append(self.world.CreateJoint(rjd))
 
@@ -387,63 +369,10 @@ class GridBipedalWalker(gym.Env):
                 return 0
         self.lidar = [LidarCallback() for _ in range(10)]
 
-        return self.step(np.zeros((4, GRID_EDGE, GRID_EDGE)))[0]
+        return self.step(np.array([0,0,0,0]))[0]
 
-    def _get_state(self):
-        # Project raw state into grid, center grid at hull
-        grid_state = np.zeros((9, GRID_EDGE, GRID_EDGE))
-        zero_x, zero_y = self.get_zeros()
-
-        # 1. For every body b in body config, get position (bx, by) and
-        #   - Write angle of b to (0, bx, by)
-        #   - Write angvel of b to (1,bx,by) in G
-        #   - Write velx of b to (2,bx,by) in G
-        #   - Write vely of b to (3,bx,by) in G
-        #   - Write ground_contact of b to (4,bx,by) in G
-        for b in ([self.hull] + self.legs):
-            # Round to nearest integer coordinates here
-            grid_x, grid_y = coord_to_grid(b.position.x, zero_x), coord_to_grid(b.position.y, zero_y)
-            # Not sure if these scalings apply for hull only or hull and legs
-            grid_state[0, grid_x, grid_y] = b.angle
-            grid_state[1, grid_x, grid_y] = 2.0*b.angularVelocity/FPS
-            grid_state[2, grid_x, grid_y] = 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS
-            grid_state[3, grid_x, grid_y] = 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS
-            grid_state[4, grid_x, grid_y] = 1.0 if b.ground_contact else 0
-
-        # 2. For every joint j in body configuration:
-        #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
-        #   - Write angle of j to (5,Ajx,Ajy),(7,Bjx,Bjy) in G
-        #   - Write speed of j to (6,Ajx,Ajy),(8,Bjx,Bjy) in G
-        for j_index in range(len(self.joints)):
-            j = self.joints[j_index]
-
-            # For each anchor position, write joint features
-            A_grid_x, A_grid_y = coord_to_grid(j.anchorA.x, zero_x), coord_to_grid(j.anchorA.y, zero_y)
-            B_grid_x, B_grid_y = coord_to_grid(j.anchorB.x, zero_x), coord_to_grid(j.anchorB.y, zero_y)
-
-            grid_state[5, A_grid_x, A_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
-            grid_state[6, A_grid_x, A_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
-            grid_state[7, B_grid_x, B_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
-            grid_state[8, B_grid_x, B_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
-
-        return grid_state
-
-    def _extract_grid_action(self, actiongrid):
-        action = np.array([0.,0.,0.,0])
-
-        zero_x, zero_y = self.get_zeros()
-        for j in range(len(self.joints)):
-            # Alternatively, we can average the two anchor positions instead of just using anchorA
-            grid_x, grid_y = coord_to_grid(self.joints[j].anchorA.x, zero_x), coord_to_grid(self.joints[j].anchorB.y, zero_y)
-            action[j] = actiongrid[j,grid_x,grid_y]
-        return action
-
-    def step(self, actiongrid):
+    def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
-        
-        # Extract action from grid
-        action = self._extract_grid_action(actiongrid)
-        
         control_speed = False  # Should be easier as well
         if control_speed:
             self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
@@ -473,7 +402,7 @@ class GridBipedalWalker(gym.Env):
                 pos[1] - math.cos(1.5*i/10.0)*LIDAR_RANGE)
             self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
 
-        self._vec_state = [
+        state = [
             self.hull.angle,        # Normal angles up to 0.5 here, but sure more is possible.
             2.0*self.hull.angularVelocity/FPS,
             0.3*vel.x*(VIEWPORT_W/SCALE)/FPS,  # Normalized to get -1..1 range
@@ -489,13 +418,13 @@ class GridBipedalWalker(gym.Env):
             self.joints[3].speed / SPEED_KNEE,
             1.0 if self.legs[3].ground_contact else 0.0
             ]
-        self._vec_state += [l.fraction for l in self.lidar]
-        assert len(self._vec_state)==24
+        state += [l.fraction for l in self.lidar]
+        assert len(state)==24
 
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
         shaping  = 130*pos[0]/SCALE   # moving forward is a way to receive reward (normalized to get 300 on completion)
-        shaping -= 5.0*abs(self.hull.angle)  # keep head straight, other than that and falling, any behavior is unpunished
+        shaping -= 5.0*abs(state[0])  # keep head straight, other than that and falling, any behavior is unpunished
 
         reward = 0
         if self.prev_shaping is not None:
@@ -512,8 +441,7 @@ class GridBipedalWalker(gym.Env):
             done   = True
         if pos[0] > (TERRAIN_LENGTH-TERRAIN_GRASS)*TERRAIN_STEP:
             done   = True
-
-        return self._get_state(), reward, done, {}
+        return np.array(state), reward, done, {}
 
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering
@@ -563,53 +491,6 @@ class GridBipedalWalker(gym.Env):
         self.viewer.draw_polygon(f, color=(0.9,0.2,0) )
         self.viewer.draw_polyline(f + [f[0]], color=(0,0,0), linewidth=2 )
 
-        # Draw state/action grid around hull and highlight occupied squares
-        draw_grid = True
-        fill_empty = True
-        show_grid = True
-        colorize = False
-
-        if draw_grid:
-            zero_x, zero_y = self.get_zeros()
-            filled_in_squares = []
-
-            if colorize:
-                body_color = (0, 1, 0, 0.5)
-                joint_color = (1, 0, 0, 0.5)
-            else:
-                body_color = (1, 1, 1, 0.5)
-                joint_color = (1, 1, 1, 0.5)
-
-            if fill_empty:
-                vertices = [(zero_x, zero_y),
-                            (zero_x + GRID_SCALE, zero_y),
-                            (zero_x + GRID_SCALE, zero_y + GRID_SCALE),
-                            (zero_x, zero_y + GRID_SCALE)]
-                big_square = self.viewer.draw_polygon(vertices)
-                big_square._color.vec4 = (0, 0, 0, 0.5)
-
-            if show_grid:
-                for i in range(GRID_EDGE + 1):
-                    vertical = [(zero_x + GRID_SQUARE_EDGE * i, zero_y), (zero_x + GRID_SQUARE_EDGE * i, zero_y + GRID_SCALE)]
-                    horizontal = [(zero_x, zero_y + GRID_SQUARE_EDGE * i), (zero_x + GRID_SCALE, zero_y + GRID_SQUARE_EDGE * i)]
-                    self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
-                    self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
-
-            grid_channels_sum = np.sum(self._get_state(), axis=0)
-
-            for x in range(GRID_EDGE):
-                for y in range(GRID_EDGE):
-                    if grid_channels_sum[x, y] != 0:
-                        lower_left_x, lower_left_y = zero_x + GRID_SQUARE_EDGE * x, zero_y + GRID_SQUARE_EDGE * y
-                        vertices = [(lower_left_x, lower_left_y),
-                            (lower_left_x + GRID_SQUARE_EDGE, lower_left_y),
-                            (lower_left_x + GRID_SQUARE_EDGE, lower_left_y + GRID_SQUARE_EDGE),
-                            (lower_left_x, lower_left_y + GRID_SQUARE_EDGE)]
-                        filled_in_square = self.viewer.draw_polygon(vertices)
-                        # Make half transparent
-                        filled_in_square._color.vec4 = body_color
-                        filled_in_squares.append((lower_left_x, lower_left_y))
-
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
     def close(self):
@@ -617,16 +498,16 @@ class GridBipedalWalker(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-class GridBipedalWalkerHardcore(GridBipedalWalker):
+class BipedalWalkerHardcore(BipedalWalker):
     hardcore = True
 
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    env = GridBipedalWalker()
+    env = BipedalWalker()
     env.reset()
     steps = 0
     total_reward = 0
-    a = np.array([0.0]*4)
+    a = np.array([0.0, 0.0, 0.0, 0.0])
     STAY_ON_ONE_LEG, PUT_OTHER_DOWN, PUSH_OFF = 1,2,3
     SPEED = 0.29  # Will fall forward on higher speed
     state = STAY_ON_ONE_LEG
@@ -635,18 +516,7 @@ if __name__=="__main__":
     SUPPORT_KNEE_ANGLE = +0.1
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
-        env.render()
-
-        # Build the grid action
-        agrid = np.zeros((4, GRID_EDGE, GRID_EDGE))
-
-        zero_x, zero_y = env.get_zeros()
-        for j in range(len(env.joints)):
-            grid_x, grid_y = coord_to_grid(env.joints[j].anchorA.x, zero_x), coord_to_grid(env.joints[j].anchorB.y, zero_y)
-            agrid[j, grid_x, grid_y] = a[j]
-
-        _, r, done, info = env.step(agrid)
-        s = env._vec_state
+        s, r, done, info = env.step(a)
         total_reward += r
         if steps % 20 == 0 or done:
             print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
