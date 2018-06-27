@@ -64,7 +64,7 @@ TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
 # Use a fixed grid size, scale positions into [0, 1] with 1 being 4*(LEG_H)-2*LEG_DOWN
-GRID_EDGE = 4 #32
+GRID_EDGE = 32
 # Currently, make the scaling very large so never need to resize grid
 GRID_SCALE = int(8*(LEG_H)*0.6)
 GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
