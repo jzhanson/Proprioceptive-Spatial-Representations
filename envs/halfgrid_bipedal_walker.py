@@ -64,7 +64,7 @@ TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
 # Use a fixed grid size, scale positions into [0, 1] with 1 being 4*(LEG_H)-2*LEG_DOWN
-GRID_EDGE = 32
+GRID_EDGE = 4 #32
 # Currently, make the scaling very large so never need to resize grid
 GRID_SCALE = int(8*(LEG_H)*0.6)
 GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
@@ -114,7 +114,7 @@ class ContactDetector(contactListener):
             if leg in [contact.fixtureA.body, contact.fixtureB.body]:
                 leg.ground_contact = False
 
-class GridBipedalWalker(gym.Env):
+class HalfGridBipedalWalker(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : FPS
@@ -440,6 +440,9 @@ class GridBipedalWalker(gym.Env):
 
     def step(self, actiongrid):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
+
+        # Reshape the action
+        actiongrid = np.reshape(actiongrid, (4, GRID_EDGE, GRID_EDGE))
         
         # Extract action from grid
         action = self._extract_grid_action(actiongrid)
@@ -617,12 +620,12 @@ class GridBipedalWalker(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-class GridBipedalWalkerHardcore(GridBipedalWalker):
+class HalfGridBipedalWalkerHardcore(HalfGridBipedalWalker):
     hardcore = True
 
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    env = GridBipedalWalker()
+    env = HalfGridBipedalWalker()
     env.reset()
     steps = 0
     total_reward = 0

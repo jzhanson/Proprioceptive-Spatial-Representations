@@ -7,6 +7,7 @@ from gym import spaces
 from envs.humanoid_walker import HumanoidWalker, HumanoidWalkerHardcore
 from envs.json_walker import JSONWalker, JSONWalkerHardcore
 from envs.grid_bipedal_walker import GridBipedalWalker, GridBipedalWalkerHardcore
+from envs.halfgrid_bipedal_walker import HalfGridBipedalWalker, HalfGridBipedalWalkerHardcore
 
 def create_env(env_id, args):
     if env_id == 'HumanoidWalker-v0':
@@ -21,6 +22,10 @@ def create_env(env_id, args):
         env = GridBipedalWalker()
     elif env_id == 'GridBipedalWalkerHardcore-v0':
         env = GridBipedalWalkerHardcore()
+    elif env_id == 'HalfGridBipedalWalker-v0':
+        env = HalfGridBipedalWalker()
+    elif env_id == 'HalfGridBipedalWalkerHardcore-v0':
+        env = HalfGridBipedalWalkerHardcore()
     else:
         env = gym.make(env_id)
     env = frame_stack(env, args)
