@@ -69,7 +69,7 @@ class ActorCritic(torch.nn.Module):
         
         critic_out = self.critic_linear(x).mean(-1).mean(-1)
         actor_out = F.softsign(self.actor_linear(x)).view(batch_size, self.output_size)
-        actor_out2 = self.actor_linear2(x).view(batch_size, self.output_size)*0.
+        actor_out2 = self.actor_linear2(x).view(batch_size, self.output_size)
 
         return critic_out, actor_out, actor_out2, None
 
