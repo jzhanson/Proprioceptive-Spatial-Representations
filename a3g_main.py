@@ -91,6 +91,11 @@ parser.add_argument(
     metavar='LMD',
     help='folder to load trained models from')
 parser.add_argument(
+    '--save-prefix',
+    default='',
+    'SP',
+    help='prefix to add to log and model directory')
+parser.add_argument(
     '--save-model-dir',
     default='trained_models/',
     metavar='SMD',
