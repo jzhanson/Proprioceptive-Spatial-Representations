@@ -14,6 +14,10 @@ import time
 import logging
 import gym
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 
 def test(args, shared_model):
     ptitle('Test Agent')
@@ -49,9 +53,13 @@ def test(args, shared_model):
             player.model = player.model.cuda()
             player.state = player.state.cuda()
     player.model.eval()
+
+    episode_count = 0
+    all_scores = []
     max_score = 0
     while True:
         if player.done:
+            episode_count += 1
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
                     player.model.load_state_dict(shared_model.state_dict())
@@ -71,6 +79,16 @@ def test(args, shared_model):
                     time.strftime("%Hh %Mm %Ss",
                                   time.gmtime(time.time() - start_time)),
                     reward_sum, player.eps_len, reward_mean))
+
+            # Plot scores every 5 episodes
+            all_scores.append(reward_sum)
+            if (episode_count%5 == 0):
+                plt.clf()
+                plt.plot(range(len(all_scores)), all_scores)
+                plt.title('Test Episode Returns')
+                plt.xlabel('Test Episode')
+                plt.ylabel('Return')
+                plt.savefig('{0}{1}{2}.png'.format(args.log_dir, args.save_prefix, args.env))
 
             if args.save_max and reward_sum >= max_score:
                 max_score = reward_sum
