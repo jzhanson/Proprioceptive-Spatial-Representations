@@ -51,10 +51,10 @@ class ActorCritic(torch.nn.Module):
         self.train()
 
     def _convforward(self, x):
-        x = F.leaky_relu(self.conv1(x), 0.1)
-        x = F.leaky_relu(self.conv2(x), 0.1)
-        x = F.leaky_relu(self.conv3(x), 0.1)
-        x = F.leaky_relu(self.conv4(x), 0.1)
+        x = F.leaky_relu(self.conv1(x), 0.1) 
+        x = F.leaky_relu(self.conv2(x), 0.1) + x
+        x = F.leaky_relu(self.conv3(x), 0.1) + x
+        x = F.leaky_relu(self.conv4(x), 0.1) + x
         return x
 
     def forward(self, inputs):
@@ -70,6 +70,7 @@ class ActorCritic(torch.nn.Module):
         critic_out = self.critic_linear(x).mean(-1).mean(-1)
         actor_out = F.softsign(self.actor_linear(x)).view(batch_size, self.output_size)
         actor_out2 = self.actor_linear2(x).view(batch_size, self.output_size)
+
 
         return critic_out, actor_out, actor_out2, None
 
