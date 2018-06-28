@@ -1,4 +1,5 @@
 import sys, math
+from collections import deque
 import numpy as np
 
 import Box2D
@@ -68,6 +69,10 @@ GRID_EDGE = 32
 # Currently, make the scaling very large so never need to resize grid
 GRID_SCALE = int(8*(LEG_H)*0.6)
 GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
+
+# Number of previous grids to sum when outputting grid state, weight to multiply previous frames by
+NUM_BLUR = 10
+BLUR_DISCOUNT = 0.9
 
 def coord_to_grid(coord, zero):
     return round((coord - zero) / GRID_SCALE * GRID_EDGE)
@@ -148,6 +153,9 @@ class GridBipedalWalker(gym.Env):
                     categoryBits=0x0001,
                 )
 
+        # HACK(josh): Fill self.last_grids with zeros so reset which relies on step
+        # which relies on _get_state will have a deque to begin with. Could repeat first frame
+        self.last_grids = deque([np.zeros((9, GRID_EDGE, GRID_EDGE)) for i in range(NUM_BLUR)])
         self.reset()
 
         self.action_space = spaces.Box(low=-1, high=1, shape=(1, GRID_EDGE, GRID_EDGE))
@@ -425,8 +433,12 @@ class GridBipedalWalker(gym.Env):
             grid_state[6, A_grid_x, A_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
             grid_state[7, B_grid_x, B_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
             grid_state[8, B_grid_x, B_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
+        self.last_grids.append(grid_state)
+        blurred = np.sum(self.last_grids, axis=0)
+        self.last_grids.popleft()
+        self.last_grids = deque(map(lambda arr: arr * BLUR_DISCOUNT, self.last_grids))
 
-        return grid_state
+        return blurred
 
     def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
@@ -635,7 +647,7 @@ if __name__=="__main__":
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
         env.render()
-        
+
         # Build the grid action
         agrid = np.zeros((1, GRID_EDGE, GRID_EDGE))
 

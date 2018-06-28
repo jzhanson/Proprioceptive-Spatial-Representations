@@ -1,4 +1,5 @@
 import sys, math
+from collections import deque
 import numpy as np
 
 import Box2D
@@ -68,6 +69,10 @@ GRID_EDGE = 32
 # Currently, make the scaling very large so never need to resize grid
 GRID_SCALE = int(8*(LEG_H)*0.6)
 GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
+
+# Number of previous grids to sum when outputting grid state, weight to multiply previous frames by
+NUM_BLUR = 10
+BLUR_DISCOUNT = 0.9
 
 def coord_to_grid(coord, zero):
     return round((coord - zero) / GRID_SCALE * GRID_EDGE)
@@ -148,6 +153,9 @@ class HalfGridBipedalWalker(gym.Env):
                     categoryBits=0x0001,
                 )
 
+        # HACK(josh): Fill self.last_grids with zeros so reset which relies on step
+        # which relies on _get_state will have a deque to begin with. Could repeat first frame
+        self.last_grids = deque([np.zeros((9, GRID_EDGE, GRID_EDGE)) for i in range(NUM_BLUR)])
         self.reset()
 
         self.action_space = spaces.Box(low=-1, high=1, shape=(4, GRID_EDGE, GRID_EDGE))
@@ -426,7 +434,12 @@ class HalfGridBipedalWalker(gym.Env):
             grid_state[7, B_grid_x, B_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
             grid_state[8, B_grid_x, B_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
 
-        return grid_state
+        self.last_grids.append(grid_state)
+        blurred = np.sum(self.last_grids, axis=0)
+        self.last_grids.popleft()
+        self.last_grids = deque(map(lambda arr: arr * BLUR_DISCOUNT, self.last_grids))
+
+        return blurred
 
     def _extract_grid_action(self, actiongrid):
         action = np.array([0.,0.,0.,0])
@@ -443,10 +456,10 @@ class HalfGridBipedalWalker(gym.Env):
 
         # Reshape the action
         actiongrid = np.reshape(actiongrid, (4, GRID_EDGE, GRID_EDGE))
-        
+
         # Extract action from grid
         action = self._extract_grid_action(actiongrid)
-        
+
         control_speed = False  # Should be easier as well
         if control_speed:
             self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
