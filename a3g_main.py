@@ -93,7 +93,7 @@ parser.add_argument(
 parser.add_argument(
     '--save-prefix',
     default='',
-    'SP',
+    metavar='SP',
     help='prefix to add to log and model directory')
 parser.add_argument(
     '--save-model-dir',
