@@ -28,6 +28,9 @@ def create_env(env_id, args):
         env = HalfGridBipedalWalkerHardcore()
     else:
         env = gym.make(env_id)
+
+    # Note: apply motion_blur BEFORE frame_stack if using both
+    env = motion_blur(env, args)
     env = frame_stack(env, args)
     return env
 
@@ -58,6 +61,34 @@ class frame_stack(gym.Wrapper):
     def observation(self):
         assert len(self.frames) == self.stack_frames
         return np.stack(self.frames, axis=0)
+
+class motion_blur(gym.Wrapper):
+    def __init__(self, env, args):
+        super(motion_blur, self).__init__(env)
+        self.num_blur = args.blur_frames
+        self.blur_discount = args.blur_discount
+        self.blur_frames = deque([], maxlen=self.num_blur)
+
+    def reset(self):
+        ob = self.env.reset()
+        ob = np.float32(ob)
+        # Need to normalize?
+        for i in range(self.num_blur):
+            self.blur_frames.appendleft(ob * (self.blur_discount ** i))
+        return self.observation()
+
+    def step(self, action):
+        ob, rew, done, info = self.env.step(action)
+        ob = np.float32(ob)
+        self.blur_frames.append(ob)
+        blurred = self.observation()
+        # TODO(josh): recreating a deque every step is not very efficient, can consider using slicing + appending a np.array
+        self.blur_frames = deque(map(lambda frame: frame * self.blur_discount, self.blur_frames), maxlen=self.num_blur)
+        return blurred, rew, done, info
+
+    def observation(self):
+        assert len(self.blur_frames) == self.num_blur
+        return np.sum(self.blur_frames, axis=0)
 
 
 class MaxMinFilter():

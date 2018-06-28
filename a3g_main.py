@@ -112,6 +112,18 @@ parser.add_argument(
     metavar='SF',
     help='Choose number of observations to stack')
 parser.add_argument(
+    '--blur-frames',
+    type=int,
+    default=1,
+    metavar='BF',
+    help='Choose number of frames to blur')
+parser.add_argument(
+    '--blur-discount',
+    type=float,
+    default=1.0,
+    metavar='BD',
+    help='Choose discount factor for motion blur')
+parser.add_argument(
     '--gpu-ids',
     type=int,
     default=-1,
@@ -139,7 +151,7 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
         mp.set_start_method('spawn')
     env = create_env(args.env, args)
-    
+
     # Create model
     AC = importlib.import_module(args.model_name)
     shared_model = AC.ActorCritic(
