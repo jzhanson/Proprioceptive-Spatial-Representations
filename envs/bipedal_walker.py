@@ -441,7 +441,33 @@ class BipedalWalker(gym.Env):
             done   = True
         if pos[0] > (TERRAIN_LENGTH-TERRAIN_GRASS)*TERRAIN_STEP:
             done   = True
-        return np.array(state), reward, done, {}
+
+        # Construct the extras dict so that the grid state space and action space can be built
+        extras = {}
+        extras['zero_x'] = zero_x
+        extras['zero_y'] = zero_y
+        extras['bodies'] = []
+        for b in ([self.hull] + self.legs):
+            extras['bodies'].append((
+                b.position.x, b.position.y, b.angle, 
+                2.0*b.angularVelocity/FPS, 
+                0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS,
+                0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
+                1.0 if b.ground_contact else 0
+            ))
+        extras['joints'] = []
+        for j_index in range(len(self.joints)):
+            j = self.joints[j_index]
+            even = j_index % 2 == 0
+            extras['joints'].append((
+                j.anchorA.x, j.anchorA.y, j.anchorB.x, j.anchorB.y,
+                j.angle + (0.0 if even else 1.0),
+                j.speed / (SPEED_HIP if even else SPEED_KNEE)
+                j.angle + (0.0 if even else 1.0)
+                j.speed / (SPEED_HIP if even else SPEED_KNEE)
+            ))
+
+        return np.array(state), reward, done, extras
 
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering
