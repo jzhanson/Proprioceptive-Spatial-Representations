@@ -129,6 +129,12 @@ parser.add_argument(
     metavar='BD',
     help='Choose discount factor for motion blur')
 parser.add_argument(
+    '--grid-edge',
+    type=int,
+    default=32,
+    metavar='GE',
+    help='Number of squares on one edge of grid state')
+parser.add_argument(
     '--gpu-ids',
     type=int,
     default=-1,

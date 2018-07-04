@@ -63,15 +63,6 @@ TERRAIN_GRASS    = 10    # low long are grass spots, in steps
 TERRAIN_STARTPAD = 20    # in steps
 FRICTION = 2.5
 
-# Use a fixed grid size, scale positions into [0, 1] with 1 being 4*(LEG_H)-2*LEG_DOWN
-GRID_EDGE = 32
-# Currently, make the scaling very large so never need to resize grid
-GRID_SCALE = int(8*(LEG_H)*0.6)
-GRID_SQUARE_EDGE = GRID_SCALE / GRID_EDGE
-
-def coord_to_grid(coord, zero):
-    return round((coord - zero) / GRID_SCALE * GRID_EDGE)
-
 HULL_FD = fixtureDef(
                 shape=polygonShape(vertices=[ (x/SCALE,y/SCALE) for x,y in HULL_POLY ]),
                 density=5.0,
@@ -123,6 +114,8 @@ class GridBipedalWalker(gym.Env):
     hardcore = False
 
     def __init__(self):
+        self.set_grid_params()
+
         self.seed()
         self.viewer = None
 
@@ -150,11 +143,19 @@ class GridBipedalWalker(gym.Env):
 
         self.reset()
 
-        self.action_space = spaces.Box(low=-1, high=1, shape=(1, GRID_EDGE, GRID_EDGE))
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(9, GRID_EDGE, GRID_EDGE))
+    def set_grid_params(self, grid_edge=32, grid_scale=8*(LEG_H)*0.6):
+        self.grid_edge = grid_edge
+        self.grid_scale = int(grid_scale)
+        self.grid_square_edge= self.grid_scale / self.grid_edge
+
+        self.action_space = spaces.Box(low=-1, high=1, shape=(1, self.grid_edge, self.grid_edge))
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(9, self.grid_edge, self.grid_edge))
+
+    def coord_to_grid(self, coord, zero):
+        return round((coord - zero) / self.grid_scale * self.grid_edge)
 
     def get_zeros(self):
-        return self.hull.position.x - GRID_SCALE / 2, self.hull.position.y - GRID_SCALE / 2
+        return self.hull.position.x - self.grid_scale / 2, self.hull.position.y - self.grid_scale / 2
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -387,11 +388,11 @@ class GridBipedalWalker(gym.Env):
                 return 0
         self.lidar = [LidarCallback() for _ in range(10)]
 
-        return self.step(np.zeros((1, GRID_EDGE, GRID_EDGE)))[0]
+        return self.step(np.zeros((1, self.grid_edge, self.grid_edge)))[0]
 
     def _get_state(self):
         # Project raw state into grid, center grid at hull
-        grid_state = np.zeros((9, GRID_EDGE, GRID_EDGE))
+        grid_state = np.zeros((9, self.grid_edge, self.grid_edge))
         zero_x, zero_y = self.get_zeros()
 
         # 1. For every body b in body config, get position (bx, by) and
@@ -402,7 +403,7 @@ class GridBipedalWalker(gym.Env):
         #   - Write ground_contact of b to (4,bx,by) in G
         for b in ([self.hull] + self.legs):
             # Round to nearest integer coordinates here
-            grid_x, grid_y = coord_to_grid(b.position.x, zero_x), coord_to_grid(b.position.y, zero_y)
+            grid_x, grid_y = self.coord_to_grid(b.position.x, zero_x), self.coord_to_grid(b.position.y, zero_y)
             # Not sure if these scalings apply for hull only or hull and legs
             grid_state[0, grid_x, grid_y] = b.angle
             grid_state[1, grid_x, grid_y] = 2.0*b.angularVelocity/FPS
@@ -418,8 +419,8 @@ class GridBipedalWalker(gym.Env):
             j = self.joints[j_index]
 
             # For each anchor position, write joint features
-            A_grid_x, A_grid_y = coord_to_grid(j.anchorA.x, zero_x), coord_to_grid(j.anchorA.y, zero_y)
-            B_grid_x, B_grid_y = coord_to_grid(j.anchorB.x, zero_x), coord_to_grid(j.anchorB.y, zero_y)
+            A_grid_x, A_grid_y = self.coord_to_grid(j.anchorA.x, zero_x), self.coord_to_grid(j.anchorA.y, zero_y)
+            B_grid_x, B_grid_y = self.coord_to_grid(j.anchorB.x, zero_x), self.coord_to_grid(j.anchorB.y, zero_y)
 
             grid_state[5, A_grid_x, A_grid_y] = j.angle + (0.0 if j_index % 2 == 0 else 1.0)
             grid_state[6, A_grid_x, A_grid_y] = j.speed / (SPEED_HIP if j_index % 2 == 0 else SPEED_KNEE)
@@ -433,7 +434,7 @@ class GridBipedalWalker(gym.Env):
         control_speed = False  # Should be easier as well
 
         # Reshape the action
-        action = np.reshape(action, (1, GRID_EDGE, GRID_EDGE))
+        action = np.reshape(action, (1, self.grid_edge, self.grid_edge))
 
         # Get joint torques from input grid
         # These zeroes are different from the zeroes we use to calculate state after stepping the env
@@ -442,7 +443,7 @@ class GridBipedalWalker(gym.Env):
         all_actions = []
         for j in range(len(self.joints)):
             # Alternately, we can average the two anchor positions instead of just using anchorA
-            grid_x, grid_y = coord_to_grid(self.joints[j].anchorA.x, zero_x), coord_to_grid(self.joints[j].anchorB.y, zero_y)
+            grid_x, grid_y = self.coord_to_grid(self.joints[j].anchorA.x, zero_x), self.coord_to_grid(self.joints[j].anchorB.y, zero_y)
 
             all_actions.append(action[0,grid_x,grid_y])
             if control_speed:
@@ -580,29 +581,29 @@ class GridBipedalWalker(gym.Env):
 
             if fill_empty:
                 vertices = [(zero_x, zero_y),
-                            (zero_x + GRID_SCALE, zero_y),
-                            (zero_x + GRID_SCALE, zero_y + GRID_SCALE),
-                            (zero_x, zero_y + GRID_SCALE)]
+                            (zero_x + self.grid_scale, zero_y),
+                            (zero_x + self.grid_scale, zero_y + self.grid_scale),
+                            (zero_x, zero_y + self.grid_scale)]
                 big_square = self.viewer.draw_polygon(vertices)
                 big_square._color.vec4 = (0, 0, 0, 0.5)
 
             if show_grid:
-                for i in range(GRID_EDGE + 1):
-                    vertical = [(zero_x + GRID_SQUARE_EDGE * i, zero_y), (zero_x + GRID_SQUARE_EDGE * i, zero_y + GRID_SCALE)]
-                    horizontal = [(zero_x, zero_y + GRID_SQUARE_EDGE * i), (zero_x + GRID_SCALE, zero_y + GRID_SQUARE_EDGE * i)]
+                for i in range(self.grid_edge + 1):
+                    vertical = [(zero_x + self.grid_square_edge * i, zero_y), (zero_x + self.grid_square_edge * i, zero_y + self.grid_scale)]
+                    horizontal = [(zero_x, zero_y + self.grid_square_edge * i), (zero_x + self.grid_scale, zero_y + self.grid_square_edge * i)]
                     self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
                     self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
 
             grid_channels_sum = np.sum(self._get_state(), axis=0)
 
-            for x in range(GRID_EDGE):
-                for y in range(GRID_EDGE):
+            for x in range(self.grid_edge):
+                for y in range(self.grid_edge):
                     if grid_channels_sum[x, y] != 0:
-                        lower_left_x, lower_left_y = zero_x + GRID_SQUARE_EDGE * x, zero_y + GRID_SQUARE_EDGE * y
+                        lower_left_x, lower_left_y = zero_x + self.grid_square_edge * x, zero_y + self.grid_square_edge * y
                         vertices = [(lower_left_x, lower_left_y),
-                            (lower_left_x + GRID_SQUARE_EDGE, lower_left_y),
-                            (lower_left_x + GRID_SQUARE_EDGE, lower_left_y + GRID_SQUARE_EDGE),
-                            (lower_left_x, lower_left_y + GRID_SQUARE_EDGE)]
+                            (lower_left_x + self.grid_square_edge, lower_left_y),
+                            (lower_left_x + self.grid_square_edge, lower_left_y + self.grid_square_edge),
+                            (lower_left_x, lower_left_y + self.grid_square_edge)]
                         filled_in_square = self.viewer.draw_polygon(vertices)
                         # Make half transparent
                         filled_in_square._color.vec4 = body_color
@@ -624,7 +625,7 @@ if __name__=="__main__":
     env.reset()
     steps = 0
     total_reward = 0
-    #a = np.zeros((1, GRID_EDGE, GRID_EDGE))
+    #a = np.zeros((1, env.grid_edge, env.grid_edge))
     a = np.array([0.0]*4)
     STAY_ON_ONE_LEG, PUT_OTHER_DOWN, PUSH_OFF = 1,2,3
     SPEED = 0.29  # Will fall forward on higher speed
@@ -637,11 +638,11 @@ if __name__=="__main__":
         env.render()
 
         # Build the grid action
-        agrid = np.zeros((1, GRID_EDGE, GRID_EDGE))
+        agrid = np.zeros((1, env.grid_edge, env.grid_edge))
 
         zero_x, zero_y = env.get_zeros()
         for j in range(len(env.joints)):
-            grid_x, grid_y = coord_to_grid(env.joints[j].anchorA.x, zero_x), coord_to_grid(env.joints[j].anchorB.y, zero_y)
+            grid_x, grid_y = env.coord_to_grid(env.joints[j].anchorA.x, zero_x), env.coord_to_grid(env.joints[j].anchorB.y, zero_y)
             agrid[0, grid_x, grid_y] = a[j]
 
         _, r, done, info = env.step(agrid)
