@@ -7,7 +7,7 @@ import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from a3g.utils import norm_col_init, weights_init, weights_init_mlp
+from common.utils import norm_col_init, weights_init, weights_init_mlp
 
 # Early-fusion Conv1D + LSTM
 # All frames stacks, passed to 1D convnet then LSTM

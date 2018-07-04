@@ -8,7 +8,7 @@ import torch
 import torch.multiprocessing as mp
 
 from common.environment import create_env
-from common.shared_optim import SharedRMSprop, SharedAdam
+from common.shared_optim import SHaredRMSprop, SharedAdam
 
 from a3g.train import train
 from a3g.test import test
@@ -160,6 +160,9 @@ if __name__ == '__main__':
     AC = importlib.import_module(args.model_name)
     shared_model = AC.ActorCritic(
         env.observation_space, env.action_space, args.stack_frames)
+    EXP = importlib.import_module(args.expert_model_name)
+    shared_expert = EXP.ActorCritic(
+        env.observation_space, env.action_space, args.stack_frames)
     if args.load:
         print('Loading model from: {0}{1}.dat'.format(
             args.load_model_dir, args.env))
@@ -167,6 +170,12 @@ if __name__ == '__main__':
             args.load_model_dir, args.env), map_location=lambda storage, loc: storage)
         shared_model.load_state_dict(saved_state)
     shared_model.share_memory()
+
+    print('Loading expert from: '+args.load_expert_path))
+    saved_expert_state = torch.load(args.load_expert_path, 
+                                    map_function=lambda storage, loc: storage)
+    shared_expert.load_state_dict(saved_expert_state)
+    shared_expert.share_memory()
 
     if args.shared_optimizer:
         if args.optimizer == 'RMSprop':
@@ -186,7 +195,7 @@ if __name__ == '__main__':
     time.sleep(0.1)
     for rank in range(0, args.workers):
         p = mp.Process(target=train, args=(
-            rank, args, shared_model, optimizer))
+            rank, args, shared_model, shared_expert, optimizer))
         p.start()
         processes.append(p)
         time.sleep(0.1)

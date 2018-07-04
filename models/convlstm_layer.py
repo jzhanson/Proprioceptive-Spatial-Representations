@@ -7,7 +7,7 @@ import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from a3g.utils import weights_init
+from common.utils import weights_init
 
 # ConvLSTM layer
 class ConvLSTM(torch.nn.Module):

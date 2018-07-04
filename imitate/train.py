@@ -7,10 +7,10 @@ import torch
 import torch.optim as optim
 from torch.autograd import Variable
 
-from common.environment import create_env
-from common.utils import ensure_shared_grads
 
-from a3g.player_util import Agent
+from imitate.environment import create_env
+from imitate.utils import ensure_shared_grads
+from imitate.player_util import Agent
 
 import gym
 
@@ -29,11 +29,15 @@ def train(rank, args, shared_model, optimizer):
             optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
 
     env.seed(args.seed + rank)
-    player = Agent(None, env, args, None)
+    player = Agent(None, None, env, args, None)
     player.gpu_id = gpu_id
     AC = importlib.import_module(args.model_name)
     player.model = AC.ActorCritic(
         env.observation_space, env.action_space, args.stack_frames)
+    EXP = importlib.import_module(args.expert_model_name)
+    player.expert = EXP.ActorCritic(
+        env.observation_space, env.action_space, args.stack_frames)
+    player.expert.load_state_dict(shared_expert.state_dict())
 
     player.state = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
@@ -54,10 +58,13 @@ def train(rank, args, shared_model, optimizer):
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
                     player.memory = player.model.initialize_memory()
+                    player.expert_memory = player.expert.initialize_memory()
             else:
                 player.memory = player.model.initialize_memory()
+                player.expert_memory = player.expert.initialize_memory()
         else:
             player.memory = player.model.reinitialize_memory(player.memory)
+            player.expert_memory = player.expert.reinitialize_memory(player.expert_memory)
             
         for step in range(args.num_steps):
 
@@ -74,45 +81,15 @@ def train(rank, args, shared_model, optimizer):
                 with torch.cuda.device(gpu_id):
                     player.state = player.state.cuda()
 
-        if gpu_id >= 0:
-            with torch.cuda.device(gpu_id):
-                R = torch.zeros(1, 1).cuda()
-        else:
-            R = torch.zeros(1, 1)
-        if not player.done:
-            state = player.state
-            state = state.unsqueeze(0)
-            value, _, _, _ = player.model(
-                (Variable(state), player.memory))
-            R = value.data
-
-        player.values.append(Variable(R))
+        # Imitation + Entropy loss
         policy_loss = 0
-        value_loss = 0
-        R = Variable(R)
-        if gpu_id >= 0:
-            with torch.cuda.device(gpu_id):
-                gae = torch.zeros(1, 1).cuda()
-        else:
-            gae = torch.zeros(1, 1)
         for i in reversed(range(len(player.rewards))):
-            R = args.gamma * R + player.rewards[i]
-            advantage = R - player.values[i]
-            value_loss = value_loss + 0.5 * advantage.pow(2)
-
-            # Generalized Advantage Estimataion
-  #          print(player.rewards[i])
-            delta_t = player.rewards[i] + args.gamma * \
-                player.values[i + 1].data - player.values[i].data
-
-            gae = gae * args.gamma * args.tau + delta_t
-
             policy_loss = policy_loss - \
-                (player.log_probs[i].sum() * Variable(gae)) - \
-                (0.01 * player.entropies[i].sum())
+                          (player.ces[i].sum()) - \
+                          (0.01 * player.entropies[i].sum())
 
         player.model.zero_grad()
-        (policy_loss + 0.5 * value_loss).backward()
+        policy_loss.backward()
         ensure_shared_grads(player.model, shared_model, gpu=gpu_id >= 0)
         optimizer.step()
         player.clear_actions()

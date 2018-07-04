@@ -7,7 +7,7 @@ import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from a3g.utils import norm_col_init, weights_init, weights_init_mlp
+from common.utils import norm_col_init, weights_init, weights_init_mlp
 
 # Late-fusion MLP + LSTM 
 # All frames first processed by MLP then passed to LSTM

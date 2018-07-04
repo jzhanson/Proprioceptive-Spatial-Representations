@@ -7,8 +7,9 @@ import importlib
 import torch
 from torch.autograd import Variable
 
-from a3g.environment import create_env
-from a3g.utils import setup_logger
+from common.environment import create_env
+from common.utils import setup_logger
+
 from a3g.player_util import Agent
 
 import gym
@@ -52,8 +53,8 @@ parser.add_argument(
     metavar='M',
     help='maximum length of an episode (default: 100000)')
 parser.add_argument(
-    '--model',
-    default='MLP',
+    '--model-name',
+    default='models.mlp',
     metavar='M',
     help='Model type to use')
 parser.add_argument(
