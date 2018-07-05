@@ -5,10 +5,15 @@ from gym import spaces
 
 class StateEncoder:
     def __init__(self, args):
-        super(StateEncoder, self).__init__()
-
         self.grid_edge  = args.grid_edge
         self.grid_scale = args.grid_scale
+
+        self.observation_space = spaces.Box(
+            low=-np.inf, high=np.inf,
+            shape=(9, self.grid_edge, self.grid_edge))
+
+    def reset(self, ob, info):
+        return self.encode(ob, info)
 
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)

@@ -4,8 +4,11 @@ import numpy as np
 from gym import spaces
 
 class StateEncoder:
-    def __init__(self, args):
+    def __init__(self, env):
         pass
 
-    def encoder(self, ob, info):
+    def reset(self):
+        pass
+
+    def encode(self, ob, info):
         return ob
