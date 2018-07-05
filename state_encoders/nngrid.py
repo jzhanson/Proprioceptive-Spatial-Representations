@@ -3,8 +3,15 @@ import gym
 import numpy as np
 from gym import spaces
 
-class StateEncoder:
+import torch
+import torch.nn as nn
+import torch.nn.init as init
+import torch.nn.functional as F
+from torch.autograd import Variable
+
+class NNGrid(torch.nn.Module):
     def __init__(self, args):
+        super(NNGrid, self).__init__()
         self.grid_edge  = args.grid_edge
         self.grid_scale = args.grid_scale
 
@@ -12,15 +19,17 @@ class StateEncoder:
             low=-np.inf, high=np.inf,
             shape=(9, self.grid_edge, self.grid_edge))
 
-    def reset(self, ob, info):
-        return self.encode(ob, info)
-
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
 
-    def encode(self, ob, info):
+    def forward(self, inputs):
+        ob, info = inputs 
+
+        print(ob.size())
+        exit()
+
         # Project raw state into grid, center grid at hull
-        grid_state = np.zeros((9, self.grid_edge, self.grid_edge))
+        grid_state = Variable(torch.zeros((9, self.grid_edge, self.grid_edge)))
         zero_x, zero_y = info['zero_x'], info['zero_y']
 
         # 1. For every body b in body config, get position (bx, by) and
@@ -54,7 +63,6 @@ class StateEncoder:
             B_pos_x, B_pos_y = j[2], j[3]
             f = j[4:]
 
-
             # For each anchor position, write joint features
             A_grid_x, A_grid_y = self.coord_to_grid(A_pos_x, zero_x), self.coord_to_grid(A_pos_y, zero_y)
             B_grid_x, B_grid_y = self.coord_to_grid(B_pos_x, zero_x), self.coord_to_grid(B_pos_y, zero_y)
@@ -63,3 +71,9 @@ class StateEncoder:
             grid_state[7:9, B_grid_x, B_grid_y] = f
 
         return grid_state
+
+    def initialize_memory(self):
+        return None
+
+    def reinitialize_memory(self, old_memory):
+        return None
