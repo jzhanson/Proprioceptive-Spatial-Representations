@@ -442,28 +442,26 @@ class BipedalWalker(gym.Env):
         if pos[0] > (TERRAIN_LENGTH-TERRAIN_GRASS)*TERRAIN_STEP:
             done   = True
 
-        # Construct the extras dict so that the grid state space and action space can be built
-        extras = {}
-        extras['zero_x'] = zero_x
-        extras['zero_y'] = zero_y
-        extras['bodies'] = []
+        # Construct the info dict so that the grid state space and action space can be built
+        info = {}
+        info['zero_x'] = zero_x
+        info['zero_y'] = zero_y
+        info['bodies'] = []
         for b in ([self.hull] + self.legs):
-            extras['bodies'].append((
-                b.position.x, b.position.y, b.angle, 
-                2.0*b.angularVelocity/FPS, 
+            info['bodies'].append((
+                b.position.x, b.position.y, b.angle,
+                2.0*b.angularVelocity/FPS,
                 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS,
                 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
                 1.0 if b.ground_contact else 0
             ))
-        extras['joints'] = []
+        info['joints'] = []
         for j_index in range(len(self.joints)):
             j = self.joints[j_index]
             even = j_index % 2 == 0
-            extras['joints'].append((
+            info['joints'].append((
                 j.anchorA.x, j.anchorA.y, j.anchorB.x, j.anchorB.y,
                 j.angle + (0.0 if even else 1.0),
-                j.speed / (SPEED_HIP if even else SPEED_KNEE)
-                j.angle + (0.0 if even else 1.0)
                 j.speed / (SPEED_HIP if even else SPEED_KNEE)
             ))
 
