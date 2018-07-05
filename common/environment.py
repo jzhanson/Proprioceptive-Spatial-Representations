@@ -29,10 +29,10 @@ def create_env(env_id, args):
     else:
         env = gym.make(env_id)
 
-    env.set_grid_params(grid_edge=args.grid_edge)
+    #env.set_grid_params(grid_edge=args.grid_edge)
     # Note: apply motion_blur BEFORE frame_stack if using both
-    env = motion_blur(env, args)
-    env = frame_stack(env, args)
+    #env = motion_blur(env, args)
+    #env = frame_stack(env, args)
     return env
 
 
