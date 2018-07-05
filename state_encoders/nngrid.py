@@ -3,28 +3,17 @@ import gym
 import numpy as np
 from gym import spaces
 
-class StateEncoder(gym.Wrapper):
-    def __init__(self, env, args):
-        super(StateEncoder, self).__init__(env)
+class StateEncoder:
+    def __init__(self, args):
+        super(StateEncoder, self).__init__()
 
         self.grid_edge  = args.grid_edge
         self.grid_scale = args.grid_scale
 
-    def reset(self):
-        # Call reset, then step(0) to get info dict
-        env.reset()
-        ob, rew, done, info = env.step(
-            np.zeros(self.env.action_space.shape))
-        return self._info_to_gridstate(info), rew, done, info
-
-    def step(self, action):
-        ob, rew, done, info = env.step(action)
-        return self._info_to_gridstate(info), rew, done, info
-
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
 
-    def _info_to_gridstate(self, ob):
+    def encode(self, ob, info):
         # Project raw state into grid, center grid at hull
         grid_state = np.zeros((9, self.grid_edge, self.grid_edge))
         zero_x, zero_y = info['zero_x'], info['zero_y']

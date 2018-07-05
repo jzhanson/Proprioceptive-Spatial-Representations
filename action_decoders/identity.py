@@ -3,9 +3,9 @@ import gym
 import numpy as np
 from gym import spaces
 
-class StateEncoder:
+class ActionDecoder:
     def __init__(self, args):
         pass
 
-    def encoder(self, ob, info):
-        return ob
+    def decode(self, action):
+        return action
