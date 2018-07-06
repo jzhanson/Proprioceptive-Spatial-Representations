@@ -7,36 +7,47 @@ import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+from state_encoders.wrappers import FrameStack
+from state_encoders.nngrid import NNGrid as senc_NNGrid
+
 from common.utils import norm_col_init, weights_init, weights_init_mlp
 
 # Early-fusion Conv1D + LSTM
 # All frames stacks, passed to 1D convnet then LSTM
 class ActorCritic(torch.nn.Module):
-    def __init__(self, observation_space, action_space, n_frames):
+    def __init__(self, observation_space, action_space, n_frames, args):
         super(ActorCritic, self).__init__()
+
+        # State preprocessing
+        self.senc_nngrid = senc_NNGrid(args)
+        self.frame_stack = FrameStack(n_frames)
 
         self.observation_space = observation_space
         self.action_space      = action_space
 
-        self.n_frames    = n_frames
-        self.input_size  = self.observation_space.shape
+        self.input_size  = self.senc_nngrid.observation_space.shape
         self.output_size = int(np.prod(self.action_space.shape))
 
-        self.conv1 = nn.Conv2d(self.n_frames*self.input_size[0], 32, 4, stride=2, padding=0)
-        self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=0)
-        self.conv3 = nn.Conv2d(32, 32, 3, stride=1, padding=0)
-        self.conv4 = nn.Conv2d(32, 32, 3, stride=1, padding=0)
+        self.conv1 = nn.Conv2d(self.frame_stack.n_frames*self.input_size[0], 32, 4, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(32, 64,  3, stride=2, padding=0)
+        self.conv3 = nn.Conv2d(64, 128, 3, stride=1, padding=0)
 
-        self.critic_linear = nn.Conv2d(32, 1, 1, stride=1, padding=1)
-        self.actor_linear  = nn.Conv2d(32, self.action_space.shape[0], 1, stride=1, padding=0)
-        self.actor_linear2 = nn.Conv2d(32, self.action_space.shape[0], 1, stride=1, padding=0)
+        # Calculate conv->linear size
+        dummy_input = Variable(torch.zeros((1,n_frames,)+self.senc_nngrid.observation_space.shape))
+        dummy_input = dummy_input.view((1, n_frames*self.input_size[0],)+self.input_size[1:])
+        outconv = self._convforward(dummy_input)
+
+        self.lstm = nn.LSTMCell(outconv.nelement(), 128)
+
+        self.critic_linear = nn.Linear(128, 1)
+        self.actor_linear  = nn.Linear(128, self.action_space.shape[0])
+        self.actor_linear2 = nn.Linear(128, self.action_space.shape[0])
 
         self.apply(weights_init)
         lrelu_gain = nn.init.calculate_gain('leaky_relu')
         self.conv1.weight.data.mul_(lrelu_gain)
         self.conv2.weight.data.mul_(lrelu_gain)
         self.conv3.weight.data.mul_(lrelu_gain)
-        #self.conv4.weight.data.mul_(lrelu_gain)
 
         self.actor_linear.weight.data = norm_col_init(
             self.actor_linear.weight.data, 0.01)
@@ -57,29 +68,42 @@ class ActorCritic(torch.nn.Module):
         return x
 
     def forward(self, inputs):
-        x, _ = inputs
+        ob, info, (hx, cx, frames) = inputs
 
+        # Get the grid state from vectorized input
+        x = self.senc_nngrid((ob, info))
+
+        # Stack it
+        x, frames = self.frame_stack((x, frames))
+
+        # Resize to correct dims for convnet
         batch_size = x.size(0)
-        x = x.view(batch_size, 
-                   self.n_frames*self.input_size[0], 
+        x = x.view(batch_size,
+                   self.frame_stack.n_frames*self.input_size[0],
                    self.input_size[1], self.input_size[2])
-
         x = self._convforward(x)
-        
-        critic_out = self.critic_linear(x).mean(-1).mean(-1)
-        actor_out = F.softsign(self.actor_linear(x))
-        actor_out = actor_out.expand(batch_size, 
-                                   self.action_space.shape[0], self.action_space.shape[1],
-                                   self.action_space.shape[2]).contiguous().view(batch_size, self.output_size)
-        actor_out2 = self.actor_linear2(x)
-        actor_out2 = actor_out2.expand(batch_size,
-                                       self.action_space.shape[0], self.action_space.shape[1],
-                                       self.action_space.shape[2]).contiguous().view(batch_size, self.output_size)
 
-        return critic_out, actor_out, actor_out2, None
+        x = x.view(1, -1)
+        hx, cx = self.lstm(x, (hx, cx))
+        x = hx
+
+        critic_out = self.critic_linear(x)
+        actor_out = F.softsign(self.actor_linear(x))
+        actor_out2 = self.actor_linear2(x)
+
+        return self.critic_linear(x), F.softsign(self.actor_linear(x)), self.actor_linear2(x), (hx, cx, frames)
 
     def initialize_memory(self):
-        return None
+        if next(self.parameters()).is_cuda:
+            return (Variable(torch.zeros(1, 128).cuda()),
+                    Variable(torch.zeros(1, 128).cuda()),
+                    self.frame_stack.initialize_memory())
+        return (Variable(torch.zeros(1, 128)),
+                Variable(torch.zeros(1, 128)),
+                self.frame_stack.initialize_memory())
 
     def reinitialize_memory(self, old_memory):
-        return None
+        old_hx, old_cx, old_frames = old_memory
+        return (Variable(old_hx.data),
+                Variable(old_cx.data),
+                self.frame_stack.reinitialize_memory(old_frames))
