@@ -46,6 +46,7 @@ def train(rank, args, shared_model, shared_expert, optimizer):
         with torch.cuda.device(gpu_id):
             player.state = player.state.cuda()
             player.model = player.model.cuda()
+            player.expert = player.expert.cuda()
     player.model.train()
 
     step_count = 0

@@ -23,10 +23,14 @@ class NNGrid(torch.nn.Module):
     def forward(self, inputs):
         action, info = inputs
 
-        # Extract raw action from grid, centered at hull
-        decoded_action = Variable(torch.zeros(action.size(0), self.action_space.shape[0]))
-        zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
+        decoded_action = torch.zeros(action.size(0), self.action_space.shape[0])
+        if action.is_cuda:
+            with torch.cuda.device(action.get_device()):
+                decoded_action = decoded_action.cuda()
+        decoded_action = Variable(decoded_action)
 
+        # Extract raw action from grid, centered at hull
+        zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
         for j_index, j in enumerate(info['joints']):
             # Alternatively, we can average the two anchor positions instead of just using anchorA
             A_pos_x, A_pos_y = j[0], j[1]
