@@ -25,10 +25,15 @@ class NNGrid(torch.nn.Module):
     def forward(self, inputs):
         ob, info = inputs
 
-        # Project raw state into grid, center grid at hull
-        grid_state = Variable(torch.zeros((9, self.grid_edge, self.grid_edge)))
-        zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
+        grid_state = torch.zeros(9, self.grid_edge, self.grid_edge)
+        if ob.is_cuda:
+            with torch.cuda.device(ob.get_device()):
+                grid_state = grid_state.cuda()
+        grid_state = Variable(grid_state)
 
+        # Project raw state into grid, center grid at hull
+        zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
+        
         # 1. For every body b in body config, get position (bx, by) and
         #   - Write angle of b to (0, bx, by)
         #   - Write angvel of b to (1,bx,by) in G
