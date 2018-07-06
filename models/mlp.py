@@ -7,18 +7,22 @@ import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+from state_encoders.wrappers import FrameStack
+
 from common.utils import norm_col_init, weights_init, weights_init_mlp
 
-# Late-fusion MLP + LSTM 
+# Late-fusion MLP + LSTM
 # All frames first processed by MLP then passed to LSTM
 class ActorCritic(torch.nn.Module):
     def __init__(self, observation_space, action_space, n_frames):
         super(ActorCritic, self).__init__()
 
+        # Stack preprocessing
+        self.frame_stack = FrameStack(n_frames)
+
         self.observation_space = observation_space
         self.action_space      = action_space
 
-        self.n_frames    = n_frames
         self.input_size  = int(np.prod(self.observation_space.shape))
         self.output_size = int(np.prod(self.action_space.shape))
 
@@ -31,7 +35,7 @@ class ActorCritic(torch.nn.Module):
         self.fc4 = nn.Linear(128, 128)
         self.lrelu4 = nn.LeakyReLU(0.1)
 
-        self.m1 = self.n_frames * 128
+        self.m1 = self.frame_stack.n_frames * 128
         self.lstm = nn.LSTMCell(self.m1, 128)
         self.critic_linear = nn.Linear(128, 1)
         self.actor_linear = nn.Linear(128, self.output_size)
@@ -60,10 +64,15 @@ class ActorCritic(torch.nn.Module):
         self.train()
 
     def forward(self, inputs):
-        x, (hx, cx) = inputs
+        x, (hx, cx, frames) = inputs
+
+        # Stack it
+        x, frames = self.frame_stack((x, frames))
 
         batch_size = x.size(0)
-        x = x.view(batch_size, self.n_frames, self.input_size)
+        x = x.view(batch_size,
+                   self.frame_stack.n_frames,
+                   self.input_size)
 
         x = self.lrelu1(self.fc1(x))
         x = self.lrelu2(self.fc2(x))
@@ -74,17 +83,19 @@ class ActorCritic(torch.nn.Module):
         hx, cx = self.lstm(x, (hx, cx))
         x = hx
 
-        return self.critic_linear(x), F.softsign(self.actor_linear(x)), self.actor_linear2(x), (hx, cx)
+        return self.critic_linear(x), F.softsign(self.actor_linear(x)), self.actor_linear2(x), (hx, cx, frames)
 
     def initialize_memory(self):
         if next(self.parameters()).is_cuda:
             return (Variable(torch.zeros(1, 128).cuda()),
-                    Variable(torch.zeros(1, 128).cuda()))
-        return (Variable(torch.zeros(1, 128)), 
-                Variable(torch.zeros(1, 128)))
+                    Variable(torch.zeros(1, 128).cuda()),
+                    self.frame_stack.initialize_memory())
+        return (Variable(torch.zeros(1, 128)),
+                Variable(torch.zeros(1, 128)),
+                self.frame_stack.initialize_memory())
 
     def reinitialize_memory(self, old_memory):
-        old_hx, old_cx = old_memory
+        old_hx, old_cx, old_frames = old_memory
         return (Variable(old_hx.data),
-                Variable(old_cx.data))
-        
+                Variable(old_cx.data),
+                self.frame_stack.reinitialize_memory(old_frames))
