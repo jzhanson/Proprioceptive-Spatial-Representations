@@ -79,12 +79,12 @@ class ActorCritic(torch.nn.Module):
         x, frames = self.frame_stack((x, frames))
 
         batch_size = x.size(0)
-        x = x.view(batch_size, 
+        x = x.view(batch_size,
                    self.frame_stack.n_frames, self.input_size)
 
         x = self._convforward(x)
         x = x.view(x.size(0), -1)
-        
+
         hx, cx = self.lstm(x, (hx, cx))
         x = hx
 
@@ -100,7 +100,6 @@ class ActorCritic(torch.nn.Module):
                 self.frame_stack.initialize_memory())
 
     def reinitialize_memory(self, old_memory):
-        exit()
         old_hx, old_cx, old_frames = old_memory
         return (Variable(old_hx.data),
                 Variable(old_cx.data),
