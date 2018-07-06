@@ -15,7 +15,7 @@ class Agent(object):
         self.env = env
         self.state = state
         self.memory = None
-        self.expert_memory = NOne
+        self.expert_memory = None
         self.eps_len = 0
         self.args = args
         self.rewards = []
@@ -29,7 +29,7 @@ class Agent(object):
     def action_train(self):
         self.state = self.state.unsqueeze(0)
         _, mu, sigma, self.memory = self.model(
-            (Variable(self.state), self.memory))
+            (Variable(self.state), self.info, self.memory))
 
         eps = torch.randn(mu.size())
         pi = np.array([math.pi])
@@ -50,7 +50,7 @@ class Agent(object):
         action = torch.clamp(action, -1.0, 1.0)
 
         _, expert_mu, expert_sigma, self.expert_memory = self.expert(
-            (Variable(self.state), self.expert_memory))
+            (Variable(self.state), self.info, self.expert_memory))
         expert_mu = torch.clamp(expert_mu, -1.0, 1.0)
         expert_sigma = F.softplus(expert_sigma) + 1e-5
 
@@ -58,7 +58,11 @@ class Agent(object):
         self.entropies.append(entropy)
 
         # https://stats.stackexchange.com/questions/7440/kl-divergence-between-two-univariate-gaussians
-        ce = 0.5*torch.log(sigma/expert_sigma) + (expert_sigma + (expert_mu - mu)**2)/(2*expert_sigma) - 0.5
+        #ce = 0.5*torch.log(sigma/expert_sigma) + (expert_sigma + (expert_mu - mu)**2)/(2*expert_sigma) - 0.5
+        ce = (mu - expert_mu)**2 + (sigma - 0.01)**2
+        #ce = sigma**2
+        #ce = ce * 0.
+        #print(sigma, expert_sigma)
         self.ces.append(ce)
 
         state, reward, self.done, self.info = self.env.step(
@@ -85,7 +89,7 @@ class Agent(object):
                 self.memory = self.model.reinitialize_memory(self.memory)
             self.state = self.state.unsqueeze(0)
             _, mu, sigma, self.memory = self.model(
-                (Variable(self.state), self.memory))
+                (Variable(self.state), self.info, self.memory))
         mu = torch.clamp(mu.data, -1.0, 1.0)
         action = mu.cpu().numpy()[0]
         state, self.reward, self.done, self.info = self.env.step(action)

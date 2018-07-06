@@ -16,16 +16,18 @@ from common.utils import norm_col_init, weights_init, weights_init_mlp
 # Early-fusion Conv1D + LSTM
 # All frames stacks, passed to 1D convnet then LSTM
 class ActorCritic(torch.nn.Module):
-    def __init__(self, observation_space, action_space, n_frames,
-                 grid_edge, grid_scale):
+    def __init__(self, observation_space, action_space, n_frames, args):
         super(ActorCritic, self).__init__()
 
         # State preprocessing
-        self.senc_nngrid = senc_NNGrid(grid_edge, grid_scale)
+        self.senc_nngrid = senc_NNGrid(args)
         self.frame_stack = FrameStack(n_frames)
 
         # Action postprocessing
-        self.adec_nngrid = adec_NNGrid(grid_edge, grid_scale)
+        self.adec_nngrid = adec_NNGrid(action_space, args)
+
+        self.observation_space = observation_space
+        self.action_space      = action_space
 
         self.input_size  = self.senc_nngrid.observation_space.shape
         self.output_size = int(np.prod(self.action_space.shape))
@@ -66,34 +68,34 @@ class ActorCritic(torch.nn.Module):
         return x
 
     def forward(self, inputs):
-        ob, info, frames= inputs
-        
+        ob, info, frames = inputs
+
         # Get the grid state from vectorized input
-        x = self.senc_nngrid(ob, info)
+        x = self.senc_nngrid((ob, info))
 
         # Stack it
         x, frames = self.frame_stack((x, frames))
 
         # Resize to correct dims for convnet
         batch_size = x.size(0)
-        x = x.view(batch_size, 
-                   self.frame_stack.n_frames*self.input_size[0], 
+        x = x.view(batch_size,
+                   self.frame_stack.n_frames*self.input_size[0],
                    self.input_size[1], self.input_size[2])
         x = self._convforward(x)
-        
+
         # Compute action mean, var and value grids
         critic_out = self.critic_linear(x)
         actor_out = F.softsign(self.actor_linear(x))
         actor_out2 = self.actor_linear2(x)
 
         # Extract motor-specific values from action grid
-        critic_out = self.adec_nngrid(critic_out, info)
-        actor_out  = self.adec_nngrid(actor_out, info)
-        actor_out2 = self.adec_nngrid(actor_out2, info)
+        critic_out = self.adec_nngrid((critic_out, info))
+        actor_out  = self.adec_nngrid((actor_out, info))
+        actor_out2 = self.adec_nngrid((actor_out2, info))
         return critic_out, actor_out, actor_out2, frames
 
     def initialize_memory(self):
         return self.frame_stack.initialize_memory()
 
     def reinitialize_memory(self, old_memory):
-        return self.frame_stack.reinitialize_memory()
+        return self.frame_stack.reinitialize_memory(old_memory)

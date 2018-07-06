@@ -14,7 +14,7 @@ from common.utils import norm_col_init, weights_init, weights_init_mlp
 # Early-fusion Conv1D + LSTM
 # All frames stacks, passed to 1D convnet then LSTM
 class ActorCritic(torch.nn.Module):
-    def __init__(self, observation_space, action_space, n_frames):
+    def __init__(self, observation_space, action_space, n_frames, args):
         super(ActorCritic, self).__init__()
 
         # Stack preprocessing
@@ -73,7 +73,7 @@ class ActorCritic(torch.nn.Module):
         return x
 
     def forward(self, inputs):
-        x, (hx, cx, frames) = inputs
+        x, _, (hx, cx, frames) = inputs
 
         # Stack it
         x, frames = self.frame_stack((x, frames))

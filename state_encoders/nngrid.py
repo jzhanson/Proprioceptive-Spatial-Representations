@@ -23,14 +23,11 @@ class NNGrid(torch.nn.Module):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
 
     def forward(self, inputs):
-        ob, info = inputs 
-
-        print(ob.size())
-        exit()
+        ob, info = inputs
 
         # Project raw state into grid, center grid at hull
         grid_state = Variable(torch.zeros((9, self.grid_edge, self.grid_edge)))
-        zero_x, zero_y = info['zero_x'], info['zero_y']
+        zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
 
         # 1. For every body b in body config, get position (bx, by) and
         #   - Write angle of b to (0, bx, by)
@@ -38,12 +35,12 @@ class NNGrid(torch.nn.Module):
         #   - Write velx of b to (2,bx,by) in G
         #   - Write vely of b to (3,bx,by) in G
         #   - Write ground_contact of b to (4,bx,by) in G
-        for b in range(len(info['bodies'])):
+        for b in info['bodies']:
             # b format:
             # pos_x, pos_y, ang,
             # ang_vel, lin_vel_x, lin_vel_y, contact
             pos_x, pos_y = b[0], b[1]
-            f = np.array(b[2:])
+            f = Variable(torch.from_numpy(np.array(b[2:])))
 
             # Round to nearest integer coordinates here
             grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
@@ -54,23 +51,23 @@ class NNGrid(torch.nn.Module):
         #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
         #   - Write angle of j to (5,Ajx,Ajy),(7,Bjx,Bjy) in G
         #   - Write speed of j to (6,Ajx,Ajy),(8,Bjx,Bjy) in G
-        for j in range(len(info['joints'])):
+        for j in info['joints']:
 
             # j format:
             # A_x, A_y, B_x, B_y,
             # angle, speed
             A_pos_x, A_pos_y = j[0], j[1]
             B_pos_x, B_pos_y = j[2], j[3]
-            f = j[4:]
+            f = Variable(torch.from_numpy(np.array(j[4:])))
 
             # For each anchor position, write joint features
-            A_grid_x, A_grid_y = self.coord_to_grid(A_pos_x, zero_x), self.coord_to_grid(A_pos_y, zero_y)
-            B_grid_x, B_grid_y = self.coord_to_grid(B_pos_x, zero_x), self.coord_to_grid(B_pos_y, zero_y)
+            A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
+            B_grid_x, B_grid_y = self._coord_to_grid(B_pos_x, zero_x), self._coord_to_grid(B_pos_y, zero_y)
 
             grid_state[5:7, A_grid_x, A_grid_y] = f
             grid_state[7:9, B_grid_x, B_grid_y] = f
 
-        return grid_state
+        return grid_state[None]
 
     def initialize_memory(self):
         return None

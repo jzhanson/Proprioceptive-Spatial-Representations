@@ -8,10 +8,10 @@ import torch
 import torch.multiprocessing as mp
 
 from common.environment import create_env
-from common.shared_optim import SHaredRMSprop, SharedAdam
+from common.shared_optim import SharedRMSprop, SharedAdam
 
-from a3g.train import train
-from a3g.test import test
+from imitate.train import train
+from imitate.test import test
 
 import time
 
@@ -90,6 +90,10 @@ parser.add_argument(
     metavar='LMD',
     help='folder to load trained models from')
 parser.add_argument(
+    '--load-expert-file',
+    default='experts/BipedalWalker-v2-mlp.dat',
+    help='File to load expert model weights from.')
+parser.add_argument(
     '--save-prefix',
     default='',
     metavar='SP',
@@ -115,6 +119,28 @@ parser.add_argument(
     default=1,
     metavar='SF',
     help='Choose number of observations to stack')
+parser.add_argument(
+    '--expert-model-name',
+    default='models.mlp',
+    metavar='EM',
+    help='Expert model type.')
+parser.add_argument(
+    '--expert-stack-frames',
+    type=int,
+    default=1,
+    metavar='ESF',
+    help='Expert number of observations to stack.')
+parser.add_argument(
+    '--grid_edge',
+    type=int,
+    default=16,
+    metavar='GE',
+    help='grid size')
+parser.add_argument(
+    '--grid-scale',
+    type=float,
+    default=5.44,
+    help='grid scale')
 parser.add_argument(
     '--blur-frames',
     type=int,
@@ -159,10 +185,10 @@ if __name__ == '__main__':
     # Create model
     AC = importlib.import_module(args.model_name)
     shared_model = AC.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames)
+        env.observation_space, env.action_space, args.stack_frames, args)
     EXP = importlib.import_module(args.expert_model_name)
     shared_expert = EXP.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames)
+        env.observation_space, env.action_space, args.expert_stack_frames, args)
     if args.load:
         print('Loading model from: {0}{1}.dat'.format(
             args.load_model_dir, args.env))
@@ -171,9 +197,9 @@ if __name__ == '__main__':
         shared_model.load_state_dict(saved_state)
     shared_model.share_memory()
 
-    print('Loading expert from: '+args.load_expert_path))
-    saved_expert_state = torch.load(args.load_expert_path, 
-                                    map_function=lambda storage, loc: storage)
+    print('Loading expert from: '+args.load_expert_file)
+    saved_expert_state = torch.load(args.load_expert_file,
+                                    map_location=lambda storage, loc: storage)
     shared_expert.load_state_dict(saved_expert_state)
     shared_expert.share_memory()
 

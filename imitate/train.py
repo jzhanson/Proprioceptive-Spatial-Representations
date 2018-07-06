@@ -8,14 +8,15 @@ import torch.optim as optim
 from torch.autograd import Variable
 
 
-from imitate.environment import create_env
-from imitate.utils import ensure_shared_grads
+from common.environment import create_env
+from common.utils import ensure_shared_grads
+
 from imitate.player_util import Agent
 
 import gym
 
 
-def train(rank, args, shared_model, optimizer):
+def train(rank, args, shared_model, shared_expert, optimizer):
     ptitle('Training Agent: {}'.format(rank))
     gpu_id = args.gpu_ids[rank % len(args.gpu_ids)]
     torch.manual_seed(args.seed + rank)
@@ -33,13 +34,13 @@ def train(rank, args, shared_model, optimizer):
     player.gpu_id = gpu_id
     AC = importlib.import_module(args.model_name)
     player.model = AC.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames)
+        env.observation_space, env.action_space, args.stack_frames, args)
     EXP = importlib.import_module(args.expert_model_name)
     player.expert = EXP.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames)
+        env.observation_space, env.action_space, args.expert_stack_frames, args)
     player.expert.load_state_dict(shared_expert.state_dict())
 
-    player.state = player.env.reset()
+    player.state, player.info = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
@@ -65,7 +66,7 @@ def train(rank, args, shared_model, optimizer):
         else:
             player.memory = player.model.reinitialize_memory(player.memory)
             player.expert_memory = player.expert.reinitialize_memory(player.expert_memory)
-            
+
         for step in range(args.num_steps):
 
             player.action_train()
@@ -75,7 +76,7 @@ def train(rank, args, shared_model, optimizer):
 
         if player.done:
             player.eps_len = 0
-            state = player.env.reset()
+            state, player.info = player.env.reset()
             player.state = torch.from_numpy(state).float()
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
@@ -84,9 +85,9 @@ def train(rank, args, shared_model, optimizer):
         # Imitation + Entropy loss
         policy_loss = 0
         for i in reversed(range(len(player.rewards))):
-            policy_loss = policy_loss - \
-                          (player.ces[i].sum()) - \
-                          (0.01 * player.entropies[i].sum())
+            policy_loss = policy_loss \
+                          + player.ces[i].sum() \
+                          #- (0.01 * player.entropies[i].sum())
 
         player.model.zero_grad()
         policy_loss.backward()

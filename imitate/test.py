@@ -9,7 +9,7 @@ from torch.autograd import Variable
 from common.environment import create_env
 from common.utils import setup_logger
 
-from a3g.player_util import Agent
+from imitate.player_util import Agent
 
 import time
 import logging
@@ -40,14 +40,14 @@ def test(args, shared_model):
     start_time = time.time()
     num_tests = 0
     reward_total_sum = 0
-    player = Agent(None, env, args, None)
+    player = Agent(None, None, env, args, None)
     player.gpu_id = gpu_id
 
     AC = importlib.import_module(args.model_name)
     player.model = AC.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames)
+        env.observation_space, env.action_space, args.stack_frames, args)
 
-    player.state = player.env.reset()
+    player.state, player.info = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
@@ -103,7 +103,7 @@ def test(args, shared_model):
 
             reward_sum = 0
             player.eps_len = 0
-            state = player.env.reset()
+            state, player.info = player.env.reset()
             time.sleep(60)
             player.state = torch.from_numpy(state).float()
             if gpu_id >= 0:

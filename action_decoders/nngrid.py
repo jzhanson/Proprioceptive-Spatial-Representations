@@ -3,26 +3,33 @@ import gym
 import numpy as np
 from gym import spaces
 
-class ActionDecoder:
-    def __init__(self, args):
-        self.action_space = env.action_space
+import torch
+import torch.nn as nn
+import torch.nn.init as init
+import torch.nn.functional as F
+from torch.autograd import Variable
+
+class NNGrid(torch.nn.Module):
+    def __init__(self, action_space, args):
+        super(NNGrid, self).__init__()
+
+        self.action_space = action_space
         self.grid_edge  = args.grid_edge
         self.grid_scale = args.grid_scale
-
-        self.action_space = spaces.Box(
-            low=-1, high=-1, shape=(4, self.grid_edge, self.grid_edge))
 
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
 
-    def decode(self, action):
-        # Extract raw action from grid, centered at hull
-        decoded_action = np.zeros(self.action_space.shape)
-        zero_x, zero_y = info['zero_x'], info['zero_y']
+    def forward(self, inputs):
+        action, info = inputs
 
-        for j in range(len(info['joints'])):
+        # Extract raw action from grid, centered at hull
+        decoded_action = Variable(torch.zeros(action.size(0), self.action_space.shape[0]))
+        zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
+
+        for j_index, j in enumerate(info['joints']):
             # Alternatively, we can average the two anchor positions instead of just using anchorA
             A_pos_x, A_pos_y = j[0], j[1]
             grid_x, grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
-            decoded_action[j] = action[j, grid_x, grid_y]
+            decoded_action[0, j_index] = action[0, 0, grid_x, grid_y]
         return decoded_action

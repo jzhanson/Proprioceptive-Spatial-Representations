@@ -134,11 +134,11 @@ class BipedalWalker(gym.Env):
                     categoryBits=0x0001,
                 )
 
-        self.reset()
-
         high = np.array([np.inf]*24)
         self.action_space = spaces.Box(np.array([-1,-1,-1,-1]), np.array([+1,+1,+1,+1]))
         self.observation_space = spaces.Box(-high, high)
+
+        self.reset()
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -306,6 +306,7 @@ class BipedalWalker(gym.Env):
             position = (init_x, init_y),
             fixtures = HULL_FD
                 )
+        self.hull.ground_contact = False
         self.hull.color1 = (0.5,0.4,0.9)
         self.hull.color2 = (0.3,0.3,0.5)
         self.hull.ApplyForceToCenter((self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM), 0), True)
@@ -332,6 +333,7 @@ class BipedalWalker(gym.Env):
                 lowerAngle = -0.8,
                 upperAngle = 1.1,
                 )
+            leg.ground_contact = False
             self.legs.append(leg)
             self.joints.append(self.world.CreateJoint(rjd))
 
@@ -369,7 +371,8 @@ class BipedalWalker(gym.Env):
                 return 0
         self.lidar = [LidarCallback() for _ in range(10)]
 
-        return self.step(np.array([0,0,0,0]))[0]
+        ob, _, _, info = self.step(np.zeros(self.action_space.shape))
+        return ob, info
 
     def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
@@ -442,10 +445,13 @@ class BipedalWalker(gym.Env):
         if pos[0] > (TERRAIN_LENGTH-TERRAIN_GRASS)*TERRAIN_STEP:
             done   = True
 
+        return np.array(state), reward, done, self._info_dict()
+
+    def _info_dict(self):
         # Construct the info dict so that the grid state space and action space can be built
         info = {}
-        info['zero_x'] = zero_x
-        info['zero_y'] = zero_y
+        info['hull_x'] = self.hull.position.x
+        info['hull_y'] = self.hull.position.y
         info['bodies'] = []
         for b in ([self.hull] + self.legs):
             info['bodies'].append((
@@ -464,8 +470,8 @@ class BipedalWalker(gym.Env):
                 j.angle + (0.0 if even else 1.0),
                 j.speed / (SPEED_HIP if even else SPEED_KNEE)
             ))
+        return info
 
-        return np.array(state), reward, done, extras
 
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering

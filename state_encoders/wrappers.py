@@ -23,7 +23,7 @@ class MaxMinFilter(torch.nn.Module):
         obs = x.clamp(min=self.mn_d, max=self.mx_d)
         new_obs = (((obs - self.mn_d) * (self.new_maxd - self.new_mind)
                     ) / (self.mx_d - self.mn_d)) + self.new_mind
-        return new_obs        
+        return new_obs
 
 
 class NormalizedEnv(torch.nn.Module):
@@ -56,9 +56,9 @@ class FrameStack(torch.nn.Module):
     def forward(self, inputs):
         x, frames = inputs
         #x = self.obs_norm(x)
-        frames.append(x[:,None,:])
+        frames.append(x[:,None])
         while len(frames) != self.n_frames:
-            frames.append(x[:,None,:])
+            frames.append(x[:,None])
         x = torch.cat(list(frames), 1)
         return x, frames
 
@@ -67,6 +67,6 @@ class FrameStack(torch.nn.Module):
 
     def reinitialize_memory(self, old_memory):
         return deque(
-            [Variable(e.data) for e in old_memory], 
+            [Variable(e.data) for e in old_memory],
             maxlen=self.n_frames
         )

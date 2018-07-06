@@ -4,13 +4,18 @@ import numpy as np
 from collections import deque
 from gym import spaces
 
+from envs.bipedal_walker import BipedalWalker, BipedalWalkerHardcore
 from envs.humanoid_walker import HumanoidWalker, HumanoidWalkerHardcore
 from envs.json_walker import JSONWalker, JSONWalkerHardcore
 from envs.grid_bipedal_walker import GridBipedalWalker, GridBipedalWalkerHardcore
 from envs.halfgrid_bipedal_walker import HalfGridBipedalWalker, HalfGridBipedalWalkerHardcore
 
 def create_env(env_id, args):
-    if env_id == 'HumanoidWalker-v0':
+    if env_id == 'BipedalWalker-v2':
+        env = BipedalWalker()
+    elif env_id == 'BipedalWalkerHardcore-v2':
+        env = BipedalWalkerHardcore()
+    elif env_id == 'HumanoidWalker-v0':
         env = HumanoidWalker()
     elif env_id == 'HumanoidWalkerHardcore-v0':
         env = HumanoidWalkerHardcore()
@@ -124,4 +129,3 @@ class NormalizedEnv():
         unbiased_std = self.state_std / (1 - pow(self.alpha, self.num_steps))
 
         return (observation - unbiased_mean) / (unbiased_std + 1e-8)
-

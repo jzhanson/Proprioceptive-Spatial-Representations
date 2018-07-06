@@ -14,7 +14,7 @@ from common.utils import norm_col_init, weights_init, weights_init_mlp
 # Late-fusion MLP + LSTM
 # All frames first processed by MLP then passed to LSTM
 class ActorCritic(torch.nn.Module):
-    def __init__(self, observation_space, action_space, n_frames):
+    def __init__(self, observation_space, action_space, n_frames, args):
         super(ActorCritic, self).__init__()
 
         # Stack preprocessing
@@ -64,7 +64,7 @@ class ActorCritic(torch.nn.Module):
         self.train()
 
     def forward(self, inputs):
-        x, (hx, cx, frames) = inputs
+        x, _, (hx, cx, frames) = inputs
 
         # Stack it
         x, frames = self.frame_stack((x, frames))
