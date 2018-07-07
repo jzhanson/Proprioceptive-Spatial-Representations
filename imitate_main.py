@@ -131,7 +131,7 @@ parser.add_argument(
     metavar='ESF',
     help='Expert number of observations to stack.')
 parser.add_argument(
-    '--grid_edge',
+    '--grid-edge',
     type=int,
     default=16,
     metavar='GE',
