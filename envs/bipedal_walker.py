@@ -310,6 +310,8 @@ class BipedalWalker(gym.Env):
         self.hull.color1 = (0.5,0.4,0.9)
         self.hull.color2 = (0.3,0.3,0.5)
         self.hull.ApplyForceToCenter((self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM), 0), True)
+        self.hull.connected_body = [1, 3]
+        self.hull.connected_joints = [0, 2]
 
         self.legs = []
         self.joints = []
@@ -334,8 +336,14 @@ class BipedalWalker(gym.Env):
                 upperAngle = 1.1,
                 )
             leg.ground_contact = False
+            leg.connected_body = [0, i+3]
+            leg.connected_joints = [i+1, i+2]
             self.legs.append(leg)
-            self.joints.append(self.world.CreateJoint(rjd))
+            hip = self.world.CreateJoint(rjd)
+            hip.connected_body = [0, i+3]
+            # We define connected joints to a joint to be the distance-1 neighbors
+            hip.connected_joints = [i+2]
+            self.joints.append(hip)
 
             lower = self.world.CreateDynamicBody(
                 position = (init_x, init_y - LEG_H*3/2 - LEG_DOWN),
@@ -357,8 +365,13 @@ class BipedalWalker(gym.Env):
                 upperAngle = -0.1,
                 )
             lower.ground_contact = False
+            lower.connected_body = [i+2]
+            lower.connected_joints = [i+2]
+            knee = self.world.CreateJoint(rjd)
+            knee.connected_body = [i+2, i+3]
+            knee.connected_joints = [i+1]
             self.legs.append(lower)
-            self.joints.append(self.world.CreateJoint(rjd))
+            self.joints.append(knee)
 
         self.drawlist = self.terrain + self.legs + [self.hull]
 
@@ -463,7 +476,9 @@ class BipedalWalker(gym.Env):
                 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
                 1.0 if b.ground_contact else 0,
                 # Depth: 0.0 if "front", 1.0 if "back", hull is considered front and second leg is back leg
-                0.0 if b_index < 3 else 1.0
+                0.0 if b_index < 3 else 1.0,
+                b.connected_body,
+                b.connected_joints
             ))
         info['joints'] = []
         for j_index in range(len(self.joints)):
@@ -474,7 +489,9 @@ class BipedalWalker(gym.Env):
                 j.angle + (0.0 if even else 1.0),
                 j.speed / (SPEED_HIP if even else SPEED_KNEE),
                 # Depth: second set of joints are in back
-                0.0 if j_index < 2 else 1.0
+                0.0 if j_index < 2 else 1.0,
+                j.connected_body,
+                j.connected_joints
             ))
         return info
 
