@@ -17,7 +17,7 @@ class NNGrid(torch.nn.Module):
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
-            shape=(18, self.grid_edge, self.grid_edge))
+            shape=(20, self.grid_edge, self.grid_edge))
 
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
