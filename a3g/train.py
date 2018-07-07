@@ -33,9 +33,9 @@ def train(rank, args, shared_model, optimizer):
     player.gpu_id = gpu_id
     AC = importlib.import_module(args.model_name)
     player.model = AC.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames)
+        env.observation_space, env.action_space, args.stack_frames, args)
 
-    player.state = player.env.reset()
+    player.state, player.info = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
@@ -58,7 +58,7 @@ def train(rank, args, shared_model, optimizer):
                 player.memory = player.model.initialize_memory()
         else:
             player.memory = player.model.reinitialize_memory(player.memory)
-            
+
         for step in range(args.num_steps):
 
             player.action_train()
@@ -68,7 +68,7 @@ def train(rank, args, shared_model, optimizer):
 
         if player.done:
             player.eps_len = 0
-            state = player.env.reset()
+            state, player.info = player.env.reset()
             player.state = torch.from_numpy(state).float()
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
@@ -83,7 +83,7 @@ def train(rank, args, shared_model, optimizer):
             state = player.state
             state = state.unsqueeze(0)
             value, _, _, _ = player.model(
-                (Variable(state), player.memory))
+                (Variable(state), player.info, player.memory))
             R = value.data
 
         player.values.append(Variable(R))
