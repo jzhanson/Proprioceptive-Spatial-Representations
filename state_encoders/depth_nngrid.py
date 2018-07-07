@@ -35,12 +35,12 @@ class NNGrid(torch.nn.Module):
         zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
 
         # 1. For every body b in body config, get position (bx, by) and
-        #   - Write angle of b to (0, bx, by)
-        #   - Write angvel of b to (1,bx,by) in G
-        #   - Write velx of b to (2,bx,by) in G
-        #   - Write vely of b to (3,bx,by) in G
-        #   - Write ground_contact of b to (4,bx,by) in G
-        #   - Write depth of b to (9, bx, by) in G
+        #   - Write angle of b to (0, bx, by) if front and (5, bx, by) if back
+        #   - Write angvel of b to (1,bx,by) in G if front and (6, bx, by) if back
+        #   - Write velx of b to (2,bx,by) in G if front and (7, bx, by) if back
+        #   - Write vely of b to (3,bx,by) in G if front and (8, bx, by) if back
+        #   - Write ground_contact of b to (4,bx,by) in G if front and (9, bx, by) if back
+        #   - Write 1.0 to (18, bx, by) in G if front and (19, bx, by) if back
         for b in info['bodies']:
             # b format:
             # pos_x, pos_y, ang,
@@ -48,21 +48,24 @@ class NNGrid(torch.nn.Module):
             pos_x, pos_y = b[0], b[1]
             f = Variable(torch.from_numpy(np.array(b[2:7])))
             d = b[7]
+            d_var = Variable(torch.tensor(b[7]))
 
             # Round to nearest integer coordinates here
             grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
             if d > 0:
                 grid_state[0:5, grid_x, grid_y] = f
+                grid_state[18, grid_x, grid_y] = d_var
             else:
                 grid_state[5:10, grid_x, grid_y] = f
+                grid_state[19, grid_x, grid_y] = Variable(torch.tensor(1.0))
+
 
         # 2. For every joint j in body configuration:
         #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
-        #   - Write angle of j to (5,Ajx,Ajy),(7,Bjx,Bjy) in G
-        #   - Write speed of j to (6,Ajx,Ajy),(8,Bjx,Bjy) in G
-        #   - Write depth of j to (9,Ajx,Ajy),(9,Bjx,Bjy) in G
+        #   - Write angle of j to (10,Ajx,Ajy),(12,Bjx,Bjy) in G if front and (14,Ajx,Ajy),(16,Bjx,Bjy) if back
+        #   - Write speed of j to (11,Ajx,Ajy),(13,Bjx,Bjy) in G if front and (15,Ajx,Ajy),(17,Bjx,Bjy) if back
+        #   - Write depth of j to (18,Ajx,Ajy),(18,Bjx,Bjy) in G if front and (19,Ajx,Ajy),(19,Bjx,Bjy) if back
         for j in info['joints']:
-
             # j format:
             # A_x, A_y, B_x, B_y,
             # angle, speed, depth
@@ -70,6 +73,7 @@ class NNGrid(torch.nn.Module):
             B_pos_x, B_pos_y = j[2], j[3]
             f = Variable(torch.from_numpy(np.array(j[4:6])))
             d = j[6]
+            d_var = Variable(torch.tensor(j[6]))
 
             # For each anchor position, write joint features
             A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
@@ -78,9 +82,13 @@ class NNGrid(torch.nn.Module):
             if d > 0:
                 grid_state[10:12, A_grid_x, A_grid_y] = f
                 grid_state[12:14, B_grid_x, B_grid_y] = f
+                grid_state[18, A_grid_x, A_grid_y] = d_var
+                grid_state[18, B_grid_x, B_grid_y] = d_var
             else:
                 grid_state[14:16, A_grid_x, A_grid_y] = f
                 grid_state[16:18, B_grid_x, B_grid_y] = f
+                grid_state[19, A_grid_x, A_grid_y] = Variable(torch.tensor(1.0))
+                grid_state[19, B_grid_x, B_grid_y] = Variable(torch.tensor(1.0))
 
         return grid_state[None]
 
