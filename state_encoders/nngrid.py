@@ -33,7 +33,7 @@ class NNGrid(torch.nn.Module):
 
         # Project raw state into grid, center grid at hull
         zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
-        
+
         # 1. For every body b in body config, get position (bx, by) and
         #   - Write angle of b to (0, bx, by)
         #   - Write angvel of b to (1,bx,by) in G
@@ -45,7 +45,7 @@ class NNGrid(torch.nn.Module):
             # pos_x, pos_y, ang,
             # ang_vel, lin_vel_x, lin_vel_y, contact
             pos_x, pos_y = b[0], b[1]
-            f = Variable(torch.from_numpy(np.array(b[2:])))
+            f = Variable(torch.from_numpy(np.array(b[2:7])))
 
             # Round to nearest integer coordinates here
             grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
@@ -63,7 +63,7 @@ class NNGrid(torch.nn.Module):
             # angle, speed
             A_pos_x, A_pos_y = j[0], j[1]
             B_pos_x, B_pos_y = j[2], j[3]
-            f = Variable(torch.from_numpy(np.array(j[4:])))
+            f = Variable(torch.from_numpy(np.array(j[4:6])))
 
             # For each anchor position, write joint features
             A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
