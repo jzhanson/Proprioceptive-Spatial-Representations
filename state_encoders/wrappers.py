@@ -70,3 +70,27 @@ class FrameStack(torch.nn.Module):
             [Variable(e.data) for e in old_memory],
             maxlen=self.n_frames
         )
+
+class MotionBlur(torch.nn.Module):
+    def __init__(self, blur_frames):
+        super(MotionBlur, self).__init__()
+        self.blur_frames = blur_frames
+
+    def forward(self, inputs):
+        x, frames = inputs
+        frames.append(x[:,None])
+        while len(frames) != self.n_frames:
+            frames.append(x[:,None])
+        x = sum(list(frames))
+
+        return x, frames
+
+    def initialize_memory(self):
+        return deque([], maxlen=self.blur_frames)
+
+    def reinitialize_memory(self, old_memory):
+        return deque(
+            [Variable(e.data) for e in old_memory],
+            maxlen=self.blur_frames
+        )
+
