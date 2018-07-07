@@ -48,16 +48,15 @@ class NNGrid(torch.nn.Module):
             pos_x, pos_y = b[0], b[1]
             f = Variable(torch.from_numpy(np.array(b[2:7])))
             d = b[7]
-            d_var = Variable(torch.tensor(b[7]))
 
             # Round to nearest integer coordinates here
             grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
             if d > 0:
                 grid_state[0:5, grid_x, grid_y] = f
-                grid_state[18, grid_x, grid_y] = d_var
+                grid_state[18, grid_x, grid_y] = 1
             else:
                 grid_state[5:10, grid_x, grid_y] = f
-                grid_state[19, grid_x, grid_y] = Variable(torch.tensor(1.0))
+                grid_state[19, grid_x, grid_y] = 1
 
 
         # 2. For every joint j in body configuration:
@@ -73,7 +72,6 @@ class NNGrid(torch.nn.Module):
             B_pos_x, B_pos_y = j[2], j[3]
             f = Variable(torch.from_numpy(np.array(j[4:6])))
             d = j[6]
-            d_var = Variable(torch.tensor(j[6]))
 
             # For each anchor position, write joint features
             A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
@@ -82,13 +80,13 @@ class NNGrid(torch.nn.Module):
             if d > 0:
                 grid_state[10:12, A_grid_x, A_grid_y] = f
                 grid_state[12:14, B_grid_x, B_grid_y] = f
-                grid_state[18, A_grid_x, A_grid_y] = d_var
-                grid_state[18, B_grid_x, B_grid_y] = d_var
+                grid_state[18, A_grid_x, A_grid_y] = 1
+                grid_state[18, B_grid_x, B_grid_y] = 1
             else:
                 grid_state[14:16, A_grid_x, A_grid_y] = f
                 grid_state[16:18, B_grid_x, B_grid_y] = f
-                grid_state[19, A_grid_x, A_grid_y] = Variable(torch.tensor(1.0))
-                grid_state[19, B_grid_x, B_grid_y] = Variable(torch.tensor(1.0))
+                grid_state[19, A_grid_x, A_grid_y] = 1
+                grid_state[19, B_grid_x, B_grid_y] = 1
 
         return grid_state[None]
 
