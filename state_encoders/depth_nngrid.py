@@ -17,7 +17,7 @@ class NNGrid(torch.nn.Module):
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
-            shape=(10, self.grid_edge, self.grid_edge))
+            shape=(18, self.grid_edge, self.grid_edge))
 
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
@@ -25,7 +25,7 @@ class NNGrid(torch.nn.Module):
     def forward(self, inputs):
         ob, info = inputs
 
-        grid_state = torch.zeros(10, self.grid_edge, self.grid_edge)
+        grid_state = torch.zeros(self.observation_space.shape)
         if ob.is_cuda:
             with torch.cuda.device(ob.get_device()):
                 grid_state = grid_state.cuda()
@@ -47,13 +47,14 @@ class NNGrid(torch.nn.Module):
             # ang_vel, lin_vel_x, lin_vel_y, contact, depth
             pos_x, pos_y = b[0], b[1]
             f = Variable(torch.from_numpy(np.array(b[2:7])))
-            d = Variable(torch.tensor(b[7]))
+            d = b[7]
 
             # Round to nearest integer coordinates here
             grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
-            # Not sure if these scalings apply for hull only or hull and legs
-            grid_state[0:5, grid_x, grid_y] = f
-            grid_state[9, grid_x, grid_y] = d
+            if d > 0:
+                grid_state[0:5, grid_x, grid_y] = f
+            else:
+                grid_state[5:10, grid_x, grid_y] = f
 
         # 2. For every joint j in body configuration:
         #   - Get Position of Both Anchors of Joint (Ajx, Ajy), (Bjx, Bjy)
@@ -68,16 +69,18 @@ class NNGrid(torch.nn.Module):
             A_pos_x, A_pos_y = j[0], j[1]
             B_pos_x, B_pos_y = j[2], j[3]
             f = Variable(torch.from_numpy(np.array(j[4:6])))
-            d = Variable(torch.tensor(j[6]))
+            d = j[6]
 
             # For each anchor position, write joint features
             A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
             B_grid_x, B_grid_y = self._coord_to_grid(B_pos_x, zero_x), self._coord_to_grid(B_pos_y, zero_y)
 
-            grid_state[5:7, A_grid_x, A_grid_y] = f
-            grid_state[7:9, B_grid_x, B_grid_y] = f
-            grid_state[9, A_grid_x, A_grid_y] = d
-            grid_state[9, B_grid_x, B_grid_y] = d
+            if d > 0:
+                grid_state[10:12, A_grid_x, A_grid_y] = f
+                grid_state[12:14, B_grid_x, B_grid_y] = f
+            else:
+                grid_state[14:16, A_grid_x, A_grid_y] = f
+                grid_state[16:18, B_grid_x, B_grid_y] = f
 
         return grid_state[None]
 
