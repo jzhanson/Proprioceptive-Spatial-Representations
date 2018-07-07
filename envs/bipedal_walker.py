@@ -453,13 +453,17 @@ class BipedalWalker(gym.Env):
         info['hull_x'] = self.hull.position.x
         info['hull_y'] = self.hull.position.y
         info['bodies'] = []
-        for b in ([self.hull] + self.legs):
+        body_parts = [self.hull] + self.legs
+        for b_index in range(len(body_parts)):
+            b = body_parts[b_index]
             info['bodies'].append((
                 b.position.x, b.position.y, b.angle,
                 2.0*b.angularVelocity/FPS,
                 0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS,
                 0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
-                1.0 if b.ground_contact else 0
+                1.0 if b.ground_contact else 0,
+                # Depth: 0.0 if "front", 1.0 if "back", hull is considered front and second leg is back leg
+                0.0 if b_index < 3 else 1.0
             ))
         info['joints'] = []
         for j_index in range(len(self.joints)):
@@ -468,7 +472,9 @@ class BipedalWalker(gym.Env):
             info['joints'].append((
                 j.anchorA.x, j.anchorA.y, j.anchorB.x, j.anchorB.y,
                 j.angle + (0.0 if even else 1.0),
-                j.speed / (SPEED_HIP if even else SPEED_KNEE)
+                j.speed / (SPEED_HIP if even else SPEED_KNEE),
+                # Depth: second set of joints are in back
+                0.0 if j_index < 2 else 1.0
             ))
         return info
 
