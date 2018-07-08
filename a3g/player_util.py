@@ -28,7 +28,7 @@ class Agent(object):
     def action_train(self):
         self.state = self.state.unsqueeze(0)
         value, mu, sigma, self.memory = self.model(
-            (Variable(self.state), self.memory))
+            (Variable(self.state), self.info, self.memory))
         mu = torch.clamp(mu, -1.0, 1.0)
         sigma = F.softplus(sigma) + 1e-5
         eps = torch.randn(mu.size())
@@ -75,7 +75,7 @@ class Agent(object):
                 self.memory = self.model.reinitialize_memory(self.memory)
             self.state = self.state.unsqueeze(0)
             value, mu, sigma, self.memory = self.model(
-                (Variable(self.state), self.memory))
+                (Variable(self.state), self.info, self.memory))
         mu = torch.clamp(mu.data, -1.0, 1.0)
         action = mu.cpu().numpy()[0]
         state, self.reward, self.done, self.info = self.env.step(action)

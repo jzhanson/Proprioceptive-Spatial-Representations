@@ -116,6 +116,17 @@ parser.add_argument(
     metavar='SF',
     help='Choose number of observations to stack')
 parser.add_argument(
+    '--grid-edge',
+    type=int,
+    default=16,
+    metavar='GE',
+    help='grid size')
+parser.add_argument(
+    '--grid-scale',
+    type=float,
+    default=5.44,
+    help='grid scale')
+parser.add_argument(
     '--blur-frames',
     type=int,
     default=1,
@@ -127,12 +138,6 @@ parser.add_argument(
     default=1.0,
     metavar='BD',
     help='Choose discount factor for motion blur')
-parser.add_argument(
-    '--grid-edge',
-    type=int,
-    default=32,
-    metavar='GE',
-    help='Number of squares on one edge of grid state')
 parser.add_argument(
     '--gpu-ids',
     type=int,
@@ -165,7 +170,7 @@ if __name__ == '__main__':
     # Create model
     AC = importlib.import_module(args.model_name)
     shared_model = AC.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames)
+        env.observation_space, env.action_space, args.stack_frames, args)
     if args.load:
         print('Loading model from: {0}{1}.dat'.format(
             args.load_model_dir, args.env))
