@@ -56,6 +56,8 @@ class NNGrid(torch.nn.Module):
                 y = y + float(m)
                 values = values + differences / interval
 
+    # TODO: pytorch'ify these functions so that input features are already Variables
+    # this will allow future hybrid models to be fully-differentiable
     def _draw_lines(self, grid_state, info):
         # First, connect body parts to each other. Don't route through joints yet
         zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5

@@ -22,6 +22,8 @@ class NNGrid(torch.nn.Module):
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
 
+    # TODO: pytorch'ify these functions so that input features are already Variables
+    # this will allow future hybrid models to be fully-differentiable
     def forward(self, inputs):
         ob, info = inputs
 
