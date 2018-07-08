@@ -22,21 +22,22 @@ class NNGrid(torch.nn.Module):
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
 
-    def _dda_draw(self, grid_state, start, end, start_val, end_val, channel):
+    def _dda_draw(self, grid_state, start, end, start_vals, end_vals, channels):
         if start == end:
             return
         start_x, start_y = start
         end_x, end_y = end
-        difference = end_val - start_val
-        value = float(start_val)
+        start_channel, end_channel = channels
+        differences = (end_vals - start_vals).astype(float)
+        values = start_vals.astype(float)
         # To avoid division by 0
         if start_x == end_x:
             x = float(start_x)
             interval = abs(end_y - start_y)
             # Re-fills in endpoints
             for y in range(start_y, end_y+1):
-                grid_state[channel, round(x), y] = value
-                value = value + float(difference) / interval
+                grid_state[start_channel:end_channel, round(x), y] = Variable(torch.from_numpy(values))
+                values = values + differences / interval
             return
         m = (float(end_y) - float(start_y)) / (float(end_x) - float(start_x))
         if abs(m) > 1:
@@ -44,48 +45,70 @@ class NNGrid(torch.nn.Module):
             interval = abs(end_y - start_y)
             # Re-fills in endpoints
             for y in range(start_y, end_y+1):
-                grid_state[channel, round(x), y] = value
+                grid_state[start_channel:end_channel, round(x), y] = Variable(torch.from_numpy(values))
                 x = x + 1. / float(m)
-                value = value + float(difference) / interval
+                values = values + differences / interval
         else:
             y = float(start_y)
             interval = abs(end_x - start_x)
             for x in range(start_x, end_x+1):
-                print(start_x, end_x+1)
-                #print(str(channel) + " " + str(x) + " " + str(round(y)))
-                grid_state[channel, x, round(y)] = value
+                grid_state[start_channel:end_channel, x, round(y)] = Variable(torch.from_numpy(values))
                 y = y + float(m)
-                value = value + float(difference) / interval
+                values = values + differences / interval
 
     def _draw_lines(self, grid_state, info):
-        # First, connect body parts to each other
+        # First, connect body parts to each other. Don't route through joints yet
         zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
         for b in info['bodies']:
             pos_x, pos_y = b[0], b[1]
             grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
+
             for b_neighbor_index in b[8]:
                 b_neighbor = info['bodies'][b_neighbor_index]
                 neighbor_pos_x, neighbor_pos_y = b_neighbor[0], b_neighbor[1]
                 neighbor_grid_x, neighbor_grid_y = self._coord_to_grid(neighbor_pos_x, zero_x), self._coord_to_grid(neighbor_pos_y, zero_y)
+
                 # Write to front/back channels
                 start_ind = int(b[7]) * 5
-                for attr in range(5):
-                    self._dda_draw(grid_state, (grid_x, grid_y), (neighbor_grid_x, neighbor_grid_y), b[2 + attr], b_neighbor[2 + attr], attr + start_ind)
+                self._dda_draw(
+                    grid_state,
+                    (grid_x, grid_y),
+                    (neighbor_grid_x, neighbor_grid_y),
+                    np.array(b[2:7]),
+                    np.array(b_neighbor[2:7]),
+                    (start_ind, start_ind + 5)
+                )
+
         for j in info['joints']:
             A_pos_x, A_pos_y = j[0], j[1]
             A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
             B_pos_x, B_pos_y = j[2], j[3]
             B_grid_x, B_grid_y = self._coord_to_grid(B_pos_x, zero_x), self._coord_to_grid(B_pos_y, zero_y)
+
             for j_neighbor_index in j[8]:
                 j_neighbor = info['joints'][j_neighbor_index]
                 A_neighbor_pos_x, A_neighbor_pos_y = j_neighbor[0], j_neighbor[1]
                 A_neighbor_grid_x, A_neighbor_grid_y = self._coord_to_grid(A_neighbor_pos_x, zero_x), self._coord_to_grid(A_neighbor_pos_y, zero_y)
                 B_neighbor_pos_x, B_neighbor_pos_y = j_neighbor[2], j_neighbor[3]
                 B_neighbor_grid_x, B_neighbor_grid_y = self._coord_to_grid(B_neighbor_pos_x, zero_x), self._coord_to_grid(B_neighbor_pos_y, zero_y)
+
                 start_ind = 10 + int(j[6]) * 4
-                for attr in range(2):
-                    self._dda_draw(grid_state, (A_grid_x, A_grid_y), (A_neighbor_grid_x, A_neighbor_grid_y), j[4 + attr], j_neighbor[4 + attr], attr + start_ind)
-                    self._dda_draw(grid_state, (B_grid_x, B_grid_y), (B_neighbor_grid_x, B_neighbor_grid_y), j[4 + attr], j_neighbor[4 + attr], attr + start_ind + 2)
+                self._dda_draw(
+                    grid_state,
+                    (A_grid_x, A_grid_y),
+                    (A_neighbor_grid_x, A_neighbor_grid_y),
+                    np.array(j[4:6]),
+                    np.array(j_neighbor[4:6]),
+                    (start_ind, start_ind + 2)
+                )
+                self._dda_draw(
+                    grid_state,
+                    (B_grid_x, B_grid_y),
+                    (B_neighbor_grid_x, B_neighbor_grid_y),
+                    np.array(j[4:6]),
+                    np.array(j_neighbor[4:6]),
+                    (start_ind, start_ind + 2)
+                )
         return grid_state
 
 
