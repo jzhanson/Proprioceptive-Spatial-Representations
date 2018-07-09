@@ -98,8 +98,7 @@ class ActorCritic(torch.nn.Module):
         critic_out = self.critic_linear(x)
         actor_out = F.softsign(self.actor_linear(x))
         actor_out2 = self.actor_linear2(x)
-
-        return self.critic_linear(x), F.softsign(self.actor_linear(x)), self.actor_linear2(x), (convhx, convcx, hx, cx, frames)
+        return critic_out, actor_out, actor_out2, (convhx, convcx, hx, cx, frames)
 
     def initialize_memory(self):
         if next(self.parameters()).is_cuda:
