@@ -1,11 +1,16 @@
 from __future__ import division
 import numpy as np
+import copy
 
 import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
+
+from state_encoders.wrappers import FrameStack
+from state_encoders.nngrid import NNGrid as senc_NNGrid
+from action_decoders.nngrid import NNGrid as adec_NNGrid
 
 from .convlstm_layer import ConvLSTM
 
@@ -14,26 +19,44 @@ from common.utils import norm_col_init, weights_init, weights_init_mlp
 # Early-fusion Conv1D + LSTM
 # All frames stacks, passed to 1D convnet then LSTM
 class ActorCritic(torch.nn.Module):
-    def __init__(self, observation_space, action_space, n_frames):
+    def __init__(self, observation_space, action_space, n_frames, args):
         super(ActorCritic, self).__init__()
+
+        # State preprocessing
+        self.senc_nngrid = senc_NNGrid(args)
+        self.frame_stack = FrameStack(n_frames)
+
+        # Action postprocessing
+        self.adec_nngrid = adec_NNGrid(action_space, args)
 
         self.observation_space = observation_space
         self.action_space      = action_space
 
-        self.n_frames    = n_frames
-        self.input_size  = self.observation_space.shape
+        self.input_size  = self.senc_nngrid.observation_space.shape
         self.output_size = int(np.prod(self.action_space.shape))
 
-        self.convlstm1 = ConvLSTM(self.n_frames*self.input_size[0], 32, 3, stride=1, padding=1)
-        self.convlstm2 = ConvLSTM(32, 32, 3, stride=1, padding=1)
-        self.convlstm3 = ConvLSTM(32, 32, 3, stride=1, padding=1)
-        self.convlstm4 = ConvLSTM(32, 32, 3, stride=1, padding=1)
+        _s = [32, 64, 128, 128]
+        self.convlstm1 = ConvLSTM(self.frame_stack.n_frames*self.input_size[0], 32, 4, stride=1, padding=1)
+        self.convlstm2 = ConvLSTM( 32,  64, 3, stride=1, padding=1)
+        self.convlstm3 = ConvLSTM( 64, 128, 3, stride=1, padding=1)
+        self.convlstm4 = ConvLSTM(128, 128, 3, stride=1, padding=1)
+        self.convlstm = [
+            self.convlstm1,
+            self.convlstm2,
+            self.convlstm3,
+            self.convlstm4,
+        ]
+        _is = (n_frames*self.input_size[0],)+self.input_size[1:]
+        self.memsizes = []
+        for i in range(len(self.convlstm)):
+            _is = self.convlstm[i]._spatial_size_output_given_input((1,)+_is)
+            _is = (_s[i],)+_is
+            self.memsizes.append(copy.deepcopy(_is))
 
-        self.critic_linear = nn.Conv2d(32, 1, 3, stride=1, padding=1)
-        self.actor_linear  = nn.Conv2d(32, 1, 3, stride=1, padding=1)
-        self.actor_linear2 = nn.Conv2d(32, 1, 3, stride=1, padding=1)
+        self.critic_linear = nn.Conv2d(128, 1, 3, stride=1, padding=1)
+        self.actor_linear  = nn.Conv2d(128, 1, 3, stride=1, padding=1)
+        self.actor_linear2 = nn.Conv2d(128, 1, 3, stride=1, padding=1)
 
-        # TODO(eparisot): does this make sense for conv?
         self.actor_linear.weight.data = norm_col_init(
             self.actor_linear.weight.data, 0.01)
         self.actor_linear.bias.data.fill_(0)
@@ -46,38 +69,55 @@ class ActorCritic(torch.nn.Module):
 
         self.train()
 
-    def _convlstmforward(self, x, hx, cx):
-        hx[0], cx[0] = self.convlstm1(x,     (hx[0],cx[0]))
-        hx[1], cx[1] = self.convlstm2(hx[0], (hx[1],cx[1]))
-        hx[2], cx[2] = self.convlstm3(hx[1], (hx[2],cx[2]))
-        hx[3], cx[3] = self.convlstm4(hx[2], (hx[3],cx[3]))
-        return hx, cx
+    def _convlstmforward(self, x, convhx, convcx):
+        last_convhx = x
+        for i in range(len(self.convlstm)):
+            convhx[i], convcx[i] = self.convlstm[i](last_convhx, (convhx[i], convcx[i]))
+            last_convhx = convhx[i]
+        return convhx, convcx
 
     def forward(self, inputs):
-        x, (hx, cx) = inputs
+        ob, info, (convhx, convcx, frames) = inputs
 
+        # Get the grid state from vectorized input
+        x = self.senc_nngrid((ob, info))
+
+        # Stack it
+        x, frames = self.frame_stack((x, frames))
+
+        # Resize to correct dims for convnet
         batch_size = x.size(0)
-        x = x.view(batch_size, 
-                   self.n_frames*self.input_size[0], 
+        x = x.view(batch_size,
+                   self.frame_stack.n_frames*self.input_size[0],
                    self.input_size[1], self.input_size[2])
+        convhx, convcx = self._convlstmforward(x, convhx, convcx)
+        x = convhx[-1]
 
-        hx, cx = self._convlstmforward(x, hx, cx)
-        x = hx[3]
-        
-        critic_out = self.critic_linear(x).view(batch_size, self.output_size).mean(-1)
-        actor_out = F.softsign(self.actor_linear(x)).view(batch_size, self.output_size)
-        actor_out2 = self.actor_linear2(x).view(batch_size, self.output_size)
+        # Compute action mean, action var and value grid
+        critic_out = self.critic_linear(x)
+        actor_out = F.softsign(self.actor_linear(x))
+        actor_out2 = self.actor_linear2(x)
 
-        return critic_out, actor_out, actor_out2, (hx, cx)
+        # Extract motor-specific values from action grid
+        critic_out = self.adec_nngrid((critic_out, info)).mean(-1, keepdim=True)
+        actor_out  = self.adec_nngrid((actor_out, info))
+        actor_out2 = self.adec_nngrid((actor_out2, info))
+        return critic_out, actor_out, actor_out2, (convhx, convcx, frames)
 
     def initialize_memory(self):
         if next(self.parameters()).is_cuda:
-            return ([Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2]).cuda()) for i in range(4)],
-                    [Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2]).cuda()) for i in range(4)])
-        return ([Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2])) for i in range(4)],
-                [Variable(torch.zeros(1, 32, self.input_size[1], self.input_size[2])) for i in range(4)])
+            return (
+                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(len(self.memsizes))],
+                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(len(self.memsizes))],
+                self.frame_stack.initialize_memory())
+        return (
+            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(len(self.memsizes))],
+            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(len(self.memsizes))],
+            self.frame_stack.initialize_memory())
 
     def reinitialize_memory(self, old_memory):
-        old_hx, old_cx = old_memory
-        return ([Variable(old_hx_l.data) for old_hx_l in old_hx],
-                [Variable(old_cx_l.data) for old_cx_l in old_cx])
+        old_convhx, old_convcx, old_frames = old_memory
+        return (
+            [Variable(chx.data) for chx in old_convhx],
+            [Variable(ccx.data) for ccx in old_convcx],
+            self.frame_stack.reinitialize_memory(old_frames))
