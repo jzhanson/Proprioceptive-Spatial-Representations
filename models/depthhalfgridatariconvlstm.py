@@ -44,7 +44,7 @@ class ActorCritic(torch.nn.Module):
 
         _is = (n_frames*self.input_size[0],)+self.input_size[1:]
         self.memsizes = []
-        for i in range(3):
+        for i in range(len(self.convlstm)):
             _is = self.convlstm[i]._spatial_size_output_given_input((1,)+_is)
             _is = (_s[i],)+_is
             self.memsizes.append(copy.deepcopy(_is))
