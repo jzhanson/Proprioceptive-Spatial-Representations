@@ -111,6 +111,7 @@ class BipedalWalker(gym.Env):
     def __init__(self):
         self.seed()
         self.viewer = None
+        self.model = None
 
         self.world = Box2D.b2World()
         self.terrain = None
@@ -387,26 +388,7 @@ class BipedalWalker(gym.Env):
         ob, _, _, info = self.step(np.zeros(self.action_space.shape))
         return ob, info
 
-    def step(self, action):
-        #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
-        control_speed = False  # Should be easier as well
-        if control_speed:
-            self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
-            self.joints[1].motorSpeed = float(SPEED_KNEE * np.clip(action[1], -1, 1))
-            self.joints[2].motorSpeed = float(SPEED_HIP  * np.clip(action[2], -1, 1))
-            self.joints[3].motorSpeed = float(SPEED_KNEE * np.clip(action[3], -1, 1))
-        else:
-            self.joints[0].motorSpeed     = float(SPEED_HIP     * np.sign(action[0]))
-            self.joints[0].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[0]), 0, 1))
-            self.joints[1].motorSpeed     = float(SPEED_KNEE    * np.sign(action[1]))
-            self.joints[1].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[1]), 0, 1))
-            self.joints[2].motorSpeed     = float(SPEED_HIP     * np.sign(action[2]))
-            self.joints[2].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[2]), 0, 1))
-            self.joints[3].motorSpeed     = float(SPEED_KNEE    * np.sign(action[3]))
-            self.joints[3].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[3]), 0, 1))
-
-        self.world.Step(1.0/FPS, 6*30, 2*30)
-
+    def get_state(self):
         pos = self.hull.position
         vel = self.hull.linearVelocity
 
@@ -436,6 +418,33 @@ class BipedalWalker(gym.Env):
             ]
         state += [l.fraction for l in self.lidar]
         assert len(state)==24
+
+        return state
+
+    def step(self, action):
+        #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
+        control_speed = False  # Should be easier as well
+        if control_speed:
+            self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
+            self.joints[1].motorSpeed = float(SPEED_KNEE * np.clip(action[1], -1, 1))
+            self.joints[2].motorSpeed = float(SPEED_HIP  * np.clip(action[2], -1, 1))
+            self.joints[3].motorSpeed = float(SPEED_KNEE * np.clip(action[3], -1, 1))
+        else:
+            self.joints[0].motorSpeed     = float(SPEED_HIP     * np.sign(action[0]))
+            self.joints[0].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[0]), 0, 1))
+            self.joints[1].motorSpeed     = float(SPEED_KNEE    * np.sign(action[1]))
+            self.joints[1].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[1]), 0, 1))
+            self.joints[2].motorSpeed     = float(SPEED_HIP     * np.sign(action[2]))
+            self.joints[2].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[2]), 0, 1))
+            self.joints[3].motorSpeed     = float(SPEED_KNEE    * np.sign(action[3]))
+            self.joints[3].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[3]), 0, 1))
+
+        self.world.Step(1.0/FPS, 6*30, 2*30)
+
+        pos = self.hull.position
+        vel = self.hull.linearVelocity
+
+        state = self.get_state()
 
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
@@ -495,6 +504,66 @@ class BipedalWalker(gym.Env):
             ))
         return info
 
+    def set_model(self, model):
+        self.model = model
+
+    def coord_to_grid(self, coord, zero):
+        return round((coord - zero) / self.grid_scale * self.grid_edge)
+
+    def get_zeros(self):
+        return self.hull.position.x - self.grid_scale / 2, self.hull.position.y - self.grid_scale / 2
+
+    def _draw_stategrid(self):
+        if self.model is None:
+            return
+        self.grid_edge = self.model.senc_nngrid.grid_edge
+        self.grid_scale = self.model.senc_nngrid.grid_scale
+        self.grid_square_edge = self.grid_scale / self.grid_edge
+
+        # Draw state/action grid around hull and highlight occupied squares
+        fill_empty = True
+        show_grid = True
+
+        zero_x, zero_y = self.get_zeros()
+        filled_in_squares = []
+
+        body_color = (1, 1, 1, 0.5)
+        joint_color = (1, 1, 1, 0.5)
+
+        if fill_empty:
+            vertices = [(zero_x, zero_y),
+                        (zero_x + self.grid_scale, zero_y),
+                        (zero_x + self.grid_scale, zero_y + self.grid_scale),
+                        (zero_x, zero_y + self.grid_scale)]
+            big_square = self.viewer.draw_polygon(vertices)
+            big_square._color.vec4 = (0, 0, 0, 0.5)
+
+        if show_grid:
+            for i in range(self.grid_edge + 1):
+                vertical = [(zero_x + self.grid_square_edge * i, zero_y), (zero_x + self.grid_square_edge * i, zero_y + self.grid_scale)]
+                horizontal = [(zero_x, zero_y + self.grid_square_edge * i), (zero_x + self.grid_scale, zero_y + self.grid_square_edge * i)]
+                self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
+                self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
+
+        grid_channels_sum = np.sum(self.model.senc_nngrid(self.get_state(), self._info_dict()), axis=0)
+
+        for x in range(self.grid_edge):
+            for y in range(self.grid_edge):
+                if grid_channels_sum[x, y] != 0:
+                    lower_left_x, lower_left_y = zero_x + self.grid_square_edge * x, zero_y + self.grid_square_edge * y
+                    vertices = [(lower_left_x, lower_left_y),
+                        (lower_left_x + self.grid_square_edge, lower_left_y),
+                        (lower_left_x + self.grid_square_edge, lower_left_y + self.grid_square_edge),
+                        (lower_left_x, lower_left_y + self.grid_square_edge)]
+                    filled_in_square = self.viewer.draw_polygon(vertices)
+                    # Make half transparent
+                    filled_in_square._color.vec4 = body_color
+                    filled_in_squares.append((lower_left_x, lower_left_y))
+
+    def _draw_actiongrid(self):
+        if self.model is None:
+            return
+        pass
 
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering
@@ -543,6 +612,9 @@ class BipedalWalker(gym.Env):
         f = [(x, flagy2), (x, flagy2-10/SCALE), (x+25/SCALE, flagy2-5/SCALE)]
         self.viewer.draw_polygon(f, color=(0.9,0.2,0) )
         self.viewer.draw_polyline(f + [f[0]], color=(0,0,0), linewidth=2 )
+
+        self._draw_stategrid()
+        self._draw_actiongrid()
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
