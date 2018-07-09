@@ -36,7 +36,7 @@ class NNGrid(torch.nn.Module):
             # A_x, A_y, B_x, B_y,
             # angle, speed, depth
             A_pos_x, A_pos_y = j[0], j[1]
-            d = j[6]
+            d = int(j[6])
 
             # Take action at grid position of AnchorA
             # Alternatively, we can average the two anchor positions instead of just using anchorA
