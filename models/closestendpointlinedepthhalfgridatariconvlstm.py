@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from state_encoders.wrappers import FrameStack
-from state_encoders.closest_endpoint_line_nngrid import NNGrid as senc_NNGrid
+from state_encoders.closestendpoint_line_nngrid import NNGrid as senc_NNGrid
 
 from .convlstm_layer import ConvLSTM
 
