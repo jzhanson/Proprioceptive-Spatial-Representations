@@ -171,6 +171,7 @@ if __name__ == '__main__':
     AC = importlib.import_module(args.model_name)
     shared_model = AC.ActorCritic(
         env.observation_space, env.action_space, args.stack_frames, args)
+    env.set_model(shared_model)
     if args.load:
         print('Loading model from: {0}{1}.dat'.format(
             args.load_model_dir, args.env))
