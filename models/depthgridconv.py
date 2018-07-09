@@ -8,8 +8,8 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from state_encoders.wrappers import FrameStack
-from state_encoders.nngrid  import NNGrid as senc_NNGrid
-from action_decoders.nngrid import NNGrid as adec_NNGrid
+from state_encoders.depth_nngrid import NNGrid as senc_NNGrid
+from action_decoders.depth_nngrid import NNGrid as adec_NNGrid
 
 from common.utils import norm_col_init, weights_init, weights_init_mlp
 
@@ -32,14 +32,14 @@ class ActorCritic(torch.nn.Module):
         self.input_size  = self.senc_nngrid.observation_space.shape
         self.output_size = int(np.prod(self.action_space.shape))
 
-        self.conv1 = nn.Conv2d(self.frame_stack.n_frames*self.input_size[0], 32, 3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d(32, 32, 3, stride=1, padding=1)
-        self.conv3 = nn.Conv2d(32, 32, 3, stride=1, padding=1)
-        self.conv4 = nn.Conv2d(32, 32, 3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(self.frame_stack.n_frames*self.input_size[0], 32, 4, stride=1, padding=1)
+        self.conv2 = nn.Conv2d( 32,  64, 3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d( 64, 128, 3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
 
-        self.critic_linear = nn.Conv2d(32, 1, 3, stride=1, padding=1)
-        self.actor_linear  = nn.Conv2d(32, 1, 3, stride=1, padding=1)
-        self.actor_linear2 = nn.Conv2d(32, 1, 3, stride=1, padding=1)
+        self.critic_linear = nn.Conv2d(128, 2, 3, stride=1, padding=1)
+        self.actor_linear  = nn.Conv2d(128, 2, 3, stride=1, padding=1)
+        self.actor_linear2 = nn.Conv2d(128, 2, 3, stride=1, padding=1)
 
         self.apply(weights_init)
         lrelu_gain = nn.init.calculate_gain('leaky_relu')
@@ -83,13 +83,13 @@ class ActorCritic(torch.nn.Module):
                    self.input_size[1], self.input_size[2])
         x = self._convforward(x)
 
-        # Compute action mean, var and value grids
+        # Compute action mean, action var and value grid
         critic_out = self.critic_linear(x)
         actor_out = F.softsign(self.actor_linear(x))
         actor_out2 = self.actor_linear2(x)
 
         # Extract motor-specific values from action grid
-        critic_out = self.adec_nngrid((critic_out, info)).mean(-1)
+        critic_out = self.adec_nngrid((critic_out, info)).mean(-1, keepdim=True)
         actor_out  = self.adec_nngrid((actor_out, info))
         actor_out2 = self.adec_nngrid((actor_out2, info))
         return critic_out, actor_out, actor_out2, frames
