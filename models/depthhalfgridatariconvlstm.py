@@ -103,14 +103,14 @@ class ActorCritic(torch.nn.Module):
     def initialize_memory(self):
         if next(self.parameters()).is_cuda:
             return (
-                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(self.convlstm)],
-                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(self.convlstm)],
+                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(len(self.convlstm))],
+                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(len(self.convlstm))],
                 Variable(torch.zeros(1, 128).cuda()),
                 Variable(torch.zeros(1, 128).cuda()),
                 self.frame_stack.initialize_memory())
         return (
-            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(self.convlstm)],
-            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(self.convlstm)],
+            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(len(self.convlstm))],
+            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(len(self.convlstm))],
             Variable(torch.zeros(1, 128)),
             Variable(torch.zeros(1, 128)),
             self.frame_stack.initialize_memory())
