@@ -388,23 +388,12 @@ class BipedalWalker(gym.Env):
         ob, _, _, info = self.step(np.zeros(self.action_space.shape))
         return ob, info
 
-    def get_state(self):
-        pos = self.hull.position
-        vel = self.hull.linearVelocity
-
-        for i in range(10):
-            self.lidar[i].fraction = 1.0
-            self.lidar[i].p1 = pos
-            self.lidar[i].p2 = (
-                pos[0] + math.sin(1.5*i/10.0)*LIDAR_RANGE,
-                pos[1] - math.cos(1.5*i/10.0)*LIDAR_RANGE)
-            self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
-
+    def _get_state(self):
         state = [
             self.hull.angle,        # Normal angles up to 0.5 here, but sure more is possible.
             2.0*self.hull.angularVelocity/FPS,
-            0.3*vel.x*(VIEWPORT_W/SCALE)/FPS,  # Normalized to get -1..1 range
-            0.3*vel.y*(VIEWPORT_H/SCALE)/FPS,
+            0.3*self.hull.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS,  # Normalized to get -1..1 range
+            0.3*self.hull.LinearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
             self.joints[0].angle,   # This will give 1.1 on high up, but it's still OK (and there should be spikes on hiting the ground, that's normal too)
             self.joints[0].speed / SPEED_HIP,
             self.joints[1].angle + 1.0,
@@ -444,7 +433,17 @@ class BipedalWalker(gym.Env):
         pos = self.hull.position
         vel = self.hull.linearVelocity
 
-        state = self.get_state()
+        # Cache lidar results
+        for  i in range(10):
+            self.lidar[i].fraction = 1.0
+            self.lidar[i].p1 = pos
+            self.lidar[i].p2 = (
+                pos[0] + math.sin(1.5*i/10.0)*LIDAR_RANGE,
+                pos[1] - math.cos(1.5*i/10.0)*LIDAR_RANGE)
+            self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
+
+
+        state = self._get_state()
 
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
@@ -545,7 +544,7 @@ class BipedalWalker(gym.Env):
                 self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
                 self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
 
-        grid_channels_sum = np.sum(self.model.senc_nngrid(self.get_state(), self._info_dict()), axis=0)
+        grid_channels_sum = np.sum(self.model.senc_nngrid(self._get_state(), self._info_dict()), axis=0)
 
         for x in range(self.grid_edge):
             for y in range(self.grid_edge):
