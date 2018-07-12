@@ -68,7 +68,7 @@ class NNGrid(torch.nn.Module):
             for b_neighbor_index in b[8]:
                 b_neighbor = info['bodies'][b_neighbor_index]
 
-                shared_joint_index = set(b[9]).intersection(b_neighbor[9])
+                shared_joint_index = list(set(b[9]).intersection(b_neighbor[9]))[0]
                 shared_joint = info['joints'][shared_joint_index]
                 # For simplicity, we use anchorA coords for joint
                 shared_joint_pos_x, shared_joint_pos_y = shared_joint[0], shared_joint[1]
@@ -106,7 +106,7 @@ class NNGrid(torch.nn.Module):
             for j_neighbor_index in j[8]:
                 j_neighbor = info['joints'][j_neighbor_index]
 
-                shared_body_index = set(j[7]).intersection(j_neighbor[7])
+                shared_body_index = list(set(j[7]).intersection(j_neighbor[7]))[0]
                 shared_body = info['bodies'][shared_body_index]
                 shared_body_pos_x, shared_body_pos_y = shared_body[0], shared_body[1]
                 shared_body_grid_x, shared_body_grid_y = self._coord_to_grid(shared_body_pos_x, zero_x), self._coord_to_grid(shared_body_pos_y, zero_y)
