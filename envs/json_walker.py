@@ -291,14 +291,14 @@ class JSONWalker(gym.Env):
         # Process the fixtures
         # PolygonShape: vertices
         # EdgeShape: vertices
-        # CircleShape: radius 
+        # CircleShape: radius
         # friction, density, restitution, maskBits, categoryBits
         self.fixtures = {}
         for k in self.fixture_defs.keys():
             if self.fixture_defs[k]['FixtureShape']['Type'] == 'PolygonShape' or \
                self.fixture_defs[k]['FixtureShape']['Type'] == 'EdgeShape':
                 fixture_shape = polygonShape(
-                    vertices=[ (x/SCALE,y/SCALE) 
+                    vertices=[ (x/SCALE,y/SCALE)
                                for x,y in self.fixture_defs[k]['FixtureShape']['Vertices']])
             elif self.fixture_defs[k]['FixtureShape']['Type'] == 'CircleShape':
                 fixture_shape = circleShape(
@@ -315,7 +315,7 @@ class JSONWalker(gym.Env):
                 categoryBits=self.fixture_defs[k]['CategoryBits']
             )
 
-        
+
         # Process the dynamic bodies
         # position, angle,  fixture,
         self.bodies = {}
@@ -329,13 +329,19 @@ class JSONWalker(gym.Env):
             self.bodies[k].color2 = self.body_defs[k]['Color2']
             self.bodies[k].can_touch_ground = self.body_defs[k]['CanTouchGround']
             self.bodies[k].ground_contact = False
+            self.bodies[k].depth = self.body_defs[k]['Depth']
+            self.bodies[k].connected_body   = []
+            self.bodies[k].connected_joints = []
 
             # Apply a force to the 'center' body
             if k == 'Hull':
                 self.bodies[k].ApplyForceToCenter(
-                    (self.np_random.uniform(-self.body_defs[k]['InitialForceScale'], self.body_defs[k]['InitialForceScale']), 
+                    (self.np_random.uniform(-self.body_defs[k]['InitialForceScale'], self.body_defs[k]['InitialForceScale']),
                      0), True)
         self.body_state_order = copy.deepcopy(list(self.bodies.keys()))
+        for i in range(len(self.body_state_order)):
+            k = self.body_state_order[i]
+            self.bodies[k].index = i
 
         # Process the joint motors
         # bodyA, bodyB, localAnchorA, localAnchorB, enableMotor, enableLimit,
@@ -354,7 +360,43 @@ class JSONWalker(gym.Env):
                 lowerAngle=self.joint_defs[k]['LowerAngle'],
                 upperAngle=self.joint_defs[k]['UpperAngle']
             ))
+            self.joints[k].depth = self.joint_defs[k]['Depth']
+            self.joints[k].connected_body   = []
+            self.joints[k].connected_joints = []
+
         self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
+        for i in range(len(self.joint_action_order)):
+            k = self.joint_action_order[i]
+            self.joints[k].index = i
+
+        # Construct index links between bodies and joints
+        for k in self.joint_defs.keys():
+            self.bodies[self.joint_defs[k]['BodyA']].connected_body.append(
+                self.bodies[self.joint_defs[k]['BodyB']].index)
+            self.bodies[self.joint_defs[k]['BodyB']].connected_body.append(
+                self.bodies[self.joint_defs[k]['BodyA']].index)
+            self.bodies[self.joint_defs[k]['BodyA']].connected_joints.append(
+                self.joints[k].index)
+            self.bodies[self.joint_defs[k]['BodyB']].connected_joints.append(
+                self.joints[k].index)
+
+            self.joints[k].connected_body.append(
+                self.bodies[self.joint_defs[k]['BodyA']].index)
+            self.joints[k].connected_body.append(
+                self.bodies[self.joint_defs[k]['BodyB']].index)
+
+        # Construct index links between joints connected to same body
+        for k_joint in self.joints.keys():
+            for i_body in self.joints[k_joint].connected_body:
+                k_body = self.body_state_order[i_body]
+                for i_jointB in self.bodies[k_body].connected_joints:
+                    # Avoid adding self-links
+                    if self.joints[k_joint].index == i_jointB:
+                        continue
+                    # Keep uniqueness of lists
+                    if i_jointB in self.joints[k_joint].connected_joints:
+                        continue
+                    self.joints[k_joint].connected_joints.append(i_jointB)
 
         # Make sure hull is last
         self.drawlist = self.terrain + list(self.bodies.values())
@@ -368,34 +410,10 @@ class JSONWalker(gym.Env):
                 return 0
         self.lidar = [LidarCallback() for _ in range(10)]
 
-        return self.step(np.array([0]*np.prod(self.action_space.shape)))[0]
+        ob, _, _, info = self.step(np.zeros(self.action_space.shape))
+        return ob, info
 
-    def step(self, action):
-        #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
-        control_speed = False  # Should be easier as well
-        if control_speed:
-            for a in range(len(self.joint_action_order)):
-                k = self.joint_action_order[a]
-                self.joints[k].motorSpeed = float(self.joint_defs[k]['Speed'] * np.clip(action[a], -1, 1))
-        else:
-            for a in range(len(self.joint_action_order)):
-                k = self.joint_action_order[a]
-                self.joints[k].motorSpeed = float(self.joint_defs[k]['Speed'] * np.sign(action[a]))
-                self.joints[k].maxMotorTorque = float(self.joint_defs[k]['MaxMotorTorque'] * np.clip(np.abs(action[a]), 0, 1))
-
-        self.world.Step(1.0/FPS, 6*30, 2*30)
-
-        pos = self.bodies['Hull'].position
-        vel = self.bodies['Hull'].linearVelocity
-
-        for i in range(10):
-            self.lidar[i].fraction = 1.0
-            self.lidar[i].p1 = pos
-            self.lidar[i].p2 = (
-                pos[0] + math.sin(1.5*i/10.0)*LIDAR_RANGE,
-                pos[1] - math.cos(1.5*i/10.0)*LIDAR_RANGE)
-            self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
-
+    def _get_state(self):
         # State encoding:
         # For every body:
         #  angle, 2*angularVelocity/FPS, 0.3*velx*(VIEWPORT_W/SCALE)/FPS, 0.3*vely*(VIEWPORT_H/SCALE)/FPS, ground_contact
@@ -420,6 +438,37 @@ class JSONWalker(gym.Env):
         state += [l.fraction for l in self.lidar]
         assert len(state)==(5*len(self.body_state_order)+2*len(self.joint_action_order)+10)
 
+        return state
+
+    def step(self, action):
+        #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
+        control_speed = False  # Should be easier as well
+        if control_speed:
+            for a in range(len(self.joint_action_order)):
+                k = self.joint_action_order[a]
+                self.joints[k].motorSpeed = float(self.joint_defs[k]['Speed'] * np.clip(action[a], -1, 1))
+        else:
+            for a in range(len(self.joint_action_order)):
+                k = self.joint_action_order[a]
+                self.joints[k].motorSpeed = float(self.joint_defs[k]['Speed'] * np.sign(action[a]))
+                self.joints[k].maxMotorTorque = float(self.joint_defs[k]['MaxMotorTorque'] * np.clip(np.abs(action[a]), 0, 1))
+
+        self.world.Step(1.0/FPS, 6*30, 2*30)
+
+        pos = self.bodies['Hull'].position
+        vel = self.bodies['Hull'].linearVelocity
+
+        # Cache lidar results
+        for i in range(10):
+            self.lidar[i].fraction = 1.0
+            self.lidar[i].p1 = pos
+            self.lidar[i].p2 = (
+                pos[0] + math.sin(1.5*i/10.0)*LIDAR_RANGE,
+                pos[1] - math.cos(1.5*i/10.0)*LIDAR_RANGE)
+            self.world.RayCast(self.lidar[i], self.lidar[i].p1, self.lidar[i].p2)
+
+        state = self._get_state()
+
         self.scroll = pos.x - VIEWPORT_W/SCALE/5
 
         shaping  = 130*pos[0]/SCALE   # moving forward is a way to receive reward (normalized to get 300 on completion)
@@ -440,7 +489,42 @@ class JSONWalker(gym.Env):
             done   = True
         if pos[0] > (TERRAIN_LENGTH-TERRAIN_GRASS)*TERRAIN_STEP:
             done   = True
-        return np.array(state), reward, done, {}
+        return np.array(state), reward, done, self._info_dict()
+
+    def _info_dict(self):
+                # Construct the info dict so that the grid state space and action space can be built
+        info = {}
+        info['hull_x'] = self.bodies['Hull'].position.x
+        info['hull_y'] = self.bodies['Hull'].position.y
+        info['bodies'] = []
+        for i in range(len(self.body_state_order)):
+            k = self.body_state_order[i]
+            b = self.bodies[k]
+            info['bodies'].append((
+                b.position.x, b.position.y, b.angle,
+                2.0*b.angularVelocity/FPS,
+                0.3*b.linearVelocity.x*(VIEWPORT_W/SCALE)/FPS,
+                0.3*b.linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
+                1.0 if b.ground_contact else 0,
+                # Depth: 0.0 if "front", 1.0 if "back", hull is considered front and second leg is back leg
+                b.depth,
+                b.connected_body,
+                b.connected_joints
+            ))
+        info['joints'] = []
+        for i in range(len(self.joint_action_order)):
+            k = self.joint_action_order[i]
+            j = self.joints[k]
+            info['joints'].append((
+                j.anchorA.x, j.anchorA.y, j.anchorB.x, j.anchorB.y,
+                j.angle,
+                j.speed / self.joint_defs[k]['Speed'],
+                j.depth,
+                j.connected_body,
+                j.connected_joints
+            ))
+        return info
+
 
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering
