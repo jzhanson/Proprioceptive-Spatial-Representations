@@ -46,7 +46,8 @@
         "Color1" : [0.5, 0.4, 0.9],
         "Color2" : [0.3, 0.3, 0.5],
         "CanTouchGround" : true,
-		  "InitialForceScale" : 5
+		  "InitialForceScale" : 5,
+		  "Depth" : 0
     },
 	 "Leg-1" : {
 		  "DataType" : "DynamicBody",
@@ -55,7 +56,8 @@
 		  "FixtureName" : "LegFixture",
 		  "Color1" : [0.7, 0.4, 0.6],
 		  "Color2" : [0.5, 0.3, 0.4],
-		  "CanTouchGround" : true
+		  "CanTouchGround" : true,
+		  "Depth" : 0
 	 },
 	 "HullLeg-1Joint" : {
 		  "DataType" : "JointMotor",
@@ -69,7 +71,8 @@
 		  "MotorSpeed" : -1,
 		  "LowerAngle" : -0.8,
 		  "UpperAngle" : 1.1,
-		  "Speed" : 4
+		  "Speed" : 4,
+		  "Depth" : 0
 	 },
 	 "Lower-1" : {
 		  "DataType" : "DynamicBody",
@@ -78,7 +81,8 @@
 		  "FixtureName" : "LowerFixture",
 		  "Color1" : [0.7, 0.4, 0.6],
 		  "Color2" : [0.5, 0.3, 0.4],
-		  "CanTouchGround" : true
+		  "CanTouchGround" : true,
+		  "Depth" : 0
 	 },
 	 "Leg-1Lower-1Joint" : {
 		  "DataType" : "JointMotor",
@@ -92,7 +96,8 @@
 		  "MotorSpeed" : 1,
 		  "LowerAngle" : -1.6,
 		  "UpperAngle" : -0.1,
-		  "Speed" : 6
+		  "Speed" : 6,
+		  "Depth" : 0
 	 },
 	 "Leg1" : {
 		  "DataType" : "DynamicBody",
@@ -101,7 +106,8 @@
         "FixtureName" : "LegFixture",
         "Color1" : [0.4, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
-        "CanTouchGround" : true
+        "CanTouchGround" : true,
+		  "Depth" : 1
     },
     "HullLeg1Joint" : {
 		  "DataType" : "JointMotor",
@@ -115,7 +121,8 @@
         "MotorSpeed" : 1,
         "LowerAngle" : -0.8,
         "UpperAngle" : 1.1,
-		  "Speed" : 4
+		  "Speed" : 4,
+		  "Depth" : 1
     },
     "Lower1" : {
 		  "DataType" : "DynamicBody",
@@ -124,7 +131,8 @@
         "FixtureName" : "LowerFixture",
         "Color1" : [0.4, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
-        "CanTouchGround" : true
+        "CanTouchGround" : true,
+		  "Depth" : 1
     },
     "Leg1Lower1Joint" : {
 		  "DataType" : "JointMotor",
@@ -138,6 +146,7 @@
         "MotorSpeed" : 1,
         "LowerAngle" : -1.6,
         "UpperAngle" : -0.1,
-		  "Speed" : 6
+		  "Speed" : 6,
+		  "Depth" : 1
     }
 }

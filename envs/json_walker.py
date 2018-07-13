@@ -586,9 +586,9 @@ class JSONWalkerHardcore(JSONWalker):
 
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    #env = JSONWalker("box2d-json/BipedalWalker.json")
+    env = JSONWalker("box2d-json/BipedalWalker.json")
     #env = JSONWalker('box2d-json/HumanoidWalker.json')
-    env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
+    #env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
     env.reset()
     steps = 0
     total_reward = 0
@@ -602,10 +602,10 @@ if __name__=="__main__":
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
         env.render()
-        s, r, done, info = env.step(env.action_space.sample())
+        s, r, done, info = env.step(a)
         if done:
             env.reset()
-        continue
+        #continue
         total_reward += r
         if steps % 20 == 0 or done:
             print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
