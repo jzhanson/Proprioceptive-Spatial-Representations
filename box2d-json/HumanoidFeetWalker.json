@@ -99,7 +99,8 @@
         "Color1" : [0.5, 0.4, 0.9],
         "Color2" : [0.3, 0.3, 0.5],
         "CanTouchGround" : false,
-		  "InitialForceScale" : 5
+		  "InitialForceScale" : 5,
+		  "Depth" : 0
     },
 
 	 "Head" : {
@@ -109,7 +110,8 @@
 		  "FixtureName" : "HeadFixture",
 		  "Color1" : [0.5, 0.4, 0.9],
 		  "Color2" : [0.3, 0.3, 0.5],
-		  "CanTouchGround" : false
+		  "CanTouchGround" : false,
+		  "Depth" : 0
 	 },
 	 "HullHeadJoint" : {
 		  "DataType" : "JointMotor",
@@ -123,7 +125,8 @@
 		  "MotorSpeed" : 0,
 		  "LowerAngle" : -0.01,
 		  "UpperAngle" : 0.01,
-		  "Speed" : 1
+		  "Speed" : 1,
+		  "Depth" : 0
 	 },
 
 
@@ -134,7 +137,8 @@
 		  "FixtureName" : "LegFixture",
 		  "Color1" : [0.7, 0.4, 0.6],
 		  "Color2" : [0.5, 0.3, 0.4],
-		  "CanTouchGround" : true
+		  "CanTouchGround" : true,
+		  "Depth" : 0
 	 },
 	 "HullLeg-1Joint" : {
 		  "DataType" : "JointMotor",
@@ -146,9 +150,10 @@
 		  "EnableLimit" : true,
 		  "MaxMotorTorque" : 80,
 		  "MotorSpeed" : -1,
-		  "LowerAngle" : -0.8,
-		  "UpperAngle" : 1.1,
-		  "Speed" : 4
+		  "LowerAngle" : -2.4,
+		  "UpperAngle" : 2.4,
+		  "Speed" : 4,
+		  "Depth" : 0
 	 },
 	 "Lower-1" : {
 		  "DataType" : "DynamicBody",
@@ -157,7 +162,8 @@
 		  "FixtureName" : "LowerFixture",
 		  "Color1" : [0.7, 0.4, 0.6],
 		  "Color2" : [0.5, 0.3, 0.4],
-		  "CanTouchGround" : true
+		  "CanTouchGround" : true,
+		  "Depth" : 0
 	 },
 	 "Leg-1Lower-1Joint" : {
 		  "DataType" : "JointMotor",
@@ -171,7 +177,8 @@
 		  "MotorSpeed" : 1,
 		  "LowerAngle" : -1.6,
 		  "UpperAngle" : -0.1,
-		  "Speed" : 6
+		  "Speed" : 6,
+		  "Depth" : 0
 	 },
 	 "Feet-1" : {
 		  "DataType" : "DynamicBody",
@@ -180,7 +187,8 @@
 		  "FixtureName" : "FeetFixture",
 		  "Color1" : [0.7, 0.4, 0.6],
 		  "Color2" : [0.5, 0.3, 0.4],
-		  "CanTouchGround" : true
+		  "CanTouchGround" : true,
+		  "Depth" : 0
 	 },
 	 "Lower-1Feet-1Joint" : {
 		  "DataType" : "JointMotor",
@@ -194,7 +202,8 @@
 		  "MotorSpeed" : 1,
 		  "LowerAngle" : -0.1,
 		  "UpperAngle" : 0.1,
-		  "Speed" : 6
+		  "Speed" : 6,
+		  "Depth" : 0
 	 },
 
 
@@ -205,7 +214,8 @@
         "FixtureName" : "LegFixture",
         "Color1" : [0.4, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
-        "CanTouchGround" : true
+        "CanTouchGround" : true,
+		  "Depth" : 1
     },
     "HullLeg1Joint" : {
 		  "DataType" : "JointMotor",
@@ -217,9 +227,10 @@
         "EnableLimit" : true,
         "MaxMotorTorque" : 80,
         "MotorSpeed" : 1,
-        "LowerAngle" : -0.8,
-        "UpperAngle" : 1.1,
-		  "Speed" : 4
+        "LowerAngle" : -2.4,
+        "UpperAngle" : 2.4,
+		  "Speed" : 4,
+		  "Depth" : 1
     },
     "Lower1" : {
 		  "DataType" : "DynamicBody",
@@ -228,7 +239,8 @@
         "FixtureName" : "LowerFixture",
         "Color1" : [0.4, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
-        "CanTouchGround" : true
+        "CanTouchGround" : true,
+		  "Depth" : 1
     },
     "Leg1Lower1Joint" : {
 		  "DataType" : "JointMotor",
@@ -242,7 +254,8 @@
         "MotorSpeed" : 1,
         "LowerAngle" : -1.6,
         "UpperAngle" : -0.1,
-		  "Speed" : 6
+		  "Speed" : 6,
+		  "Depth" : 1
     },
 	 "Feet1" : {
         "DataType" : "DynamicBody",
@@ -251,7 +264,8 @@
         "FixtureName" : "FeetFixture",
         "Color1" : [0.5, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
-        "CanTouchGround" : true
+        "CanTouchGround" : true,
+		  "Depth" : 1
     },
     "Lower1Feet1Joint" : {
         "DataType" : "JointMotor",
@@ -265,7 +279,8 @@
         "MotorSpeed" : 1,
         "LowerAngle" : -0.1,
         "UpperAngle" : 0.1,
-        "Speed" : 6
+        "Speed" : 6,
+		  "Depth" : 1
     },
 
 
@@ -276,7 +291,8 @@
         "FixtureName" : "ArmFixture",
         "Color1" : [0.5, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
-        "CanTouchGround" : false
+        "CanTouchGround" : false,
+		  "Depth" : 1
     },
     "HullArm1Joint" : {
         "DataType" : "JointMotor",
@@ -290,7 +306,8 @@
         "MotorSpeed" : 1,
         "LowerAngle" : -1.57,
         "UpperAngle" : 1.57,
-        "Speed" : 4
+        "Speed" : 4,
+		  "Depth" : 1
     },
     "Upper1" : {
         "DataType" : "DynamicBody",
@@ -299,7 +316,8 @@
         "FixtureName" : "UpperFixture",
         "Color1" : [0.5, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
-        "CanTouchGround" : false
+        "CanTouchGround" : false,
+		  "Depth" : 1
     },
     "Arm1Lower1Joint" : {
         "DataType" : "JointMotor",
@@ -313,7 +331,8 @@
         "MotorSpeed" : 1,
         "LowerAngle" : 1.57,
         "UpperAngle" : 3.0,
-        "Speed" : 6
+        "Speed" : 6,
+		  "Depth" : 1
     },
 
 	 "Arm-1" : {
@@ -323,7 +342,8 @@
         "FixtureName" : "ArmFixture",
         "Color1" : [0.7, 0.4, 0.6],
         "Color2" : [0.5, 0.3, 0.4],
-        "CanTouchGround" : false
+        "CanTouchGround" : false,
+		  "Depth" : 0
     },
     "HullArm-1Joint" : {
         "DataType" : "JointMotor",
@@ -337,7 +357,8 @@
         "MotorSpeed" : -1,
         "LowerAngle" : -1.57,
         "UpperAngle" : 1.57,
-        "Speed" : 4
+        "Speed" : 4,
+		  "Depth" : 0
     },
     "Upper-1" : {
         "DataType" : "DynamicBody",
@@ -346,7 +367,8 @@
         "FixtureName" : "UpperFixture",
         "Color1" : [0.7, 0.4, 0.6],
         "Color2" : [0.5, 0.3, 0.4],
-        "CanTouchGround" : false
+        "CanTouchGround" : false,
+		  "Depth" : 0
     },
     "Arm-1Lower-1Joint" : {
         "DataType" : "JointMotor",
@@ -360,6 +382,7 @@
         "MotorSpeed" : 1,
         "LowerAngle" : 1.57,
         "UpperAngle" : 3.0,
-        "Speed" : 6
+        "Speed" : 6,
+		  "Depth" : 0
     }
 }
