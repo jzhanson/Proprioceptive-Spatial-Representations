@@ -45,7 +45,7 @@
         "FixtureName" : "HullFixture",
         "Color1" : [0.5, 0.4, 0.9],
         "Color2" : [0.3, 0.3, 0.5],
-        "CanTouchGround" : true,
+        "CanTouchGround" : false,
 		  "InitialForceScale" : 5,
 		  "Depth" : 0
     },
