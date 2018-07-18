@@ -595,7 +595,7 @@ class BipedalWalker(gym.Env):
                 filled_in_square._color.vec4 = (1, 1, 1, self.current_actiongrid[0, x, y] / max_sum)
 
 
-    def render(self, mode='human'):
+    def render(self, mode='human', draw_stategrid=False, draw_actiongrid=False):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
@@ -643,8 +643,10 @@ class BipedalWalker(gym.Env):
         self.viewer.draw_polygon(f, color=(0.9,0.2,0) )
         self.viewer.draw_polyline(f + [f[0]], color=(0,0,0), linewidth=2 )
 
-        self._draw_stategrid()
-        self._draw_actiongrid()
+        if draw_stategrid:
+            self._draw_stategrid()
+        if draw_actiongrid:
+            self._draw_actiongrid()
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
