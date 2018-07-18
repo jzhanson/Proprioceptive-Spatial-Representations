@@ -525,7 +525,6 @@ class JSONWalker(gym.Env):
             ))
         return info
 
-
     def render(self, mode='human'):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
@@ -602,7 +601,26 @@ if __name__=="__main__":
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
         env.render()
-        s, r, done, info = env.step(a)
+        _, r, done, info = env.step(a)
+        # Build the state
+        s = [
+            env.bodies['Hull'].angle,
+            2.0*env.bodies['Hull'].angularVelocity/FPS,
+            0.3*env.bodies['Hull'].linearVelocity.x*(VIEWPORT_W/SCALE)/FPS,
+            0.3*env.bodies['Hull'].linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
+            env.joints['HullLeg-1Joint'].angle,
+            env.joints['HullLeg-1Joint'].speed / env.joint_defs['HullLeg-1Joint']['Speed'],
+            env.joints['Leg-1Lower-1Joint'].angle + 1.0,
+            env.joints['Leg-1Lower-1Joint'].speed / env.joint_defs['Leg-1Lower-1Joint']['Speed'],
+            1.0 if env.bodies['Lower-1'].ground_contact else 0.0,
+            env.joints['HullLeg1Joint'].angle,
+            env.joints['HullLeg1Joint'].speed / env.joint_defs['HullLeg1Joint']['Speed'],
+            env.joints['Leg1Lower1Joint'].angle + 1.0,
+            env.joints['Leg1Lower1Joint'].speed / env.joint_defs['Leg1Lower1Joint']['Speed'],
+            1.0 if env.bodies['Lower1'].ground_contact else 0.0
+        ]
+        s += [l.fraction for l in env.lidar]
+
         if done:
             env.reset()
         #continue
