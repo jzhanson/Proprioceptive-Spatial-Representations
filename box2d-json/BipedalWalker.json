@@ -76,7 +76,7 @@
 	 },
 	 "Lower-1" : {
 		  "DataType" : "DynamicBody",
-		  "Position" : [140, 128],
+		  "Position" : [140, 125],
 		  "Angle" : -0.05,
 		  "FixtureName" : "LowerFixture",
 		  "Color1" : [0.7, 0.4, 0.6],
@@ -126,7 +126,7 @@
     },
     "Lower1" : {
 		  "DataType" : "DynamicBody",
-        "Position" : [140, 128],
+        "Position" : [140, 125],
         "Angle" : 0.05,
         "FixtureName" : "LowerFixture",
         "Color1" : [0.4, 0.2, 0.4],
