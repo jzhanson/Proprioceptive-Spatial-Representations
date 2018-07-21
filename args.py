@@ -59,6 +59,10 @@ def parse_cmdline_args():
         metavar='SO',
         help='use an optimizer without shared statistics.')
     parser.add_argument(
+        '--save-directory',
+        metavar='SD',
+        help='where to save model files and logs.')
+    parser.add_argument(
         '--load',
         metavar='L',
         help='load a trained model')
@@ -74,18 +78,6 @@ def parse_cmdline_args():
         '--load-model-dir',
         metavar='LMD',
         help='folder to load trained models from')
-    parser.add_argument(
-        '--save-prefix',
-        metavar='SP',
-        help='prefix to add to log and model directory')
-    parser.add_argument(
-        '--save-model-dir',
-        metavar='SMD',
-        help='folder to save trained models')
-    parser.add_argument(
-        '--log-dir',
-        metavar='LG',
-        help='folder to save logs')
     parser.add_argument(
         '--model-name',
         metavar='M',
@@ -149,10 +141,8 @@ def parse_default_args():
         'load' : False,
         'save_max' : True,
         'optimizer' : 'Adam',
+        'save_directory' : 'saved/default/',
         'load_model_dir' : 'trained_models/',
-        'save_prefix' : '',
-        'save_model_dir' : 'trained_models/',
-        'log_dir' : 'logs/',
         'model_name' : 'models.mlp',
         'stack_frames' : 1,
         'grid_edge' : 16,

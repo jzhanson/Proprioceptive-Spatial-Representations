@@ -11,6 +11,7 @@ from common.utils import setup_logger
 
 from a3g.player_util import Agent
 
+import os
 import time
 import logging
 import gym
@@ -21,18 +22,17 @@ import matplotlib.pyplot as plt
 
 
 def test(args, shared_model):
-    # Make sure env name does not have directory in it
-    envname = args['env'].replace('/', '0')
+    # Shortcut to save directory
+    save_dir = args['save_directory']+'/'
+    run_name = os.path.basename(args['save_directory'].strip('/'))
 
     ptitle('Test Agent')
     gpu_id = args['gpu_ids'][-1]
     log = {}
-    setup_logger('{}_log'.format(envname),
-                 r'{0}{1}{2}_log'.format(args['log_dir'], args['save_prefix'], envname))
-    log['{}_log'.format(envname)] = logging.getLogger(
-        '{}_log'.format(envname))
+    setup_logger('info.log', r'{0}/info.log'.format(save_dir))
+    log['info.log'] = logging.getLogger('info.log')
     for k in args.keys():
-        log['{}_log'.format(envname)].info('{0}: {1}'.format(k, args[k]))
+        log['info.log'].info('{0}: {1}'.format(k, args[k]))
 
     torch.manual_seed(args['seed'])
     if gpu_id >= 0:
@@ -76,7 +76,7 @@ def test(args, shared_model):
             num_tests += 1
             reward_total_sum += reward_sum
             reward_mean = reward_total_sum / num_tests
-            log['{}_log'.format(envname)].info(
+            log['info.log'].info(
                 "Time {0}, episode reward {1}, episode length {2}, reward mean {3:.4f}".
                 format(
                     time.strftime("%Hh %Mm %Ss",
@@ -91,7 +91,7 @@ def test(args, shared_model):
                 plt.title('Test Episode Returns')
                 plt.xlabel('Test Episode')
                 plt.ylabel('Return')
-                plt.savefig('{0}{1}{2}.png'.format(args['log_dir'], args['save_prefix'], envname))
+                plt.savefig('{0}/test_episode_returns.png'.format(save_dir))
 
             if args['save_max'] and reward_sum >= max_score:
                 max_score = reward_sum

@@ -3,6 +3,9 @@ import os
 os.environ["OMP_NUM_THREADS"] = "1"
 import importlib
 
+import numpy        as np
+import numpy.random as npr
+
 import torch
 import torch.multiprocessing as mp
 
@@ -24,6 +27,16 @@ import time
 
 def main(args):
     torch.manual_seed(args['seed'])
+    npr.seed(args['seed']+1)
+
+    # Create the save directory
+    try:
+        os.makedirs(args['save_directory'])
+    except OSError:
+        if not os.path.isdir(args['save_directory']):
+            raise
+    print('saving to: '+args['save_directory']+'/')
+
     if args['gpu_ids'] == -1:
         args['gpu_ids'] = [-1]
     else:
