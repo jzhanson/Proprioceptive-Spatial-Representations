@@ -12,8 +12,8 @@ from torch.autograd import Variable
 class NNGrid(torch.nn.Module):
     def __init__(self, args):
         super(NNGrid, self).__init__()
-        self.grid_edge  = args.grid_edge
-        self.grid_scale = args.grid_scale
+        self.grid_edge  = args['grid_edge']
+        self.grid_scale = args['grid_scale']
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,

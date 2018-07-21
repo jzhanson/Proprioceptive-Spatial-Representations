@@ -58,7 +58,7 @@ class Agent(object):
             with torch.cuda.device(self.gpu_id):
                 self.state = self.state.cuda()
         self.eps_len += 1
-        self.done = self.done or self.eps_len >= self.args.max_episode_length
+        self.done = self.done or self.eps_len >= self.args['max_episode_length']
         self.values.append(value)
         self.rewards.append(reward)
         return self
@@ -84,7 +84,7 @@ class Agent(object):
             with torch.cuda.device(self.gpu_id):
                 self.state = self.state.cuda()
         self.eps_len += 1
-        self.done = self.done or self.eps_len >= self.args.max_episode_length
+        self.done = self.done or self.eps_len >= self.args['max_episode_length']
         return self
 
     def clear_actions(self):

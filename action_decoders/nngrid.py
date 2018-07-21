@@ -14,8 +14,8 @@ class NNGrid(torch.nn.Module):
         super(NNGrid, self).__init__()
 
         self.action_space = action_space
-        self.grid_edge  = args.grid_edge
-        self.grid_scale = args.grid_scale
+        self.grid_edge  = args['grid_edge']
+        self.grid_scale = args['grid_scale']
 
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)

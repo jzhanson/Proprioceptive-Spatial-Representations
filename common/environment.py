@@ -34,7 +34,7 @@ def create_env(env_id, args):
     else:
         env = gym.make(env_id)
 
-    #env.set_grid_params(grid_edge=args.grid_edge)
+    #env.set_grid_params(grid_edge=args['grid_edge'])
     # Note: apply motion_blur BEFORE frame_stack if using both
     #env = motion_blur(env, args)
     #env = frame_stack(env, args)
@@ -44,7 +44,7 @@ def create_env(env_id, args):
 class frame_stack(gym.Wrapper):
     def __init__(self, env, args):
         super(frame_stack, self).__init__(env)
-        self.stack_frames = args.stack_frames
+        self.stack_frames = args['stack_frames']
         self.frames = deque([], maxlen=self.stack_frames)
         self.obs_norm = MaxMinFilter() #NormalizedEnv() alternative or can just not normalize observations as environment is already kinda normalized
 
@@ -71,8 +71,8 @@ class frame_stack(gym.Wrapper):
 class motion_blur(gym.Wrapper):
     def __init__(self, env, args):
         super(motion_blur, self).__init__(env)
-        self.num_blur = args.blur_frames
-        self.blur_discount = args.blur_discount
+        self.num_blur = args['blur_frames']
+        self.blur_discount = args['blur_discount']
         self.blur_frames = deque([], maxlen=self.num_blur)
 
     def reset(self):

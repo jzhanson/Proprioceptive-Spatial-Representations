@@ -22,23 +22,22 @@ import matplotlib.pyplot as plt
 
 def test(args, shared_model):
     # Make sure env name does not have directory in it
-    envname = args.env.replace('/', '0')
+    envname = args['env'].replace('/', '0')
 
     ptitle('Test Agent')
-    gpu_id = args.gpu_ids[-1]
+    gpu_id = args['gpu_ids'][-1]
     log = {}
     setup_logger('{}_log'.format(envname),
-                 r'{0}{1}{2}_log'.format(args.log_dir, args.save_prefix, envname))
+                 r'{0}{1}{2}_log'.format(args['log_dir'], args['save_prefix'], envname))
     log['{}_log'.format(envname)] = logging.getLogger(
         '{}_log'.format(envname))
-    d_args = vars(args)
-    for k in d_args.keys():
-        log['{}_log'.format(envname)].info('{0}: {1}'.format(k, d_args[k]))
+    for k in args.keys():
+        log['{}_log'.format(envname)].info('{0}: {1}'.format(k, args[k]))
 
-    torch.manual_seed(args.seed)
+    torch.manual_seed(args['seed'])
     if gpu_id >= 0:
-        torch.cuda.manual_seed(args.seed)
-    env = create_env(args.env, args)
+        torch.cuda.manual_seed(args['seed'])
+    env = create_env(args['env'], args)
     reward_sum = 0
     start_time = time.time()
     num_tests = 0
@@ -46,9 +45,9 @@ def test(args, shared_model):
     player = Agent(None, env, args, None)
     player.gpu_id = gpu_id
 
-    AC = importlib.import_module(args.model_name)
+    AC = importlib.import_module(args['model_name'])
     player.model = AC.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames, args)
+        env.observation_space, env.action_space, args['stack_frames'], args)
 
     player.state, player.info = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
@@ -92,17 +91,17 @@ def test(args, shared_model):
                 plt.title('Test Episode Returns')
                 plt.xlabel('Test Episode')
                 plt.ylabel('Return')
-                plt.savefig('{0}{1}{2}.png'.format(args.log_dir, args.save_prefix, envname))
+                plt.savefig('{0}{1}{2}.png'.format(args['log_dir'], args['save_prefix'], envname))
 
-            if args.save_max and reward_sum >= max_score:
+            if args['save_max'] and reward_sum >= max_score:
                 max_score = reward_sum
                 if gpu_id >= 0:
                     with torch.cuda.device(gpu_id):
                         state_to_save = player.model.state_dict()
-                        torch.save(state_to_save, '{0}{1}{2}.dat'.format(args.save_model_dir, args.save_prefix, envname))
+                        torch.save(state_to_save, '{0}{1}{2}.dat'.format(args['save_model_dir'], args['save_prefix'], envname))
                 else:
                     state_to_save = player.model.state_dict()
-                    torch.save(state_to_save, '{0}{1}{2}.dat'.format(args.save_model_dir, args.save_prefix, envname))
+                    torch.save(state_to_save, '{0}{1}{2}.dat'.format(args['save_model_dir'], args['save_prefix'], envname))
 
             reward_sum = 0
             player.eps_len = 0

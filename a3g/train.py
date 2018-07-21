@@ -17,23 +17,23 @@ import gym
 
 def train(rank, args, shared_model, optimizer):
     ptitle('Training Agent: {}'.format(rank))
-    gpu_id = args.gpu_ids[rank % len(args.gpu_ids)]
-    torch.manual_seed(args.seed + rank)
+    gpu_id = args['gpu_ids'][rank % len(args['gpu_ids'])]
+    torch.manual_seed(args['seed'] + rank)
     if gpu_id >= 0:
-        torch.cuda.manual_seed(args.seed + rank)
-    env = create_env(args.env, args)
+        torch.cuda.manual_seed(args['seed'] + rank)
+    env = create_env(args['env'], args)
     if optimizer is None:
-        if args.optimizer == 'RMSprop':
-            optimizer = optim.RMSprop(shared_model.parameters(), lr=args.lr)
-        if args.optimizer == 'Adam':
-            optimizer = optim.Adam(shared_model.parameters(), lr=args.lr)
+        if args['optimizer'] == 'RMSprop':
+            optimizer = optim.RMSprop(shared_model.parameters(), lr=args['lr'])
+        if args['optimizer'] == 'Adam':
+            optimizer = optim.Adam(shared_model.parameters(), lr=args['lr'])
 
-    env.seed(args.seed + rank)
+    env.seed(args['seed'] + rank)
     player = Agent(None, env, args, None)
     player.gpu_id = gpu_id
-    AC = importlib.import_module(args.model_name)
+    AC = importlib.import_module(args['model_name'])
     player.model = AC.ActorCritic(
-        env.observation_space, env.action_space, args.stack_frames, args)
+        env.observation_space, env.action_space, args['stack_frames'], args)
 
     player.state, player.info = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
@@ -59,7 +59,7 @@ def train(rank, args, shared_model, optimizer):
         else:
             player.memory = player.model.reinitialize_memory(player.memory)
 
-        for step in range(args.num_steps):
+        for step in range(args['num_steps']):
 
             player.action_train()
 
@@ -96,16 +96,16 @@ def train(rank, args, shared_model, optimizer):
         else:
             gae = torch.zeros(1, 1)
         for i in reversed(range(len(player.rewards))):
-            R = args.gamma * R + player.rewards[i]
+            R = args['gamma'] * R + player.rewards[i]
             advantage = R - player.values[i]
             value_loss = value_loss + 0.5 * advantage.pow(2)
 
             # Generalized Advantage Estimataion
   #          print(player.rewards[i])
-            delta_t = player.rewards[i] + args.gamma * \
+            delta_t = player.rewards[i] + args['gamma'] * \
                 player.values[i + 1].data - player.values[i].data
 
-            gae = gae * args.gamma * args.tau + delta_t
+            gae = gae * args['gamma'] * args['tau'] + delta_t
 
             policy_loss = policy_loss - \
                 (player.log_probs[i].sum() * Variable(gae)) - \
