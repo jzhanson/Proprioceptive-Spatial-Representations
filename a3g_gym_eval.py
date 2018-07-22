@@ -83,8 +83,15 @@ def evaluate(args):
                     "Episode_length, {0}, reward_sum, {1}".format(player.eps_len, reward_sum))
                 break
     all_episode_returns = np.array(all_episode_returns)
-    print('Average Episodic Return: {0}'.format(np.mean(all_episode_returns)))
-    print('Average Episodic Success: {0}'.format(np.mean(np.array(all_episode_returns > 300., dtype=np.float32))))
+
+    print('Average Episodic Return: \n\tmean: {0}\n\tstd: {1}\n\tmin: {2}\n\tmax: {3}'.format(
+        np.mean(all_episode_returns), np.std(all_episode_returns),
+        np.min(all_episode_returns), np.max(all_episode_returns)))
+
+    all_episode_successes = np.array(all_episode_returns > 300., dtype=np.float32)
+    print('Average Episodic Success: \n\tmean: {0} ({1}/{2})\n\tstd: {3}\n\tmin: {4}\n\tmax: {5}'.format(
+        np.mean(all_episode_successes), np.sum(all_episode_successes), args['num_episodes'],
+        np.std(all_episode_successes), np.min(all_episode_successes), np.max(all_episode_successes)))
 
 if __name__=='__main__':
     evaluate(parse_args(
