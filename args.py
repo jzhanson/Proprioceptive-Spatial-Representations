@@ -6,7 +6,7 @@ import argparse
 import importlib
 
 
-def parse_cmdline_args():
+def parse_cmdline_args(additional_parser_args={}):
     parser = argparse.ArgumentParser(description='A3C')
     parser.add_argument(
         '--json_file',
@@ -115,6 +115,13 @@ def parse_cmdline_args():
         '--amsgrad',
         metavar='AM',
         help='Adam optimizer amsgrad parameter')
+    for k in additional_parser_args.keys():
+        parser.add_argument(
+            additional_parser_args[k]['name'],
+            type=additional_parser_args[k]['type'],
+            metavar=additional_parser_args[k]['metavar'],
+            help=additional_parser_args[k]['help']
+        )
     return vars(parser.parse_args())
 
 def parse_json_args(jsonfn):
@@ -125,7 +132,7 @@ def parse_json_args(jsonfn):
     except:
         return {}
 
-def parse_default_args():
+def parse_default_args(additional_default_args={}):
     # A3G training args
     default_args = {
         'json_file' : '',
@@ -152,18 +159,23 @@ def parse_default_args():
         'gpu_ids' : [-1],
         'amsgrad' : True,
     }
+    for k in additional_default_args.keys():
+        if k not in default_args:
+            default_args[k] = additional_default_args[k]
     return default_args
 
 
-def parse_args():
+def parse_args(additional_parser_args={}, additional_default_args={}):
     # Load arguments from command line
-    cmdline_args = parse_cmdline_args()
+    cmdline_args = parse_cmdline_args(
+        additional_parser_args=additional_parser_args)
 
     # Load arguments from JSON, if it was supplied
     json_args = parse_json_args(cmdline_args['json_file'])
 
     # Load default arguments
-    default_args = parse_default_args()
+    default_args = parse_default_args(
+        additional_default_args=additional_default_args)
 
     # Overwrite arguments in the default args if they were supplied
     # Order of Overwriting: CMDLINE > JSON > DEFAULT
