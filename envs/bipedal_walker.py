@@ -559,7 +559,8 @@ class BipedalWalker(gym.Env):
                     filled_in_squares.append((lower_left_x, lower_left_y))
 
     def _draw_actiongrid(self, model, depth=-1):
-        self.grid_edge = model.adec_nngrid.grid_edge
+        # Dimensions of action grid output by model not always the same as those of the state grid
+        self.grid_edge = model.adec_nngrid.current_actiongrid.shape[2]
         self.grid_scale = model.adec_nngrid.grid_scale
         self.grid_square_edge = self.grid_scale / self.grid_edge
 

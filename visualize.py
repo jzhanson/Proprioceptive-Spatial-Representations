@@ -51,12 +51,13 @@ class Visualize():
         self.model = AC.ActorCritic(
             self.env.observation_space, self.env.action_space, args['stack_frames'], args)
 
-        if args['load']:
-            print('Loading model from: {0}{1}.dat'.format(
-                args['load_model_dir'], args['env']))
-            saved_state = torch.load('{0}{1}.dat'.format(
-                args['load_model_dir'], args['env']), map_location=lambda storage, loc: storage)
-            self.model.load_state_dict(saved_state)
+        if args['load_file'] != '':
+            print('Loading model from: {0}'.format(args['load_file']))
+            pthfile = torch.load('{0}'.format(args['load_file']), map_location=lambda storage, loc: storage.cpu())
+            if args['load_best']:
+                self.model.load_state_dict(pthfile['best_state_dict'])
+            else:
+                self.model.load_state_dict(pthfile['state_dict'])
 
         if gpu_id >= 0:
             torch.cuda.manual_seed(args['seed'])
