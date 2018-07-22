@@ -24,7 +24,7 @@ class NNGrid(torch.nn.Module):
         action, info = inputs
 
         # Expose current action grid to be passed to env for rendering
-        self.current_actiongrid = action.data.numpy()
+        self.current_actiongrid = action.data.cpu().numpy()
 
         decoded_action = torch.zeros(action.size(0), self.action_space.shape[0])
         if action.is_cuda:
