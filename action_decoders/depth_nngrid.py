@@ -23,6 +23,9 @@ class NNGrid(torch.nn.Module):
     def forward(self, inputs):
         action, info = inputs
 
+        # Expose current action grid to be passed to env for rendering
+        self.current_actiongrid = action.data.numpy()
+
         decoded_action = torch.zeros(action.size(0), self.action_space.shape[0])
         if action.is_cuda:
             with torch.cuda.device(action.get_device()):

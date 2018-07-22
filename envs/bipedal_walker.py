@@ -8,6 +8,9 @@ import gym
 from gym import spaces
 from gym.utils import colorize, seeding
 
+import torch
+from torch.autograd import Variable
+
 # This is simple 4-joints walker robot environment.
 #
 # There are two versions:
@@ -111,7 +114,6 @@ class BipedalWalker(gym.Env):
     def __init__(self):
         self.seed()
         self.viewer = None
-        self.model = None
 
         self.world = Box2D.b2World()
         self.terrain = None
@@ -503,20 +505,15 @@ class BipedalWalker(gym.Env):
             ))
         return info
 
-    def set_model(self, model):
-        self.model = model
-
     def coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
 
     def get_zeros(self):
         return self.hull.position.x - self.grid_scale / 2, self.hull.position.y - self.grid_scale / 2
 
-    def _draw_stategrid(self):
-        if self.model is None:
-            return
-        self.grid_edge = self.model.senc_nngrid.grid_edge
-        self.grid_scale = self.model.senc_nngrid.grid_scale
+    def _draw_stategrid(self, model):
+        self.grid_edge = model.senc_nngrid.grid_edge
+        self.grid_scale = model.senc_nngrid.grid_scale
         self.grid_square_edge = self.grid_scale / self.grid_edge
 
         # Draw state grid around hull and highlight squares with a nonzero channel
@@ -544,7 +541,9 @@ class BipedalWalker(gym.Env):
                 self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
                 self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
 
-        grid_channels_sum = np.sum(self.model.senc_nngrid(self._get_state(), self._info_dict()), axis=0)
+
+        grid_channels = model.senc_nngrid((Variable(torch.from_numpy(np.array(self._get_state()))), self._info_dict()))
+        grid_channels_sum = torch.sum(torch.squeeze(grid_channels), dim=0).data.numpy()
 
         for x in range(self.grid_edge):
             for y in range(self.grid_edge):
@@ -559,14 +558,9 @@ class BipedalWalker(gym.Env):
                     filled_in_square._color.vec4 = body_color
                     filled_in_squares.append((lower_left_x, lower_left_y))
 
-    def set_current_actiongrid(self, actiongrid):
-        self.current_actiongrid = actiongrid
-
-    def _draw_actiongrid(self):
-        if self.model is None or self.current_actiongrid is None:
-            return
-        self.grid_edge = self.model.adcc_nngrid.grid_edge
-        self.grid_scale = self.model.adcc_nngrid.grid_scale
+    def _draw_actiongrid(self, model, depth=-1):
+        self.grid_edge = model.adec_nngrid.grid_edge
+        self.grid_scale = model.adec_nngrid.grid_scale
         self.grid_square_edge = self.grid_scale / self.grid_edge
 
         # Draw action grid around hull and color in grayscale intensity of action
@@ -581,7 +575,12 @@ class BipedalWalker(gym.Env):
                 self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
                 self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
 
-        max_sum = np.amax(self.current_actiongrid)
+        # Depth of -1 means flatten depth layers and display
+        if depth >= 0:
+            current_actiongrid_layer = model.adec_nngrid.current_actiongrid[0, depth]
+        else:
+            current_actiongrid_layer = np.sum(model.adec_nngrid.current_actiongrid, axis=1)[0]
+        max_sum = np.amax(current_actiongrid_layer)
 
         for x in range(self.grid_edge):
             for y in range(self.grid_edge):
@@ -591,11 +590,11 @@ class BipedalWalker(gym.Env):
                     (lower_left_x + self.grid_square_edge, lower_left_y + self.grid_square_edge),
                     (lower_left_x, lower_left_y + self.grid_square_edge)]
                 filled_in_square = self.viewer.draw_polygon(vertices)
-                # Set intensity to the intensity of channels
-                filled_in_square._color.vec4 = (1, 1, 1, self.current_actiongrid[0, x, y] / max_sum)
+                # Set intensity to the relative value of channels
+                square_fill = current_actiongrid_layer[x, y] / max_sum
+                filled_in_square._color.vec4 = (square_fill, square_fill, square_fill, 0.5)
 
-
-    def render(self, mode='human', draw_stategrid=False, draw_actiongrid=False):
+    def render(self, mode='human', model=None, show_stategrid=False, show_actiongrid=False, actiongrid_depth=-1):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
@@ -643,10 +642,10 @@ class BipedalWalker(gym.Env):
         self.viewer.draw_polygon(f, color=(0.9,0.2,0) )
         self.viewer.draw_polyline(f + [f[0]], color=(0,0,0), linewidth=2 )
 
-        if draw_stategrid:
-            self._draw_stategrid()
-        if draw_actiongrid:
-            self._draw_actiongrid()
+        if show_stategrid:
+            self._draw_stategrid(model)
+        if show_actiongrid:
+            self._draw_actiongrid(model, depth=actiongrid_depth)
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
