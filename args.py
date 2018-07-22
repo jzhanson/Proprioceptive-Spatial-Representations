@@ -63,9 +63,13 @@ def parse_cmdline_args():
         metavar='SD',
         help='where to save model files and logs.')
     parser.add_argument(
-        '--load',
-        metavar='L',
-        help='load a trained model')
+        '--load-file',
+        metavar='LF',
+        help='pth file to load a training checkpoint.')
+    parser.add_argument(
+        '--load-best',
+        metavar='LB',
+        help='whether to load the best model/optimizer from a checkpoint.')
     parser.add_argument(
         '--save-max',
         metavar='SM',
@@ -74,10 +78,6 @@ def parse_cmdline_args():
         '--optimizer',
         metavar='OPT',
         help='shares optimizer choice of Adam or RMSprop')
-    parser.add_argument(
-        '--load-model-dir',
-        metavar='LMD',
-        help='folder to load trained models from')
     parser.add_argument(
         '--model-name',
         metavar='M',
@@ -138,11 +138,11 @@ def parse_default_args():
         'max_episode_length' : 10000,
         'env' : 'BipedalWalker-v2',
         'shared_optimizer' : True,
-        'load' : False,
+        'load_file' : '',
+        'load_best' : False,
         'save_max' : True,
         'optimizer' : 'Adam',
         'save_directory' : 'saved/default/',
-        'load_model_dir' : 'trained_models/',
         'model_name' : 'models.mlp',
         'stack_frames' : 1,
         'grid_edge' : 16,
@@ -153,7 +153,6 @@ def parse_default_args():
         'amsgrad' : True,
     }
     return default_args
-
 
 
 def parse_args():

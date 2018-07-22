@@ -13,6 +13,7 @@ from a3g.player_util import Agent
 
 import os
 import time
+import copy
 import logging
 import gym
 
@@ -21,7 +22,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
-def test(args, shared_model):
+def test(args, shared_model, optimizer, all_scores):
     # Shortcut to save directory
     save_dir = args['save_directory']+'/'
     run_name = os.path.basename(args['save_directory'].strip('/'))
@@ -48,6 +49,11 @@ def test(args, shared_model):
     AC = importlib.import_module(args['model_name'])
     player.model = AC.ActorCritic(
         env.observation_space, env.action_space, args['stack_frames'], args)
+    best_model = AC.ActorCritic(
+        env.observation_space, env.action_space, args['stack_frames'], args)
+    best_optimizer_state_dict = None
+    if optimizer is not None:
+        best_optimizer_state_dict = copy.deepcopy(optimizer.state_dict())
 
     player.state, player.info = player.env.reset()
     player.state = torch.from_numpy(player.state).float()
@@ -57,9 +63,8 @@ def test(args, shared_model):
             player.state = player.state.cuda()
     player.model.eval()
 
-    episode_count = 0
-    all_scores = []
-    max_score = 0
+    episode_count = len(all_scores)
+    max_score = np.max(all_scores) if len(all_scores) > 0 else 0
     while True:
         if player.done:
             episode_count += 1
@@ -93,15 +98,40 @@ def test(args, shared_model):
                 plt.ylabel('Return')
                 plt.savefig('{0}/test_episode_returns.png'.format(save_dir))
 
-            if args['save_max'] and reward_sum >= max_score:
+            if reward_sum >= max_score:
                 max_score = reward_sum
-                if gpu_id >= 0:
-                    with torch.cuda.device(gpu_id):
-                        state_to_save = player.model.state_dict()
-                        torch.save(state_to_save, '{0}{1}{2}.dat'.format(args['save_model_dir'], args['save_prefix'], envname))
-                else:
-                    state_to_save = player.model.state_dict()
-                    torch.save(state_to_save, '{0}{1}{2}.dat'.format(args['save_model_dir'], args['save_prefix'], envname))
+                best_model.load_state_dict(player.model.state_dict())
+
+                optimizer_state_dict = None
+                if optimizer is not None:
+                    optimizer_state_dict = optimizer.state_dict()
+                    best_optimizer_state_dict = optimizer.state_dict()
+
+                torch.save({
+                    'args' : args,
+                    'episode_count' : episode_count,
+                    'state_dict' : player.model.state_dict(),
+                    'best_state_dict' : best_model.state_dict(),
+                    'optimizer' : optimizer_state_dict,
+                    'best_optimizer' : best_optimizer_state_dict,
+                    'all_scores' : all_scores,
+                }, save_dir+'model.pth')
+
+            # Save every 25 episodes or max episode
+            if (episode_count%25 == 0):
+                optimizer_state_dict = None
+                if optimizer is not None:
+                    optimizer_state_dict = optimizer.state_dict()
+
+                torch.save({
+                    'args' : args,
+                    'episode_count' : episode_count,
+                    'state_dict' : player.model.state_dict(),
+                    'best_state_dict' : best_model.state_dict(),
+                    'optimizer' : optimizer_state_dict,
+                    'best_optimizer' : best_optimizer_state_dict,
+                    'all_scores' : all_scores,
+                }, save_dir+'model.pth')
 
             reward_sum = 0
             player.eps_len = 0

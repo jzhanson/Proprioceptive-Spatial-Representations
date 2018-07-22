@@ -48,12 +48,7 @@ def main(args):
     AC = importlib.import_module(args['model_name'])
     shared_model = AC.ActorCritic(
         env.observation_space, env.action_space, args['stack_frames'], args)
-    if args['load']:
-        print('Loading model from: {0}{1}.dat'.format(
-            args['load_model_dir'], args['env']))
-        saved_state = torch.load('{0}{1}.dat'.format(
-            args['load_model_dir'], args['env']), map_location=lambda storage, loc: storage)
-        shared_model.load_state_dict(saved_state)
+
     shared_model.share_memory()
 
     if args['shared_optimizer']:
@@ -66,9 +61,24 @@ def main(args):
     else:
         optimizer = None
 
+    # Keep track of stats if we want to load from a checkpoint
+    all_scores = []
+    if args['load_file'] != '':
+        print('Loading model from: {0}'.format(args['load_file']))
+        pthfile = torch.load('{0}'.format(args['load_file']), map_location=lambda storage, loc: storage.cpu())
+        if args['load_best']:
+            shared_model.load_state_dict(pthfile['best_state_dict'])
+            if optimizer is not None:
+                optimizer.load_state_dict(pthfile['best_optimizer'])
+        else:
+            shared_model.load_state_dict(pthfile['state_dict'])
+            if optimizer is not None:
+                optimizer.load_state_dict(pthfile['optimizer'])
+            all_scores = pthfile['all_scores']
+
     processes = []
 
-    p = mp.Process(target=test, args=(args, shared_model))
+    p = mp.Process(target=test, args=(args, shared_model, optimizer, all_scores))
     p.start()
     processes.append(p)
     time.sleep(0.1)
