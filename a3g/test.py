@@ -8,6 +8,7 @@ from torch.autograd import Variable
 
 from common.environment import create_env
 from common.utils import setup_logger
+from common.stat_utils import smooth
 
 from a3g.player_util import Agent
 
@@ -20,6 +21,7 @@ import gym
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+
 
 
 def test(args, shared_model, optimizer, all_scores):
@@ -91,12 +93,25 @@ def test(args, shared_model, optimizer, all_scores):
             # Plot scores every 5 episodes
             all_scores.append(reward_sum)
             if (episode_count%5 == 0):
+                x = np.array(range(len(all_scores)))
+                y = np.array(all_scores)
+
+                # Raw plot
                 plt.clf()
-                plt.plot(range(len(all_scores)), all_scores)
+                plt.plot(x, y)
                 plt.title('Test Episode Returns')
                 plt.xlabel('Test Episode')
                 plt.ylabel('Return')
                 plt.savefig('{0}/test_episode_returns.png'.format(save_dir))
+                plt.savefig('{0}/test_episode_returns.eps'.format(save_dir))
+
+                # Smoothed version
+                plt.clf()
+                y_smooth = smooth(y, x)
+                plt.plot(x, y_smooth, 'k', color='#CC4F1B')
+                plt.savefig('{0}/test_episode_returns_smooth.png'.format(save_dir))
+                plt.savefig('{0}/test_episode_returns_smooth.eps'.format(save_dir))
+
 
             if reward_sum >= max_score:
                 max_score = reward_sum
