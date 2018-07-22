@@ -23,7 +23,6 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
-
 def test(args, shared_model, optimizer, all_scores):
     # Shortcut to save directory
     save_dir = args['save_directory']+'/'
@@ -32,10 +31,10 @@ def test(args, shared_model, optimizer, all_scores):
     ptitle('Test Agent')
     gpu_id = args['gpu_ids'][-1]
     log = {}
-    setup_logger('info.log', r'{0}/info.log'.format(save_dir))
-    log['info.log'] = logging.getLogger('info.log')
+    setup_logger('train.log', r'{0}/train.log'.format(save_dir))
+    log['train.log'] = logging.getLogger('train.log')
     for k in args.keys():
-        log['info.log'].info('{0}: {1}'.format(k, args[k]))
+        log['train.log'].info('{0}: {1}'.format(k, args[k]))
 
     torch.manual_seed(args['seed'])
     if gpu_id >= 0:
@@ -83,7 +82,7 @@ def test(args, shared_model, optimizer, all_scores):
             num_tests += 1
             reward_total_sum += reward_sum
             reward_mean = reward_total_sum / num_tests
-            log['info.log'].info(
+            log['train.log'].info(
                 "Time {0}, episode reward {1}, episode length {2}, reward mean {3:.4f}".
                 format(
                     time.strftime("%Hh %Mm %Ss",

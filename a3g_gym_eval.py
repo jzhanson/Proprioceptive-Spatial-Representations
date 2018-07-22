@@ -7,147 +7,96 @@ import importlib
 import torch
 from torch.autograd import Variable
 
+import numpy as np
+import numpy.random as npr
+
 from common.environment import create_env
 from common.utils import setup_logger
 
 from a3g.player_util import Agent
 
+from args import parse_args
+
 import gym
 import logging
 
 
-parser = argparse.ArgumentParser(description='A3C_EVAL')
-parser.add_argument(
-    '--env',
-    default='BipedalWalker-v2',
-    metavar='ENV',
-    help='environment to train on (default: BipedalWalker-v2)')
-parser.add_argument(
-    '--num-episodes',
-    type=int,
-    default=100,
-    metavar='NE',
-    help='how many episodes in evaluation (default: 100)')
-parser.add_argument(
-    '--load-model-dir',
-    default='trained_models/',
-    metavar='LMD',
-    help='folder to load trained models from')
-parser.add_argument(
-    '--log-dir', default='logs/', metavar='LG', help='folder to save logs')
-parser.add_argument(
-    '--render',
-    default=False,
-    metavar='R',
-    help='Watch game as it being played')
-parser.add_argument(
-    '--render-freq',
-    type=int,
-    default=1,
-    metavar='RF',
-    help='Frequency to watch rendered game play')
-parser.add_argument(
-    '--max-episode-length',
-    type=int,
-    default=100000,
-    metavar='M',
-    help='maximum length of an episode (default: 100000)')
-parser.add_argument(
-    '--model-name',
-    default='models.mlp',
-    metavar='M',
-    help='Model type to use')
-parser.add_argument(
-    '--stack-frames',
-    type=int,
-    default=1,
-    metavar='SF',
-    help='Choose whether to stack observations')
-parser.add_argument(
-    '--new-gym-eval',
-    default=False,
-    metavar='NGE',
-    help='Create a gym evaluation for upload')
-parser.add_argument(
-    '--seed',
-    type=int,
-    default=1,
-    metavar='S',
-    help='random seed (default: 1)')
-parser.add_argument(
-    '--gpu-id',
-    type=int,
-    default=-1,
-    help='GPU to use [-1 CPU only] (default: -1)')
-args = parser.parse_args()
+def evaluate(args):
+    torch.set_default_tensor_type('torch.FloatTensor')
 
-torch.set_default_tensor_type('torch.FloatTensor')
+    pthfile = torch.load(args['load_file'], map_location=lambda storage, loc: storage.cpu())
 
-saved_state = torch.load(
-    '{0}{1}.dat'.format(args.load_model_dir, args.env),
-    map_location=lambda storage, loc: storage)
+    save_dir = args['save_directory']+'/'
 
-log = {}
-setup_logger('{}_mon_log'.format(args.env), r'{0}{1}_mon_log'.format(
-    args.log_dir, args.env))
-log['{}_mon_log'.format(args.env)] = logging.getLogger(
-    '{}_mon_log'.format(args.env))
+    log = {}
+    setup_logger('test.log', r'{0}/test.log'.format(save_dir))
+    log['test.log'] = logging.getLogger('test.log')
 
-gpu_id = args.gpu_id
+    gpu_id = args['gpu_ids'][-1]
 
-torch.manual_seed(args.seed)
-if gpu_id >= 0:
-    torch.cuda.manual_seed(args.seed)
+    torch.manual_seed(args['seed'])
+    npr.seed(args['seed']+1)
+    if gpu_id >= 0:
+        torch.cuda.manual_seed(args['seed'])
 
+    for k in args.keys():
+        log['test.log'].info('{0}: {1}'.format(k, args[k]))
 
-d_args = vars(args)
-for k in d_args.keys():
-    log['{}_mon_log'.format(args.env)].info('{0}: {1}'.format(k, d_args[k]))
+    env = create_env(args['env'], args)
+    player = Agent(None, env, args, None)
 
-env = create_env("{}".format(args.env), args)
-num_tests = 0
-reward_total_sum = 0
-player = Agent(None, env, args, None)
+    AC = importlib.import_module(args['model_name'])
+    player.model = AC.ActorCritic(
+        env.observation_space, env.action_space, args['stack_frames'], args)
 
-AC = importlib.import_module(args.model_name)
-player.model = AC.ActorCritic(
-    env.observation_space, env.action_space, args.stack_frames)
-
-player.gpu_id = gpu_id
-if gpu_id >= 0:
-    with torch.cuda.device(gpu_id):
-        player.model = player.model.cuda()
-if args.new_gym_eval:
-    player.env = gym.wrappers.Monitor(
-        player.env, "{}_monitor".format(args.env), force=True)
-
-if gpu_id >= 0:
-    with torch.cuda.device(gpu_id):
-        player.model.load_state_dict(saved_state)
-else:
-    player.model.load_state_dict(saved_state)
-
-player.model.eval()
-for i_episode in range(args.num_episodes):
-    player.state = player.env.reset()
-    player.state = torch.from_numpy(player.state).float()
+    player.gpu_id = gpu_id
     if gpu_id >= 0:
         with torch.cuda.device(gpu_id):
-            player.state = player.state.cuda()
-    player.eps_len = 0
-    reward_sum = 0
-    while True:
-        if args.render:
-            if i_episode % args.render_freq == 0:
-                player.env.render()
+            player.model = player.model.cuda()
 
-        player.action_test()
-        reward_sum += player.reward
+    if args['load_best']:
+        player.model.load_state_dict(pthfile['best_state_dict'])
+    else:
+        player.model.load_state_dict(pthfile['state_dict'])
+    player.model.eval()
 
-        if player.done:
-            num_tests += 1
-            reward_total_sum += reward_sum
-            reward_mean = reward_total_sum / num_tests
-            log['{}_mon_log'.format(args.env)].info(
-                "Episode_length, {0}, reward_sum, {1}, reward_mean, {2:.4f}".format(player.eps_len, reward_sum, reward_mean))
-            break
+    # Keep track of returns
+    all_episode_returns = []
+    for i_episode in range(args['num_episodes']):
+        player.state, player.info = player.env.reset()
+        player.state = torch.from_numpy(player.state).float()
+        if gpu_id >= 0:
+            with torch.cuda.device(gpu_id):
+                player.state = player.state.cuda()
+        player.eps_len = 0
+        reward_sum = 0
+        while True:
+            player.action_test()
+            reward_sum += player.reward
+
+            if player.done:
+                all_episode_returns.append(reward_sum)
+                #num_tests += 1
+                #reward_total_sum += reward_sum
+                #reward_mean = reward_total_sum / num_tests
+                log['test.log'].info(
+                    "Episode_length, {0}, reward_sum, {1}".format(player.eps_len, reward_sum))
+                break
+    all_episode_returns = np.array(all_episode_returns)
+    print('Average Episodic Return: {0}'.format(np.mean(all_episode_returns)))
+    print('Average Episodic Success: {0}'.format(np.mean(np.array(all_episode_returns > 300., dtype=np.float32))))
+
+if __name__=='__main__':
+    evaluate(parse_args(
+        additional_parser_args={
+            'num_episodes' : {
+                'name' : '--num-episodes',
+                'type' : int,
+                'metavar' : 'NE',
+                'help' : 'how many epiosdes in evaluation (default: 100)'
+            }
+        },
+        additional_default_args={
+            'num_episodes' : 100
+        }
+    ))
