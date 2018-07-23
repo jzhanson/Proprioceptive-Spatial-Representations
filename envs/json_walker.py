@@ -8,6 +8,9 @@ import gym
 from gym import spaces
 from gym.utils import colorize, seeding
 
+import torch
+from torch.autograd import Variable
+
 # This is simple 4-joints walker robot environment.
 #
 # There are two versions:
@@ -525,7 +528,97 @@ class JSONWalker(gym.Env):
             ))
         return info
 
-    def render(self, mode='human'):
+    def coord_to_grid(self, coord, zero):
+        return round((coord - zero) / self.grid_scale * self.grid_edge)
+
+    def get_zeros(self):
+        return self.bodies['Hull'].position.x - self.grid_scale / 2, self.bodies['Hull'].position.y - self.grid_scale / 2
+
+    def _draw_stategrid(self, model):
+        self.grid_edge = model.senc_nngrid.grid_edge
+        self.grid_scale = model.senc_nngrid.grid_scale
+        self.grid_square_edge = self.grid_scale / self.grid_edge
+
+        # Draw state grid around hull and highlight squares with a nonzero channel
+        fill_empty = True
+        show_grid = True
+
+        zero_x, zero_y = self.get_zeros()
+        filled_in_squares = []
+
+        body_color = (1, 1, 1, 0.5)
+        joint_color = (1, 1, 1, 0.5)
+
+        if fill_empty:
+            vertices = [(zero_x, zero_y),
+                        (zero_x + self.grid_scale, zero_y),
+                        (zero_x + self.grid_scale, zero_y + self.grid_scale),
+                        (zero_x, zero_y + self.grid_scale)]
+            big_square = self.viewer.draw_polygon(vertices)
+            big_square._color.vec4 = (0, 0, 0, 0.5)
+
+        if show_grid:
+            for i in range(self.grid_edge + 1):
+                vertical = [(zero_x + self.grid_square_edge * i, zero_y), (zero_x + self.grid_square_edge * i, zero_y + self.grid_scale)]
+                horizontal = [(zero_x, zero_y + self.grid_square_edge * i), (zero_x + self.grid_scale, zero_y + self.grid_square_edge * i)]
+                self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
+                self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
+
+
+        grid_channels = model.senc_nngrid((Variable(torch.from_numpy(np.array(self._get_state()))), self._info_dict()))
+        grid_channels_sum = torch.sum(torch.squeeze(grid_channels), dim=0).data.numpy()
+
+        for x in range(self.grid_edge):
+            for y in range(self.grid_edge):
+                if grid_channels_sum[x, y] != 0:
+                    lower_left_x, lower_left_y = zero_x + self.grid_square_edge * x, zero_y + self.grid_square_edge * y
+                    vertices = [(lower_left_x, lower_left_y),
+                        (lower_left_x + self.grid_square_edge, lower_left_y),
+                        (lower_left_x + self.grid_square_edge, lower_left_y + self.grid_square_edge),
+                        (lower_left_x, lower_left_y + self.grid_square_edge)]
+                    filled_in_square = self.viewer.draw_polygon(vertices)
+                    # Make half transparent
+                    filled_in_square._color.vec4 = body_color
+                    filled_in_squares.append((lower_left_x, lower_left_y))
+
+    def _draw_actiongrid(self, model, depth=-1):
+        # Dimensions of action grid output by model not always the same as those of the state grid
+        self.grid_edge = model.adec_nngrid.current_actiongrid.shape[2]
+        self.grid_scale = model.adec_nngrid.grid_scale
+        self.grid_square_edge = self.grid_scale / self.grid_edge
+
+        # Draw action grid around hull and color in grayscale intensity of action
+        show_grid = True
+
+        zero_x, zero_y = self.get_zeros()
+
+        if show_grid:
+            for i in range(self.grid_edge + 1):
+                vertical = [(zero_x + self.grid_square_edge * i, zero_y), (zero_x + self.grid_square_edge * i, zero_y + self.grid_scale)]
+                horizontal = [(zero_x, zero_y + self.grid_square_edge * i), (zero_x + self.grid_scale, zero_y + self.grid_square_edge * i)]
+                self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
+                self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
+
+        # Depth of -1 means flatten depth layers and display
+        if depth >= 0:
+            current_actiongrid_layer = model.adec_nngrid.current_actiongrid[0, depth]
+        else:
+            current_actiongrid_layer = np.sum(model.adec_nngrid.current_actiongrid, axis=1)[0]
+        max_sum = np.amax(current_actiongrid_layer)
+
+        for x in range(self.grid_edge):
+            for y in range(self.grid_edge):
+                lower_left_x, lower_left_y = zero_x + self.grid_square_edge * x, zero_y + self.grid_square_edge * y
+                vertices = [(lower_left_x, lower_left_y),
+                    (lower_left_x + self.grid_square_edge, lower_left_y),
+                    (lower_left_x + self.grid_square_edge, lower_left_y + self.grid_square_edge),
+                    (lower_left_x, lower_left_y + self.grid_square_edge)]
+                filled_in_square = self.viewer.draw_polygon(vertices)
+                # Set intensity to the relative value of channels
+                square_fill = current_actiongrid_layer[x, y] / max_sum
+                filled_in_square._color.vec4 = (square_fill, square_fill, square_fill, 0.5)
+
+    def render(self, mode='human', model=None, show_stategrid=False, show_actiongrid=False, actiongrid_depth=-1):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
@@ -572,6 +665,11 @@ class JSONWalker(gym.Env):
         f = [(x, flagy2), (x, flagy2-10/SCALE), (x+25/SCALE, flagy2-5/SCALE)]
         self.viewer.draw_polygon(f, color=(0.9,0.2,0) )
         self.viewer.draw_polyline(f + [f[0]], color=(0,0,0), linewidth=2 )
+
+        if show_stategrid:
+            self._draw_stategrid(model)
+        if show_actiongrid:
+            self._draw_actiongrid(model, depth=actiongrid_depth)
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
