@@ -47,13 +47,15 @@ class ActorCritic(torch.nn.Module):
             self.convlstm4,
         ]
         _is = (n_frames*self.input_size[0],)+self.input_size[1:]
-        self.mem0 = []
+        self.convh0 = []
+        self.convc0 = []
         self.memsizes = []
         for i in range(len(self.convlstm)):
             _is = self.convlstm[i]._spatial_size_output_given_input((1,)+_is)
             _is = (_s[i],)+_is
             self.memsizes.append(copy.deepcopy(_is))
-            self.mem0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
+            self.convh0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
+            self.convc0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
  
         self.critic_linear = nn.Conv2d(128, 2, 3, stride=1, padding=1)
         self.actor_linear  = nn.Conv2d(128, 2, 3, stride=1, padding=1)
@@ -107,14 +109,8 @@ class ActorCritic(torch.nn.Module):
         return critic_out, actor_out, actor_out2, (convhx, convcx, frames)
 
     def initialize_memory(self):
-        if next(self.parameters()).is_cuda:
-            return (
-                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(len(self.memsizes))],
-                [Variable(torch.zeros((1,)+self.memsizes[i]).cuda()) for i in range(len(self.memsizes))],
-                self.frame_stack.initialize_memory())
         return (
-            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(len(self.memsizes))],
-            [Variable(torch.zeros((1,)+self.memsizes[i])) for i in range(len(self.memsizes))],
+            self.convh0, self.convc0,
             self.frame_stack.initialize_memory())
 
     def reinitialize_memory(self, old_memory):
