@@ -111,7 +111,10 @@ def test(args, shared_model, optimizer, all_scores):
                 plt.savefig('{0}/test_episode_returns_smooth.png'.format(save_dir))
                 plt.savefig('{0}/test_episode_returns_smooth.eps'.format(save_dir))
 
-
+            model_path = save_dir+'/model'
+            if args['save_intermediate']:
+                model_path = model_path+'.'+str(episode_count)
+            model_path = model_path+".pth"
             if reward_sum >= max_score:
                 max_score = reward_sum
                 best_model.load_state_dict(player.model.state_dict())
@@ -129,7 +132,7 @@ def test(args, shared_model, optimizer, all_scores):
                     'optimizer' : optimizer_state_dict,
                     'best_optimizer' : best_optimizer_state_dict,
                     'all_scores' : all_scores,
-                }, save_dir+'model.pth')
+                }, model_path)
 
             # Save every 25 episodes or max episode
             if (episode_count%25 == 0):
@@ -145,7 +148,7 @@ def test(args, shared_model, optimizer, all_scores):
                     'optimizer' : optimizer_state_dict,
                     'best_optimizer' : best_optimizer_state_dict,
                     'all_scores' : all_scores,
-                }, save_dir+'model.pth')
+                }, model_path)
 
             reward_sum = 0
             player.eps_len = 0

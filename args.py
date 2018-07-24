@@ -63,6 +63,10 @@ def parse_cmdline_args(additional_parser_args={}):
         metavar='SD',
         help='where to save model files and logs.')
     parser.add_argument(
+        '--save-intermediate',
+        metavar='SI',
+        help='whether to save model snapshots during training.')
+    parser.add_argument(
         '--load-file',
         metavar='LF',
         help='pth file to load a training checkpoint.')
@@ -150,6 +154,7 @@ def parse_default_args(additional_default_args={}):
         'save_max' : True,
         'optimizer' : 'Adam',
         'save_directory' : 'saved/default/',
+        'save_intermediate' : False,
         'model_name' : 'models.mlp',
         'stack_frames' : 1,
         'grid_edge' : 16,
