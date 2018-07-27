@@ -326,7 +326,7 @@ class JSONWalker(gym.Env):
             self.bodies[k] = self.world.CreateDynamicBody(
                 position=[x/SCALE for x in self.body_defs[k]['Position']],
                 angle=self.body_defs[k]['Angle'],
-                fixtures=self.fixtures[self.body_defs[k]['FixtureName']]
+                fixtures=[self.fixtures[f] for f in self.body_defs[k]['FixtureNames']]
             )
             self.bodies[k].color1 = self.body_defs[k]['Color1']
             self.bodies[k].color2 = self.body_defs[k]['Color2']

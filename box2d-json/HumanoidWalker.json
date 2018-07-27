@@ -82,7 +82,7 @@
 		  "DataType" : "DynamicBody",
         "Position" : [140, 168],
         "Angle" : 0.0,
-        "FixtureName" : "HullFixture",
+        "FixtureNames" : ["HullFixture"],
         "Color1" : [0.5, 0.4, 0.9],
         "Color2" : [0.3, 0.3, 0.5],
         "CanTouchGround" : false,
@@ -93,7 +93,7 @@
 		  "DataType" : "DynamicBody",
 		  "Position" : [140, 138],
 		  "Angle" : 0.0,
-		  "FixtureName" : "HeadFixture",
+		  "FixtureNames" : ["HeadFixture"],
 		  "Color1" : [0.5, 0.4, 0.9],
 		  "Color2" : [0.3, 0.3, 0.5],
 		  "CanTouchGround" : false
@@ -118,7 +118,7 @@
 		  "DataType" : "DynamicBody",
 		  "Position" : [140, 159],
 		  "Angle" : -0.05,
-		  "FixtureName" : "LegFixture",
+		  "FixtureNames" : ["LegFixture"],
 		  "Color1" : [0.7, 0.4, 0.6],
 		  "Color2" : [0.5, 0.3, 0.4],
 		  "CanTouchGround" : true
@@ -141,7 +141,7 @@
 		  "DataType" : "DynamicBody",
 		  "Position" : [140, 128],
 		  "Angle" : -0.05,
-		  "FixtureName" : "LowerFixture",
+		  "FixtureNames" : ["LowerFixture"],
 		  "Color1" : [0.7, 0.4, 0.6],
 		  "Color2" : [0.5, 0.3, 0.4],
 		  "CanTouchGround" : true
@@ -166,7 +166,7 @@
 		  "DataType" : "DynamicBody",
         "Position" : [140, 159],
         "Angle" : 0.05,
-        "FixtureName" : "LegFixture",
+        "FixtureNames" : ["LegFixture"],
         "Color1" : [0.4, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
         "CanTouchGround" : true
@@ -189,7 +189,7 @@
 		  "DataType" : "DynamicBody",
         "Position" : [140, 128],
         "Angle" : 0.05,
-        "FixtureName" : "LowerFixture",
+        "FixtureNames" : ["LowerFixture"],
         "Color1" : [0.4, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
         "CanTouchGround" : true
@@ -214,7 +214,7 @@
         "DataType" : "DynamicBody",
         "Position" : [140, 212],
         "Angle" : 1.5,
-        "FixtureName" : "ArmFixture",
+        "FixtureNames" : ["ArmFixture"],
         "Color1" : [0.5, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
         "CanTouchGround" : false
@@ -237,7 +237,7 @@
         "DataType" : "DynamicBody",
         "Position" : [140, 128],
         "Angle" : 0.05,
-        "FixtureName" : "UpperFixture",
+        "FixtureNames" : ["UpperFixture"],
         "Color1" : [0.5, 0.2, 0.4],
         "Color2" : [0.3, 0.1, 0.2],
         "CanTouchGround" : false
@@ -261,7 +261,7 @@
         "DataType" : "DynamicBody",
         "Position" : [140, 212],
         "Angle" : -0.05,
-        "FixtureName" : "ArmFixture",
+        "FixtureNames" : ["ArmFixture"],
         "Color1" : [0.7, 0.4, 0.6],
         "Color2" : [0.5, 0.3, 0.4],
         "CanTouchGround" : false
@@ -284,7 +284,7 @@
         "DataType" : "DynamicBody",
         "Position" : [140, 128],
         "Angle" : -0.05,
-        "FixtureName" : "UpperFixture",
+        "FixtureNames" : ["UpperFixture"],
         "Color1" : [0.7, 0.4, 0.6],
         "Color2" : [0.5, 0.3, 0.4],
         "CanTouchGround" : false
