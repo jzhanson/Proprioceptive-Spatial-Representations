@@ -101,6 +101,10 @@ def parse_cmdline_args(additional_parser_args={}):
         type=float,
         help='grid scale')
     parser.add_argument(
+        '--grid-cells-per-unit',
+        type=float,
+        help='grid cells per environment unit')
+    parser.add_argument(
         '--blur-frames',
         type=int,
         metavar='BF',
@@ -159,6 +163,7 @@ def parse_default_args(additional_default_args={}):
         'stack_frames' : 1,
         'grid_edge' : 16,
         'grid_scale' : 5.44,
+        'grid_cells_per_unit' : 16./5.44,
         'blur_frames' : 1,
         'blur_discount' : 1.0,
         'gpu_ids' : [-1],

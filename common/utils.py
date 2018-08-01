@@ -82,3 +82,30 @@ def normal(x, mu, sigma, gpu_id, gpu=False):
     a = (-1 * (x - mu).pow(2) / (2 * sigma)).exp()
     b = 1 / (2 * sigma * pi.expand_as(sigma)).sqrt()
     return a * b
+
+def recenter_old_grid(old_grid, old_anchor, new_grid, new_anchor):
+    old_anchor_x, old_anchor_y = old_anchor
+    new_anchor_x, new_anchor_y = new_anchor
+    drift_x = new_anchor_x - old_anchor_x
+    drift_y = new_anchor_y - old_anchor_y
+
+    old_grid_recentered = new_grid.clone()*0.
+
+    start_x, end_x = 0+drift_x, old_grid.size(-2)+drift_x
+    start_y, end_y = 0+drift_y, old_grid.size(-1)+drift_y
+
+    old_grid_recentered[...,start_x:end_x,start_y:end_y] = old_grid
+
+    '''
+    if drift_x != 0 or drift_y != 0:
+        print(old_anchor)
+        print(new_anchor)
+        print(start_x, end_x)
+        print(start_y, end_y)
+
+        print(old_grid[0,0,0])
+        print(old_grid_recentered[0,0,0])
+        exit()
+    '''
+
+    return old_grid_recentered

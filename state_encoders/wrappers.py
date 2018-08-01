@@ -1,5 +1,6 @@
 from __future__ import division
 import gym
+import copy
 import numpy as np
 from collections import deque
 from gym import spaces
@@ -10,6 +11,7 @@ import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+from common.utils import recenter_old_grid
 
 class MaxMinFilter(torch.nn.Module):
     def __init__(self):
@@ -71,6 +73,44 @@ class FrameStack(torch.nn.Module):
             maxlen=self.n_frames
         )
 
+class AdaptiveFrameStack(torch.nn.Module):
+    def __init__(self, n_frames):
+        super(AdaptiveFrameStack, self).__init__()
+        self.n_frames = n_frames
+        self.obs_norm = MaxMinFilter()
+        self.old_anchor = False
+        #NormalizedEnv() alternative or can just not normalize observations as environment is already kinda normalized
+
+    def forward(self, inputs):
+        x, frames, new_anchor = inputs
+
+        x = x[:,None]
+        if len(frames) > 0 and (frames[-1].size(-1) != x.size(-1) or frames[-1].size(-2) != x.size(-2)):
+            for i in range(len(frames)):
+                new_frame = torch.zeros(x.size())
+                if x.is_cuda:
+                    new_frame = new_frame.cuda()
+                new_frame = Variable(new_frame)
+                frames[i] = recenter_old_grid(frames[i], self.old_anchor, new_frame, new_anchor)
+
+        self.old_anchor = copy.deepcopy(new_anchor)
+
+        frames.append(x)
+        while len(frames) != self.n_frames:
+            frames.append(x)
+        x = torch.cat(list(frames), 1)
+        return x, frames
+
+    def initialize_memory(self):
+        return deque([], maxlen=self.n_frames)
+
+    def reinitialize_memory(self, old_memory):
+        return deque(
+            [Variable(e.data) for e in old_memory],
+            maxlen=self.n_frames
+        )
+
+
 class MotionBlur(torch.nn.Module):
     def __init__(self, blur_frames):
         super(MotionBlur, self).__init__()
@@ -93,4 +133,3 @@ class MotionBlur(torch.nn.Module):
             [Variable(e.data) for e in old_memory],
             maxlen=self.blur_frames
         )
-
