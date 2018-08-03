@@ -1,4 +1,4 @@
-import sys, math, json, copy
+import sys, math, json, copy, time
 import numpy as np
 
 import Box2D
@@ -94,6 +94,7 @@ class JSONWalker(gym.Env):
         self.fixture_defs = {}
         self.body_defs    = {}
         self.joint_defs   = {}
+        self.linkage_defs = {}
 
         # Split the data so that we can create it later in order
         for k in self.jsondata.keys():
@@ -103,6 +104,8 @@ class JSONWalker(gym.Env):
                 self.body_defs[k] = copy.deepcopy(self.jsondata[k])
             elif self.jsondata[k]['DataType'] == 'JointMotor':
                 self.joint_defs[k] = copy.deepcopy(self.jsondata[k])
+            elif self.jsondata[k]['DataType'] == 'Linkage':
+                self.linkage_defs[k] = copy.deepcopy(self.jsondata[k])
             else:
                 assert(False)
 
@@ -367,6 +370,17 @@ class JSONWalker(gym.Env):
             self.joints[k].connected_body   = []
             self.joints[k].connected_joints = []
 
+        # Process the body linkages
+        # bodyA, bodyB, anchor
+        self.linkages = {}
+        for k in self.linkage_defs.keys():
+            self.linkages[k] = self.world.CreateWeldJoint(
+                bodyA=self.bodies[self.linkage_defs[k]['BodyA']],
+                bodyB=self.bodies[self.linkage_defs[k]['BodyB']],
+                anchor=[x/SCALE for x in self.linkage_defs[k]['Anchor']]
+            )
+            self.linkages[k].depth = self.linkage_defs[k]['Depth']
+
         self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
         for i in range(len(self.joint_action_order)):
             k = self.joint_action_order[i]
@@ -387,6 +401,13 @@ class JSONWalker(gym.Env):
                 self.bodies[self.joint_defs[k]['BodyA']].index)
             self.joints[k].connected_body.append(
                 self.bodies[self.joint_defs[k]['BodyB']].index)
+
+        # Construct index links between hull segments via linkages
+        for k in self.linkage_defs.keys():
+            self.bodies[self.linkage_defs[k]['BodyA']].connected_body.append(
+                self.bodies[self.linkage_defs[k]['BodyB']].index)
+            self.bodies[self.linkage_defs[k]['BodyB']].connected_body.append(
+                self.bodies[self.linkage_defs[k]['BodyA']].index)
 
         # Construct index links between joints connected to same body
         for k_joint in self.joints.keys():
@@ -686,7 +707,16 @@ if __name__=="__main__":
     env = JSONWalker("box2d-json/BipedalWalker.json")
     #env = JSONWalker('box2d-json/HumanoidWalker.json')
     #env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
+    #env = JSONWalker('box2d-json/CentipedeWalker.json')
+    #env = JSONWalker('box2d-json/GeneratedCentipedeWalker.json')
+
+    '''
     env.reset()
+    while True:
+        env.render()
+        env.step(env.action_space.sample())
+        time.sleep(0.2)
+    '''
     steps = 0
     total_reward = 0
     a = np.array([0.0]*env.action_space.shape[0])
