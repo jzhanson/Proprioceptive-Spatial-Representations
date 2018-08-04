@@ -318,13 +318,13 @@ class JSONWalker(gym.Env):
                 categoryBits=self.fixture_defs[k]['CategoryBits']
             )
 
-
         # Process the dynamic bodies
         # position, angle,  fixture,
         self.bodies = {}
         for k in self.body_defs.keys():
             self.bodies[k] = self.world.CreateDynamicBody(
-                position=[x/SCALE for x in self.body_defs[k]['Position']],
+                position=[x/SCALE
+                          for x in self.body_defs[k]['Position']],
                 angle=self.body_defs[k]['Angle'],
                 fixtures=[self.fixtures[f] for f in self.body_defs[k]['FixtureNames']]
             )
@@ -354,8 +354,10 @@ class JSONWalker(gym.Env):
             self.joints[k] = self.world.CreateJoint(revoluteJointDef(
                 bodyA=self.bodies[self.joint_defs[k]['BodyA']],
                 bodyB=self.bodies[self.joint_defs[k]['BodyB']],
-                localAnchorA=[x/SCALE for x in self.joint_defs[k]['LocalAnchorA']],
-                localAnchorB=[x/SCALE for x in self.joint_defs[k]['LocalAnchorB']],
+                localAnchorA=[x/SCALE
+                              for x in self.joint_defs[k]['LocalAnchorA']],
+                localAnchorB=[x/SCALE
+                              for x in self.joint_defs[k]['LocalAnchorB']],
                 enableMotor=self.joint_defs[k]['EnableMotor'],
                 enableLimit=self.joint_defs[k]['EnableLimit'],
                 maxMotorTorque=self.joint_defs[k]['MaxMotorTorque'],
@@ -683,9 +685,10 @@ class JSONWalkerHardcore(JSONWalker):
 
 if __name__=="__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    env = JSONWalker("box2d-json/BipedalWalker.json")
+    #env = JSONWalker("box2d-json/BipedalWalker.json")
     #env = JSONWalker('box2d-json/HumanoidWalker.json')
     #env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
+    env = JSONWalker('box2d-json/RaptorWalker.json')
     env.reset()
     steps = 0
     total_reward = 0
@@ -699,7 +702,11 @@ if __name__=="__main__":
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
         env.render()
+        a = np.zeros(env.action_space.shape)
         _, r, done, info = env.step(a)
+        if done:
+            env.reset()
+        continue
         # Build the state
         s = [
             env.bodies['Hull'].angle,
