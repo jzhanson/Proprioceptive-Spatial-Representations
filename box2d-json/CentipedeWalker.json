@@ -1,0 +1,291 @@
+{
+	 "HullFixture" : {
+		  "DataType" : "Fixture",
+		  "FixtureShape" : {
+				"Type" : "CircleShape",
+				"Radius" : 12
+		  },
+		  "Friction" : 0.2,
+		  "Density" : 5.0,
+		  "Restitution" : 0.0,
+		  "MaskBits" : 1,
+		  "CategoryBits" : 32
+	 },
+	 "LegFixture" : {
+		  "DataType" : "Fixture",
+		  "FixtureShape" : {
+				"Type" : "PolygonShape",
+				"Vertices" : [[-3, -13], [ 3, -13],
+								  [ 3,  13], [-3,  13]]
+			},
+		  "Friction" : 0.2,
+		  "Density" : 1.0,
+		  "Restitution" : 0.0,
+		  "MaskBits" : 1,
+		  "CategoryBits" : 32
+	 },
+	 "LowerFixture" : {
+		  "DataType" : "Fixture",
+		  "FixtureShape" : {
+				"Type" : "PolygonShape",
+				"Vertices" : [[-3.2, -30], [ 3.2, -30],
+								  [ 3.2,  30], [-3.2,  30]]
+		  },
+		  "Friction" : 0.2,
+		  "Density" : 1.0,
+		  "Restitution" : 0.0,
+		  "MaskBits" : 1,
+		  "CategoryBits" : 32
+	 },
+
+	 "Hull" : {
+		  "DataType" : "DynamicBody",
+        "Position" : [140, 135],
+        "Angle" : 0.0,
+        "FixtureNames" : ["HullFixture"],
+        "Color1" : [0.5, 0.4, 0.9],
+        "Color2" : [0.3, 0.3, 0.5],
+        "CanTouchGround" : false,
+		  "InitialForceScale" : 5,
+		  "Depth" : 0
+    },
+	 "Hull2" : {
+		  "DataType" : "DynamicBody",
+        "Position" : [116, 135],
+        "Angle" : 0.0,
+        "FixtureNames" : ["HullFixture"],
+        "Color1" : [0.5, 0.4, 0.9],
+        "Color2" : [0.3, 0.3, 0.5],
+        "CanTouchGround" : false,
+		  "InitialForceScale" : 5,
+		  "Depth" : 0
+    },
+   "HullHull2Joint" : {
+		  "DataType" : "Linkage",
+		  "BodyA" : "Hull",
+		  "BodyB" : "Hull2",
+      "Anchor" : [128, 135],
+		  "Depth" : 0
+	  },
+	 "Hull3" : {
+		  "DataType" : "DynamicBody",
+        "Position" : [92, 135],
+        "Angle" : 0.0,
+        "FixtureNames" : ["HullFixture"],
+        "Color1" : [0.5, 0.4, 0.9],
+        "Color2" : [0.3, 0.3, 0.5],
+        "CanTouchGround" : false,
+		  "InitialForceScale" : 5,
+		  "Depth" : 0
+    },
+   "Hull2Hull3Joint" : {
+		  "DataType" : "Linkage",
+		  "BodyA" : "Hull2",
+		  "BodyB" : "Hull3",
+      "Anchor" : [104, 135],
+		  "Depth" : 0
+	  },
+
+	 "Leg-1" : {
+		  "DataType" : "DynamicBody",
+		  "Position" : [140, 148],
+		  "Angle" : -0.05,
+		  "FixtureNames" : ["LegFixture"],
+		  "Color1" : [0.7, 0.4, 0.6],
+		  "Color2" : [0.5, 0.3, 0.4],
+		  "CanTouchGround" : true,
+		  "Depth" : 0
+	 },
+	 "HullLeg-1Joint" : {
+		  "DataType" : "JointMotor",
+		  "BodyA" : "Hull",
+		  "BodyB" : "Leg-1",
+		  "LocalAnchorA" : [0, 0],
+		  "LocalAnchorB" : [0, -13],
+		  "EnableMotor" : true,
+		  "EnableLimit" : true,
+		  "MaxMotorTorque" : 80,
+		  "MotorSpeed" : -1,
+		  "LowerAngle" : -3.14,
+		  "UpperAngle" : 3.14,
+		  "Speed" : 4,
+		  "Depth" : 0
+	 },
+	 "Lower-1" : {
+		  "DataType" : "DynamicBody",
+		  "Position" : [140, 131],
+		  "Angle" : -0.05,
+		  "FixtureNames" : ["LowerFixture"],
+		  "Color1" : [0.7, 0.4, 0.6],
+		  "Color2" : [0.5, 0.3, 0.4],
+		  "CanTouchGround" : true,
+		  "Depth" : 0
+	 },
+	 "Leg-1Lower-1Joint" : {
+		  "DataType" : "JointMotor",
+		  "BodyA" : "Leg-1",
+		  "BodyB" : "Lower-1",
+		  "LocalAnchorA" : [0, 13],
+		  "LocalAnchorB" : [0, 30],
+		  "EnableMotor" : true,
+		  "EnableLimit" : true,
+		  "MaxMotorTorque" : 80,
+		  "MotorSpeed" : 1,
+		  "LowerAngle" : -3.14,
+		  "UpperAngle" : 3.14,
+		  "Speed" : 6,
+		  "Depth" : 0
+	 },
+	 "Leg1" : {
+		  "DataType" : "DynamicBody",
+        "Position" : [140, 148],
+        "Angle" : 0.05,
+        "FixtureNames" : ["LegFixture"],
+        "Color1" : [0.4, 0.2, 0.4],
+        "Color2" : [0.3, 0.1, 0.2],
+        "CanTouchGround" : true,
+		  "Depth" : 1
+    },
+    "HullLeg1Joint" : {
+		  "DataType" : "JointMotor",
+        "BodyA" : "Hull",
+        "BodyB" : "Leg1",
+        "LocalAnchorA" : [0, 0],
+        "LocalAnchorB" : [0, -13],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -3.14,
+        "UpperAngle" : 3.14,
+		  "Speed" : 4,
+		  "Depth" : 1
+    },
+    "Lower1" : {
+		  "DataType" : "DynamicBody",
+        "Position" : [140, 131],
+        "Angle" : 0.05,
+        "FixtureNames" : ["LowerFixture"],
+        "Color1" : [0.4, 0.2, 0.4],
+        "Color2" : [0.3, 0.1, 0.2],
+        "CanTouchGround" : true,
+		  "Depth" : 1
+    },
+    "Leg1Lower1Joint" : {
+		  "DataType" : "JointMotor",
+        "BodyA" : "Leg1",
+        "BodyB" : "Lower1",
+        "LocalAnchorA" : [0, 13],
+        "LocalAnchorB" : [0, 30],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -3.14,
+        "UpperAngle" : 3.14,
+		  "Speed" : 6,
+		  "Depth" : 1
+    },
+
+	 "Leg-2" : {
+		  "DataType" : "DynamicBody",
+		  "Position" : [116, 148],
+		  "Angle" : -0.05,
+		  "FixtureNames" : ["LegFixture"],
+		  "Color1" : [0.7, 0.4, 0.6],
+		  "Color2" : [0.5, 0.3, 0.4],
+		  "CanTouchGround" : true,
+		  "Depth" : 0
+	 },
+	 "Hull2Leg-2Joint" : {
+		  "DataType" : "JointMotor",
+		  "BodyA" : "Hull2",
+		  "BodyB" : "Leg-2",
+		  "LocalAnchorA" : [0, 0],
+		  "LocalAnchorB" : [0, -13],
+		  "EnableMotor" : true,
+		  "EnableLimit" : true,
+		  "MaxMotorTorque" : 80,
+		  "MotorSpeed" : -1,
+		  "LowerAngle" : -3.14,
+		  "UpperAngle" : 3.14,
+		  "Speed" : 4,
+		  "Depth" : 0
+	 },
+	 "Lower-2" : {
+		  "DataType" : "DynamicBody",
+		  "Position" : [116, 131],
+		  "Angle" : -0.05,
+		  "FixtureNames" : ["LowerFixture"],
+		  "Color1" : [0.7, 0.4, 0.6],
+		  "Color2" : [0.5, 0.3, 0.4],
+		  "CanTouchGround" : true,
+		  "Depth" : 0
+	 },
+	 "Leg-2Lower-2Joint" : {
+		  "DataType" : "JointMotor",
+		  "BodyA" : "Leg-2",
+		  "BodyB" : "Lower-2",
+		  "LocalAnchorA" : [0, 13],
+		  "LocalAnchorB" : [0, 30],
+		  "EnableMotor" : true,
+		  "EnableLimit" : true,
+		  "MaxMotorTorque" : 80,
+		  "MotorSpeed" : 1,
+		  "LowerAngle" : -3.14,
+		  "UpperAngle" : 3.14,
+		  "Speed" : 6,
+		  "Depth" : 0
+	 },
+	 "Leg2" : {
+		  "DataType" : "DynamicBody",
+        "Position" : [116, 148],
+        "Angle" : 0.05,
+        "FixtureNames" : ["LegFixture"],
+        "Color1" : [0.4, 0.2, 0.4],
+        "Color2" : [0.3, 0.1, 0.2],
+        "CanTouchGround" : true,
+		  "Depth" : 1
+    },
+    "Hull2Leg2Joint" : {
+		  "DataType" : "JointMotor",
+        "BodyA" : "Hull2",
+        "BodyB" : "Leg2",
+        "LocalAnchorA" : [0, 0],
+        "LocalAnchorB" : [0, -13],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -3.14,
+        "UpperAngle" : 3.14,
+		  "Speed" : 4,
+		  "Depth" : 1
+    },
+    "Lower2" : {
+		  "DataType" : "DynamicBody",
+        "Position" : [116, 131],
+        "Angle" : 0.05,
+        "FixtureNames" : ["LowerFixture"],
+        "Color1" : [0.4, 0.2, 0.4],
+        "Color2" : [0.3, 0.1, 0.2],
+        "CanTouchGround" : true,
+		  "Depth" : 1
+    },
+    "Leg2Lower2Joint" : {
+		  "DataType" : "JointMotor",
+        "BodyA" : "Leg2",
+        "BodyB" : "Lower2",
+        "LocalAnchorA" : [0, 13],
+        "LocalAnchorB" : [0, 30],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -3.14,
+        "UpperAngle" : 3.14,
+		  "Speed" : 6,
+		  "Depth" : 1
+    }
+
+}
