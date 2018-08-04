@@ -325,12 +325,20 @@ class JSONWalker(gym.Env):
         # position, angle,  fixture,
         self.bodies = {}
         for k in self.body_defs.keys():
-            self.bodies[k] = self.world.CreateDynamicBody(
-                position=[x/SCALE
-                          for x in self.body_defs[k]['Position']],
-                angle=self.body_defs[k]['Angle'],
-                fixtures=[self.fixtures[f] for f in self.body_defs[k]['FixtureNames']]
-            )
+            if False and k == 'Hull':
+                self.bodies[k] = self.world.CreateStaticBody(
+                    position=[x/SCALE
+                              for x in self.body_defs[k]['Position']],
+                    angle=self.body_defs[k]['Angle'],
+                    fixtures=[self.fixtures[f] for f in self.body_defs[k]['FixtureNames']]
+                )
+            else:
+                self.bodies[k] = self.world.CreateDynamicBody(
+                    position=[x/SCALE
+                              for x in self.body_defs[k]['Position']],
+                    angle=self.body_defs[k]['Angle'],
+                    fixtures=[self.fixtures[f] for f in self.body_defs[k]['FixtureNames']]
+                )
             self.bodies[k].color1 = self.body_defs[k]['Color1']
             self.bodies[k].color2 = self.body_defs[k]['Color2']
             self.bodies[k].can_touch_ground = self.body_defs[k]['CanTouchGround']
@@ -709,7 +717,8 @@ if __name__=="__main__":
     #env = JSONWalker("box2d-json/BipedalWalker.json")
     #env = JSONWalker('box2d-json/HumanoidWalker.json')
     #env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
-    env = JSONWalker('box2d-json/RaptorWalker.json')
+    #env = JSONWalker('box2d-json/RaptorWalker.json')
+    env = JSONWalker('box2d-json/DogWalker.json')
     #env = JSONWalker('box2d-json/CentipedeWalker.json')
     #env = JSONWalker('box2d-json/GeneratedCentipedeWalker.json')
 

@@ -2,24 +2,38 @@ from __future__ import print_function
 
 import numpy as np
 
-import raptor_walker
+import Box2D
+from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revoluteJointDef, contactListener)
+
+#import raptor_walker
+import dog_walker
 
 if __name__=='__main__':
 
-    env = raptor_walker.RaptorWalker()
-    env.reset()
-
+    #env = raptor_walker.RaptorWalker()
+    env = dog_walker.DogWalker()
+    env.reset(STATIC=False)
     joints = env.joints
     bodies = [env.hull] + env.body + env.legs
 
-    S = float(raptor_walker.SCALE)
+    lower_limits = []
+    upper_limits = []
+    for i, jnt in enumerate(joints):
+        lower_limits.append(jnt.lowerLimit)
+        upper_limits.append(jnt.upperLimit)
+
+    env.reset(STATIC=True)
+    joints = env.joints
+    bodies = [env.hull] + env.body + env.legs
+
+    S = float(dog_walker.SCALE)
 
     # Take a few steps
-    #for i in range(200):
-    #    env.render()
-    #    env.step(np.zeros(env.action_space.shape))
+    for i in range(200):
+        env.render()
+        env.step(np.zeros(env.action_space.shape))
 
-    with open("box2d-json/RaptorWalker.json", "w") as jsonfile:
+    with open("box2d-json/DogWalker.json", "w") as jsonfile:
         print("{",file=jsonfile)
 
         # Write fixtures
@@ -59,12 +73,17 @@ if __name__=='__main__':
         for i, jnt in enumerate(joints):
             bA = jnt.bodyA.userData
             bB = jnt.bodyB.userData
-            anchorA = (jnt.anchorA - jnt.bodyA.position)*S
-            anchorB = (jnt.anchorB - jnt.bodyB.position)*S
-            anchorA = [anchorA[i] for i in range(2)]
-            anchorB = [anchorB[i] for i in range(2)]
+            # Convert anchors into local space
+            anchorA = Box2D.b2Rot(-bA.angle) * (jnt.anchorA - bA.position)
+            anchorB = Box2D.b2Rot(-bB.angle) * (jnt.anchorB - bB.position)
+            anchorA = [anchorA[i]*S for i in range(2)]
+            anchorB = [anchorB[i]*S for i in range(2)]
             a = bA._tmp_index
             b = bB._tmp_index
+            #lowerLimit = jnt.lowerLimit
+            #upperLimit = jnt.upperLimit
+            lowerLimit = lower_limits[i]
+            upperLimit = upper_limits[i]
             print('\t"Joint'+str(i)+'.'+bA.name+'.'+bB.name+'" : {',file=jsonfile)
             print('\t\t"DataType" : "JointMotor",',file=jsonfile)
             print('\t\t"BodyA" : "'+bA.name+'",',file=jsonfile)
@@ -73,10 +92,10 @@ if __name__=='__main__':
             print('\t\t"LocalAnchorB" : '+str(anchorB)+',',file=jsonfile)
             print('\t\t"EnableMotor" : '+str(jnt.motorEnabled).lower()+',',file=jsonfile)
             print('\t\t"EnableLimit" : '+str(jnt.limitEnabled).lower()+',',file=jsonfile)
-            print('\t\t"MaxMotorTorque" : '+str(raptor_walker.MOTORS_TORQUE)+',',file=jsonfile)
+            print('\t\t"MaxMotorTorque" : '+str(dog_walker.MOTORS_TORQUE)+',',file=jsonfile)
             print('\t\t"MotorSpeed" : '+str(jnt.motorSpeed)+',',file=jsonfile)
-            print('\t\t"LowerAngle" : '+str(jnt.lowerLimit)+',',file=jsonfile)
-            print('\t\t"UpperAngle" : '+str(jnt.upperLimit)+',',file=jsonfile)
+            print('\t\t"LowerAngle" : '+str(lowerLimit)+',',file=jsonfile)
+            print('\t\t"UpperAngle" : '+str(upperLimit)+',',file=jsonfile)
             print('\t\t"Speed" : '+str(1)+',',file=jsonfile)
             print('\t\t"Depth" : '+str(jnt.depth),file=jsonfile)
             if i < len(joints)-1:
