@@ -32,9 +32,9 @@ class ActorCritic(torch.nn.Module):
         self.input_size  = self.senc_nngrid.observation_space.shape
         self.output_size = int(np.prod(self.action_space.shape))
 
-        self.conv1 = nn.Conv2d(self.frame_stack.n_frames*self.input_size[0], 32, 3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d( 32,  64, 3, stride=1, padding=1)
-        self.conv3 = nn.Conv2d( 64, 128, 3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(self.frame_stack.n_frames*self.input_size[0], 128, 3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
         self.conv4 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
 
         self.critic_linear = nn.Conv2d(128, 2, 3, stride=1, padding=1)
@@ -62,9 +62,9 @@ class ActorCritic(torch.nn.Module):
 
     def _convforward(self, x):
         x = F.leaky_relu(self.conv1(x), 0.1)
-        x = F.leaky_relu(self.conv2(x), 0.1)
-        x = F.leaky_relu(self.conv3(x), 0.1)
-        x = F.leaky_relu(self.conv4(x), 0.1)
+        x = F.leaky_relu(self.conv2(x), 0.1) + x
+        x = F.leaky_relu(self.conv3(x), 0.1) + x
+        x = F.leaky_relu(self.conv4(x), 0.1) + x
         return x
 
     def forward(self, inputs):
