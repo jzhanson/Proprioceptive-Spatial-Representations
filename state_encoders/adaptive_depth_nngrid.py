@@ -15,13 +15,31 @@ class NNGrid(torch.nn.Module):
         super(NNGrid, self).__init__()
         self.grid_cells_per_unit  = args['grid_cells_per_unit']
 
+        # Start off with a >1 size
+        halfsize = 3./self.grid_cells_per_unit
+
         # Keep track of min/max points we've seen
-        self.min_x, self.max_x = 0, 0
-        self.min_y, self.max_y = 0, 0
+        self.min_x, self.max_x = -halfsize, halfsize
+        self.min_y, self.max_y = -halfsize, halfsize
+
+        self._calculate_observation_space()
+
+    def _calculate_observation_space(self):
+        grid_unit_width  = 2 * max(self.max_x, abs(self.min_x))
+        grid_unit_height = 2 * max(self.max_y, abs(self.min_y))
+        grid_cell_width  = math.ceil(grid_unit_width  * self.grid_cells_per_unit)+1
+        grid_cell_height = math.ceil(grid_unit_height * self.grid_cells_per_unit)+1
+
+        # Calculate the grid anchor point
+        # This is the center cell of the grid
+        self.grid_anchor_x = math.floor(0.5 * grid_cell_width)
+        self.grid_anchor_y = math.floor(0.5 * grid_cell_height)
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
-            shape=(20, 1, 1))
+            shape=(20, grid_cell_width, grid_cell_height))
+
+        return grid_unit_width, grid_unit_height, grid_cell_width, grid_cell_height
 
     def _coord_to_grid_x(self, x_coord, x_zero):
         return round((x_coord - x_zero) * self.grid_cells_per_unit)
@@ -74,29 +92,13 @@ class NNGrid(torch.nn.Module):
         unit_zero_x, unit_zero_y = info['hull_x'], info['hull_y']
 
         # Create the gridstate based on the observed min/max values
-        grid_unit_width  = 2 * max(self.max_x, abs(self.min_x))
-        grid_unit_height = 2 * max(self.max_y, abs(self.min_y))
-        print(grid_unit_width, grid_unit_height)
-        grid_cell_width  = math.ceil(grid_unit_width  * self.grid_cells_per_unit)+1
-        grid_cell_height = math.ceil(grid_unit_height * self.grid_cells_per_unit)+1
-        self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf,
-            shape=(20, grid_cell_width, grid_cell_height))
+        grid_unit_width, grid_unit_height, grid_cell_width, grid_cell_height = self._calculate_observation_space()
 
         grid_state = torch.zeros(self.observation_space.shape)
         if ob.is_cuda:
             with torch.cuda.device(ob.get_device()):
                 grid_state = grid_state.cuda()
         grid_state = Variable(grid_state)
-
-        self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf,
-            shape=(20, grid_cell_width, grid_cell_height))
-
-        # Calculate the grid anchor point
-        # This is the center cell of the grid
-        grid_anchor_x = round(0.5 * grid_cell_width)
-        grid_anchor_y = round(0.5 * grid_cell_height)
 
         # Project raw state onto grid, center grid at hull
         zero_x, zero_y = info['hull_x'] - grid_unit_width * 0.5, info['hull_y'] - grid_unit_height * 0.5
@@ -140,9 +142,6 @@ class NNGrid(torch.nn.Module):
             f = Variable(torch.from_numpy(np.array(j[4:6])))
             d = j[6]
 
-            print(grid_state.size())
-            print(A_pos_x, info['hull_x'], A_pos_x - info['hull_x'], self.max_x)
-
             # For each anchor position, write joint features
             A_grid_x, A_grid_y = self._coord_to_grid_x(A_pos_x, zero_x), self._coord_to_grid_y(A_pos_y, zero_y)
             B_grid_x, B_grid_y = self._coord_to_grid_x(B_pos_x, zero_x), self._coord_to_grid_y(B_pos_y, zero_y)
@@ -158,7 +157,7 @@ class NNGrid(torch.nn.Module):
                 grid_state[19, A_grid_x, A_grid_y] = 1
                 grid_state[19, B_grid_x, B_grid_y] = 1
 
-        return grid_state[None], (grid_anchor_x, grid_anchor_y)
+        return grid_state[None], (self.grid_anchor_x, self.grid_anchor_y)
 
     def initialize_memory(self):
         return None
