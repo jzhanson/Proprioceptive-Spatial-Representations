@@ -5,13 +5,13 @@ import numpy as np
 import Box2D
 from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revoluteJointDef, contactListener)
 
-#import raptor_walker
-import dog_walker
+import raptor_walker
+#import dog_walker
 
 if __name__=='__main__':
 
-    #env = raptor_walker.RaptorWalker()
-    env = dog_walker.DogWalker()
+    env = raptor_walker.RaptorWalker()
+    #env = dog_walker.DogWalker()
     env.reset(STATIC=False)
     joints = env.joints
     bodies = [env.hull] + env.body + env.legs
@@ -26,14 +26,14 @@ if __name__=='__main__':
     joints = env.joints
     bodies = [env.hull] + env.body + env.legs
 
-    S = float(dog_walker.SCALE)
+    S = float(raptor_walker.SCALE)
 
     # Take a few steps
     for i in range(200):
         env.render()
         env.step(np.zeros(env.action_space.shape))
 
-    with open("box2d-json/DogWalker.json", "w") as jsonfile:
+    with open("box2d-json/RaptorWalker.json", "w") as jsonfile:
         print("{",file=jsonfile)
 
         # Write fixtures
@@ -65,7 +65,10 @@ if __name__=='__main__':
             print('\t\t"Color1" : '+str(list(b.color1))+',',file=jsonfile)
             print('\t\t"Color2" : '+str(list(b.color2))+',',file=jsonfile)
             print('\t\t"CanTouchGround" : '+str(b.can_touch_ground).lower()+',',file=jsonfile)
-            print('\t\t"InitialForceScale" : 0,',file=jsonfile)
+            if b.name == 'Hull':
+                print('\t\t"InitialForceScale" : '+str(20*raptor_walker.INITIAL_RANDOM)+',',file=jsonfile)
+            else:
+                print('\t\t"InitialForceScale" : 0,',file=jsonfile)
             print('\t\t"Depth" : '+str(b.depth),file=jsonfile)
             print('\t},',file=jsonfile)
 
@@ -92,7 +95,7 @@ if __name__=='__main__':
             print('\t\t"LocalAnchorB" : '+str(anchorB)+',',file=jsonfile)
             print('\t\t"EnableMotor" : '+str(jnt.motorEnabled).lower()+',',file=jsonfile)
             print('\t\t"EnableLimit" : '+str(jnt.limitEnabled).lower()+',',file=jsonfile)
-            print('\t\t"MaxMotorTorque" : '+str(dog_walker.MOTORS_TORQUE)+',',file=jsonfile)
+            print('\t\t"MaxMotorTorque" : '+str(raptor_walker.MOTORS_TORQUE)+',',file=jsonfile)
             print('\t\t"MotorSpeed" : '+str(jnt.motorSpeed)+',',file=jsonfile)
             print('\t\t"LowerAngle" : '+str(lowerLimit)+',',file=jsonfile)
             print('\t\t"UpperAngle" : '+str(upperLimit)+',',file=jsonfile)

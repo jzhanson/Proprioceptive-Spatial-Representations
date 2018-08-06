@@ -717,8 +717,8 @@ if __name__=="__main__":
     #env = JSONWalker("box2d-json/BipedalWalker.json")
     #env = JSONWalker('box2d-json/HumanoidWalker.json')
     #env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
-    #env = JSONWalker('box2d-json/RaptorWalker.json')
-    env = JSONWalker('box2d-json/DogWalker.json')
+    env = JSONWalker('box2d-json/RaptorWalker.json')
+    #env = JSONWalkerHardcore('box2d-json/DogWalker.json')
     #env = JSONWalker('box2d-json/CentipedeWalker.json')
     #env = JSONWalker('box2d-json/GeneratedCentipedeWalker.json')
 
