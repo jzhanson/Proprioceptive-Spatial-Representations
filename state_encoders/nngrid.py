@@ -17,7 +17,7 @@ class NNGrid(torch.nn.Module):
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
-            shape=(9, self.grid_edge, self.grid_edge))
+            shape=(10, self.grid_edge, self.grid_edge))
 
     def _coord_to_grid(self, coord, zero):
         return round((coord - zero) / self.grid_scale * self.grid_edge)
@@ -27,7 +27,7 @@ class NNGrid(torch.nn.Module):
     def forward(self, inputs):
         ob, info = inputs
 
-        grid_state = torch.zeros(9, self.grid_edge, self.grid_edge)
+        grid_state = torch.zeros(10, self.grid_edge, self.grid_edge)
         if ob.is_cuda:
             with torch.cuda.device(ob.get_device()):
                 grid_state = grid_state.cuda()
@@ -73,6 +73,13 @@ class NNGrid(torch.nn.Module):
 
             grid_state[5:7, A_grid_x, A_grid_y] = f
             grid_state[7:9, B_grid_x, B_grid_y] = f
+
+        # 3. Write lidar points
+        #   - Write 1 at position of p2
+        for l in info['lidar']:
+            p2_x, p2_y = self._coord_to_grid(l.p2[0], zero_x), self._coord_to_grid(l.p2[1], zero_y)
+
+            grid_state[10,p2_x,p2_y] = 1.
 
         return grid_state[None]
 

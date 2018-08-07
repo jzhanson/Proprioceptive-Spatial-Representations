@@ -37,7 +37,7 @@ class NNGrid(torch.nn.Module):
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
-            shape=(20, grid_cell_width, grid_cell_height))
+            shape=(21, grid_cell_width, grid_cell_height))
 
         return grid_unit_width, grid_unit_height, grid_cell_width, grid_cell_height
 
@@ -80,6 +80,17 @@ class NNGrid(torch.nn.Module):
                 self.min_y = B_pos_y
             if self.max_y < B_pos_y:
                 self.max_y = B_pos_y
+
+        for l in info['lidar']:
+            l_x, l_y = l.p2[0], l.p2[1]
+            if self.min_x > l_x:
+                self.min_x = l_x
+            if self.max_x < l_x:
+                self.max_x = l_x
+            if self.min_y > l_y:
+                self.min_y = l_y
+            if self.max_y < l_y:
+                self.max_y = l_y
 
     # TODO: pytorch'ify these functions so that input features are already Variables
     # this will allow future hybrid models to be fully-differentiable
@@ -156,6 +167,14 @@ class NNGrid(torch.nn.Module):
                 grid_state[16:18, B_grid_x, B_grid_y] = f
                 grid_state[19, A_grid_x, A_grid_y] = 1
                 grid_state[19, B_grid_x, B_grid_y] = 1
+
+        # 3. Write lidar points
+        #   - Write 1 at position of p2
+        for l in info['lidar']:
+            p2_x, p2_y = self._coord_to_grid_x(l.p2[0], zero_x), self._coord_to_grid_y(l.p2[1], zero_y)
+
+            grid_state[20,p2_x,p2_y] = 1.
+
 
         return grid_state[None], (self.grid_anchor_x, self.grid_anchor_y)
 

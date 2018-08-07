@@ -42,6 +42,7 @@ from torch.autograd import Variable
 FPS    = 50
 SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
 
+#LIDAR_RANGE = 160/SCALE
 LIDAR_RANGE   = 160/SCALE
 
 VIEWPORT_W = 600
@@ -557,6 +558,7 @@ class JSONWalker(gym.Env):
                 j.connected_body,
                 j.connected_joints
             ))
+        info['lidar'] = self.lidar
         return info
 
     def coord_to_grid(self, coord, zero):
