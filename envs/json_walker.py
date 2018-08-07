@@ -130,8 +130,9 @@ class JSONWalker(gym.Env):
         num_joints = len(self.joint_defs.keys())
         high = np.array( [np.inf]*(5*len(self.body_defs)+2*len(self.joint_defs)+10) )
 
-        self.action_space = spaces.Box(np.array([-1]*num_joints), np.array([+1]*num_joints))
-        self.observation_space = spaces.Box(-high, high)
+        self.action_space = spaces.Box(
+            np.array([-1]*num_joints), np.array([+1]*num_joints), dtype=np.float32)
+        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 
         self.reset()
 

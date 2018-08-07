@@ -105,6 +105,9 @@ def parse_cmdline_args(additional_parser_args={}):
         type=float,
         help='grid cells per environment unit')
     parser.add_argument(
+        '--grid-use-lidar',
+        help='whether to project lidar points onto grid')
+    parser.add_argument(
         '--blur-frames',
         type=int,
         metavar='BF',
@@ -164,6 +167,7 @@ def parse_default_args(additional_default_args={}):
         'grid_edge' : 24,
         'grid_scale' : 10.88,
         'grid_cells_per_unit' : 16./5.44,
+        'grid_use_lidar' : False,
         'blur_frames' : 1,
         'blur_discount' : 1.0,
         'gpu_ids' : [-1],

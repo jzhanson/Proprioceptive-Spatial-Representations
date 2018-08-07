@@ -14,6 +14,7 @@ class NNGrid(torch.nn.Module):
         super(NNGrid, self).__init__()
         self.grid_edge  = args['grid_edge']
         self.grid_scale = args['grid_scale']
+        self.use_lidar  = args['grid_use_lidar']
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
@@ -92,10 +93,11 @@ class NNGrid(torch.nn.Module):
 
         # 3. Write lidar points
         #   - Write 1 at position of p2
-        for l in info['lidar']:
-            p2_x, p2_y = self._coord_to_grid(l.p2[0], zero_x), self._coord_to_grid(l.p2[1], zero_y)
+        if self.use_lidar:
+            for l in info['lidar']:
+                p2_x, p2_y = self._coord_to_grid(l.p2[0], zero_x), self._coord_to_grid(l.p2[1], zero_y)
 
-            grid_state[20,p2_x,p2_y] = 1.
+                grid_state[20,p2_x,p2_y] = 1.
 
         return grid_state[None]
 
