@@ -47,6 +47,8 @@ class ActorCritic(torch.nn.Module):
             self.convlstm3,
             self.convlstm4,
         ]
+
+        # TODO(eparisot): add code that initializes new gridcells with learnable parameter vector
         _is = (n_frames*self.input_size[0],)+self.input_size[1:]
         self.convh0 = []
         self.convc0 = []
@@ -57,6 +59,8 @@ class ActorCritic(torch.nn.Module):
             self.memsizes.append(copy.deepcopy(_is))
             self.convh0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
             self.convc0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
+            setattr(self, '_convh0_l'+str(i), self.convh0[i])
+            setattr(self, '_convc0_l'+str(i), self.convc0[i])
 
         self.critic_linear = nn.Conv2d(128, 2, 3, stride=1, padding=1)
         self.actor_linear  = nn.Conv2d(128, 2, 3, stride=1, padding=1)
@@ -109,10 +113,15 @@ class ActorCritic(torch.nn.Module):
                 if convhx[i].is_cuda:
                     new_convhx = new_convhx.cuda()
                     new_convcx = new_convcx.cuda()
+                new_convh0 = Variable(new_convhx.clone())
+                new_convc0 = Variable(new_convcx.clone())
                 new_convhx = Variable(new_convhx)
                 new_convcx = Variable(new_convcx)
                 convhx[i] = recenter_old_grid(convhx[i], self.old_anchor, new_convhx, anchor)
                 convcx[i] = recenter_old_grid(convcx[i], self.old_anchor, new_convcx, anchor)
+                if convhx[i] is not self.convh0[i]:
+                    self.convh0[i] = recenter_old_grid(self.convh0[i], self.old_anchor, new_convh0, anchor)
+                    self.convc0[i] = recenter_old_grid(self.convc0[i], self.old_anchor, new_convc0, anchor)
         self.old_anchor = (anchor[0], anchor[1])
 
         convhx, convcx = self._convlstmforward(x, convhx, convcx)
