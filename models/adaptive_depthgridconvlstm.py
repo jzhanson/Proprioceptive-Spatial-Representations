@@ -120,6 +120,8 @@ class ActorCritic(torch.nn.Module):
                 convhx[i] = recenter_old_grid(convhx[i], self.old_anchor, new_convhx, anchor)
                 convcx[i] = recenter_old_grid(convcx[i], self.old_anchor, new_convcx, anchor)
                 if convhx[i] is not self.convh0[i]:
+                    # TODO(eparisot): this is probably causing the bug with .backward(retain_graph=False)
+                    # Need to find a better way to fix this...
                     self.convh0[i] = recenter_old_grid(self.convh0[i], self.old_anchor, new_convh0, anchor)
                     self.convc0[i] = recenter_old_grid(self.convc0[i], self.old_anchor, new_convc0, anchor)
         self.old_anchor = (anchor[0], anchor[1])
