@@ -82,7 +82,7 @@ def train(rank, args, shared_model, optimizer):
         if not player.done:
             state = player.state
             state = state.unsqueeze(0)
-            value, _, _, _ = player.model(
+            value, _, _, player.memory = player.model(
                 (Variable(state), player.info, player.memory))
             R = value.data
 
@@ -112,7 +112,7 @@ def train(rank, args, shared_model, optimizer):
                 (0.01 * player.entropies[i].sum())
 
         player.model.zero_grad()
-        (policy_loss + 0.5 * value_loss).backward()
+        (policy_loss + 0.5 * value_loss).backward(retain_graph=True)
         ensure_shared_grads(player.model, shared_model, gpu=gpu_id >= 0)
         optimizer.step()
         player.clear_actions()
