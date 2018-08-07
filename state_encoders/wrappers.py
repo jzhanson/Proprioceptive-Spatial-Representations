@@ -89,7 +89,7 @@ class AdaptiveFrameStack(torch.nn.Module):
             for i in range(len(frames)):
                 new_frame = torch.zeros(x.size())
                 if x.is_cuda:
-                    new_frame = new_frame.cuda()
+                    new_frame = new_frame.cuda(x.get_device())
                 new_frame = Variable(new_frame)
                 frames[i] = recenter_old_grid(frames[i], self.old_anchor, new_frame, new_anchor)
 

@@ -59,8 +59,8 @@ class ActorCritic(torch.nn.Module):
             self.memsizes.append(copy.deepcopy(_is))
             self.convh0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
             self.convc0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
-            setattr(self, '_convh0_l'+str(i), self.convh0[i])
-            setattr(self, '_convc0_l'+str(i), self.convc0[i])
+        self._convh0_module = nn.ParameterList(self.convh0)
+        self._convc0_module = nn.ParameterList(self.convc0)
 
         self.critic_linear = nn.Conv2d(128, 2, 3, stride=1, padding=1)
         self.actor_linear  = nn.Conv2d(128, 2, 3, stride=1, padding=1)
@@ -111,8 +111,8 @@ class ActorCritic(torch.nn.Module):
                 new_convhx = torch.zeros(convhx[i].size()[:2]+new_size[2:])
                 new_convcx = torch.zeros(convcx[i].size()[:2]+new_size[2:])
                 if convhx[i].is_cuda:
-                    new_convhx = new_convhx.cuda()
-                    new_convcx = new_convcx.cuda()
+                    new_convhx = new_convhx.cuda(x.get_device())
+                    new_convcx = new_convcx.cuda(x.get_device())
                 new_convh0 = Variable(new_convhx.clone())
                 new_convc0 = Variable(new_convcx.clone())
                 new_convhx = Variable(new_convhx)

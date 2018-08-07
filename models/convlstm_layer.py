@@ -57,7 +57,7 @@ class ConvLSTM(torch.nn.Module):
     def _spatial_size_output_given_input(self, input_size):
         x = torch.zeros(input_size)
         if next(self.parameters()).is_cuda:
-            x = x.cuda()
+            x = x.cuda(self.conv_x.weight.get_device())
         x = Variable(x)
         out = self.conv_x(x)
         x = None
