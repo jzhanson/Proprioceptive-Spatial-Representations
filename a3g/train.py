@@ -16,8 +16,8 @@ import gym
 
 
 def train(rank, args, shared_model, optimizer):
-    ptitle('Training Agent: {}'.format(rank))
     gpu_id = args['gpu_ids'][rank % len(args['gpu_ids'])]
+    ptitle('GPU {} Training Agent: {}'.format(gpu_id, rank))
     torch.manual_seed(args['seed'] + rank)
     if gpu_id >= 0:
         torch.cuda.manual_seed(args['seed'] + rank)
