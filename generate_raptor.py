@@ -142,6 +142,12 @@ class GenerateRaptor:
         for k in ['lower', 'foot']:
             self.start_y += self.args[k + '_width']
 
+    def build(self):
+        self.build_fixtures()
+
+        self.build_bodies()
+
+        self.build_joints()
 
     def build_fixtures(self):
         self.output['HullFixture'] = {}
@@ -541,11 +547,7 @@ if __name__ == '__main__':
 
     gen = GenerateRaptor(args)
 
-    gen.build_fixtures()
-
-    gen.build_bodies()
-
-    gen.build_joints()
+    gen.build()
 
     gen.write_to_json()
 

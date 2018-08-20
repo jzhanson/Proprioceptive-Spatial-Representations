@@ -42,151 +42,154 @@ def parse_args():
         default=60.0,
         help='The width of upper leg segments  (default 60.0)')
     # Can change start x/y args to be center x/y
-    parser.add_argument(
-        '--start-x',
-        type=int,
-        default=140,
-        help='The x-coordinate to generate the hindmost body segment (default 140)')
-    parser.add_argument(
-        '--start-y',
-        type=int,
-        default=135,
-        help='The y-coordinate to generate the hindmost body segment (default 135)')
     return vars(parser.parse_args())
 
-def build_fixtures(args, output):
-    output['HullFixture'] = {}
-    output['LegFixture'] = {}
-    output['LowerFixture'] = {}
-    for f in output.keys():
-        output[f]['DataType'] = 'Fixture'
-        output[f]['FixtureShape'] = {}
-        if f == 'HullFixture':
-            output[f]['FixtureShape']['Type'] = 'CircleShape'
-            output[f]['FixtureShape']['Radius'] = args['hull_radius']
-        elif f == 'LegFixture':
-            output[f]['FixtureShape']['Type'] = 'PolygonShape'
-            half_width, half_height = args['leg_width'] / 2, args['leg_height'] / 2
-            output[f]['FixtureShape']['Vertices'] = [
-                [-half_width, -half_height],
-                [half_width, -half_height],
-                [half_width, half_height],
-                [-half_width, half_height]
-            ]
-        elif f == 'LowerFixture':
-            output[f]['FixtureShape']['Type'] = 'PolygonShape'
-            half_width, half_height = args['lower_width'] / 2, args['lower_height'] / 2
-            output[f]['FixtureShape']['Vertices'] = [
-                [-half_width, -half_height],
-                [half_width, -half_height],
-                [half_width, half_height],
-                [-half_width, half_height]
-            ]
-        output[f]['Friction'] = 0.2
-        output[f]['Density'] = 5.0 if f == 'HullFixture' else 1.0
-        output[f]['Restitution'] = 0.0
-        output[f]['MaskBits'] = 1
-        output[f]['CategoryBits'] = 32
+class GenerateCentipede:
+    def __init__(self, args):
+        self.args = args
+        self.output = {}
+        # start_x is where to start the last (hindmost) body segment
+        self.start_x = 50
+        self.start_y = 100
+        self.start_y += self.args['lower_height'] - self.args['leg_height']
 
-def add_segments(num_segments, args, output):
-    start_x = args['start_x']
-    start_y = args['start_y']
-    hull_radius = args['hull_radius']
-    # Build body back to front
-    for i in range(num_segments):
-        hull_str = 'Hull' + str(i) if i > 0 else 'Hull'
-        output[hull_str] = {}
-        output[hull_str]['DataType'] = 'DynamicBody'
-        output[hull_str]['Position'] = [start_x + i * (2 * hull_radius), start_y]
-        output[hull_str]['Angle'] = 0.0
-        output[hull_str]['FixtureNames'] = ['HullFixture']
-        output[hull_str]['Color1'] = [0.5, 0.4, 0.9]
-        output[hull_str]['Color2'] = [0.3, 0.3, 0.5]
-        output[hull_str]['CanTouchGround'] = False
-        output[hull_str]['InitialForceScale'] = 5
-        output[hull_str]['Depth'] = 0
+    def build(self):
+        self.build_fixtures()
+        self.add_segments()
 
-        # Build legs
-        leg_height = args['leg_height']
-        lower_height = args['lower_height']
-        for sign in [-1, +1]:
-            leg_str = 'Leg-' + str(i) if sign == -1 else 'Leg' + str(i)
-            output[leg_str] = {}
-            output[leg_str]['DataType'] = 'DynamicBody'
-            output[leg_str]['Position'] = [start_x + i * (2 * hull_radius), start_y + leg_height / 2]
-            output[leg_str]['Angle'] = sign * 0.05
-            output[leg_str]['FixtureNames'] = ['LegFixture']
-            output[leg_str]['Color1'] = [0.7, 0.4, 0.6] if sign == -1 else [0.4, 0.2, 0.4]
-            output[leg_str]['Color2'] = [0.5, 0.3, 0.5] if sign == -1 else [0.3, 0.1, 0.2]
-            output[leg_str]['CanTouchGround'] = True
-            output[leg_str]['Depth'] = sign + 1
+    def build_fixtures(self):
+        self.output['HullFixture'] = {}
+        self.output['LegFixture'] = {}
+        self.output['LowerFixture'] = {}
+        for f in self.output.keys():
+            self.output[f]['DataType'] = 'Fixture'
+            self.output[f]['FixtureShape'] = {}
+            if f == 'HullFixture':
+                self.output[f]['FixtureShape']['Type'] = 'CircleShape'
+                self.output[f]['FixtureShape']['Radius'] = self.args['hull_radius']
+            elif f == 'LegFixture':
+                self.output[f]['FixtureShape']['Type'] = 'PolygonShape'
+                half_width, half_height = self.args['leg_width'] / 2, self.args['leg_height'] / 2
+                self.output[f]['FixtureShape']['Vertices'] = [
+                    [-half_width, -half_height],
+                    [half_width, -half_height],
+                    [half_width, half_height],
+                    [-half_width, half_height]
+                ]
+            elif f == 'LowerFixture':
+                self.output[f]['FixtureShape']['Type'] = 'PolygonShape'
+                half_width, half_height = self.args['lower_width'] / 2, self.args['lower_height'] / 2
+                self.output[f]['FixtureShape']['Vertices'] = [
+                    [-half_width, -half_height],
+                    [half_width, -half_height],
+                    [half_width, half_height],
+                    [-half_width, half_height]
+                ]
+            self.output[f]['Friction'] = 0.2
+            self.output[f]['Density'] = 5.0 if f == 'HullFixture' else 1.0
+            self.output[f]['Restitution'] = 0.0
+            self.output[f]['MaskBits'] = 1
+            self.output[f]['CategoryBits'] = 32
 
-            hull_leg_joint_str = hull_str + leg_str + 'Joint'
-            output[hull_leg_joint_str] = {}
-            output[hull_leg_joint_str]['DataType'] = 'JointMotor'
-            output[hull_leg_joint_str]['BodyA'] = hull_str
-            output[hull_leg_joint_str]['BodyB'] = leg_str
-            output[hull_leg_joint_str]['LocalAnchorA'] = [0, 0]
-            output[hull_leg_joint_str]['LocalAnchorB'] = [0, -1 * leg_height / 2]
-            output[hull_leg_joint_str]['EnableMotor'] = True
-            output[hull_leg_joint_str]['EnableLimit'] = True
-            output[hull_leg_joint_str]['MaxMotorTorque'] = 80
-            output[hull_leg_joint_str]['MotorSpeed'] = 1
-            output[hull_leg_joint_str]['LowerAngle'] = -3.14
-            output[hull_leg_joint_str]['UpperAngle'] = 3.14
-            output[hull_leg_joint_str]['Speed'] = 4
-            output[hull_leg_joint_str]['Depth'] = sign + 1
+    def add_segments(self):
+        start_x = self.start_x
+        start_y = self.start_y
+        hull_radius = self.args['hull_radius']
+        # Build body back to front
+        for i in range(self.args['num_segments']):
+            hull_str = 'Hull' + str(i) if i > 0 else 'Hull'
+            self.output[hull_str] = {}
+            self.output[hull_str]['DataType'] = 'DynamicBody'
+            self.output[hull_str]['Position'] = [start_x + i * (2 * hull_radius), start_y]
+            self.output[hull_str]['Angle'] = 0.0
+            self.output[hull_str]['FixtureNames'] = ['HullFixture']
+            self.output[hull_str]['Color1'] = [0.5, 0.4, 0.9]
+            self.output[hull_str]['Color2'] = [0.3, 0.3, 0.5]
+            self.output[hull_str]['CanTouchGround'] = False
+            self.output[hull_str]['InitialForceScale'] = 5
+            self.output[hull_str]['Depth'] = 0
 
-            lower_str = 'Lower-' + str(i) if sign == -1 else 'Lower' + str(i)
-            output[lower_str] = {}
-            output[lower_str]['DataType'] = 'DynamicBody'
-            output[lower_str]['Position'] = [start_x + i * (2 * hull_radius), start_y + leg_height - lower_height / 2]
-            output[lower_str]['Angle'] = sign * 0.05
-            output[lower_str]['FixtureNames'] = ['LowerFixture']
-            output[lower_str]['Color1'] = [0.7, 0.4, 0.6] if sign == -1 else [0.4, 0.2, 0.4]
-            output[lower_str]['Color2'] = [0.5, 0.3, 0.5] if sign == -1 else [0.3, 0.1, 0.2]
-            output[lower_str]['CanTouchGround'] = True
-            output[lower_str]['Depth'] = sign + 1
+            # Build legs
+            leg_height = self.args['leg_height']
+            lower_height = self.args['lower_height']
+            for sign in [-1, +1]:
+                leg_str = 'Leg-' + str(i) if sign == -1 else 'Leg' + str(i)
+                self.output[leg_str] = {}
+                self.output[leg_str]['DataType'] = 'DynamicBody'
+                self.output[leg_str]['Position'] = [start_x + i * (2 * hull_radius), start_y + leg_height / 2]
+                self.output[leg_str]['Angle'] = sign * 0.05
+                self.output[leg_str]['FixtureNames'] = ['LegFixture']
+                self.output[leg_str]['Color1'] = [0.7, 0.4, 0.6] if sign == -1 else [0.4, 0.2, 0.4]
+                self.output[leg_str]['Color2'] = [0.5, 0.3, 0.5] if sign == -1 else [0.3, 0.1, 0.2]
+                self.output[leg_str]['CanTouchGround'] = True
+                self.output[leg_str]['Depth'] = sign + 1
 
-            leg_lower_joint_str = leg_str + lower_str + 'Joint'
-            output[leg_lower_joint_str] = {}
-            output[leg_lower_joint_str]['DataType'] = 'JointMotor'
-            output[leg_lower_joint_str]['BodyA'] = leg_str
-            output[leg_lower_joint_str]['BodyB'] = lower_str
-            output[leg_lower_joint_str]['LocalAnchorA'] = [0, leg_height / 2]
-            output[leg_lower_joint_str]['LocalAnchorB'] = [0, lower_height / 2]
-            output[leg_lower_joint_str]['EnableMotor'] = True
-            output[leg_lower_joint_str]['EnableLimit'] = True
-            output[leg_lower_joint_str]['MaxMotorTorque'] = 80
-            output[leg_lower_joint_str]['MotorSpeed'] = 1
-            output[leg_lower_joint_str]['LowerAngle'] = -3.14
-            output[leg_lower_joint_str]['UpperAngle'] = 3.14
-            output[leg_lower_joint_str]['Speed'] = 6
-            output[leg_lower_joint_str]['Depth'] = sign + 1
+                hull_leg_joint_str = hull_str + leg_str + 'Joint'
+                self.output[hull_leg_joint_str] = {}
+                self.output[hull_leg_joint_str]['DataType'] = 'JointMotor'
+                self.output[hull_leg_joint_str]['BodyA'] = hull_str
+                self.output[hull_leg_joint_str]['BodyB'] = leg_str
+                self.output[hull_leg_joint_str]['LocalAnchorA'] = [0, 0]
+                self.output[hull_leg_joint_str]['LocalAnchorB'] = [0, -1 * leg_height / 2]
+                self.output[hull_leg_joint_str]['EnableMotor'] = True
+                self.output[hull_leg_joint_str]['EnableLimit'] = True
+                self.output[hull_leg_joint_str]['MaxMotorTorque'] = 80
+                self.output[hull_leg_joint_str]['MotorSpeed'] = 1
+                self.output[hull_leg_joint_str]['LowerAngle'] = -3.14
+                self.output[hull_leg_joint_str]['UpperAngle'] = 3.14
+                self.output[hull_leg_joint_str]['Speed'] = 4
+                self.output[hull_leg_joint_str]['Depth'] = sign + 1
 
-        # Build weld joint for all but frontmost body
-        if i < num_segments - 1:
-            next_hull_str = 'Hull' + str(i+1)
-            weld_str = hull_str + next_hull_str + 'Joint'
-            output[weld_str] = {}
-            output[weld_str]['DataType'] = 'Linkage'
-            output[weld_str]['BodyA'] = hull_str
-            output[weld_str]['BodyB'] = next_hull_str
-            output[weld_str]['Anchor'] = [start_x + i * (2 * hull_radius) + hull_radius, start_y]
-            output[weld_str]['Depth'] = 0
+                lower_str = 'Lower-' + str(i) if sign == -1 else 'Lower' + str(i)
+                self.output[lower_str] = {}
+                self.output[lower_str]['DataType'] = 'DynamicBody'
+                self.output[lower_str]['Position'] = [start_x + i * (2 * hull_radius), start_y + leg_height - lower_height / 2]
+                self.output[lower_str]['Angle'] = sign * 0.05
+                self.output[lower_str]['FixtureNames'] = ['LowerFixture']
+                self.output[lower_str]['Color1'] = [0.7, 0.4, 0.6] if sign == -1 else [0.4, 0.2, 0.4]
+                self.output[lower_str]['Color2'] = [0.5, 0.3, 0.5] if sign == -1 else [0.3, 0.1, 0.2]
+                self.output[lower_str]['CanTouchGround'] = True
+                self.output[lower_str]['Depth'] = sign + 1
 
+                leg_lower_joint_str = leg_str + lower_str + 'Joint'
+                self.output[leg_lower_joint_str] = {}
+                self.output[leg_lower_joint_str]['DataType'] = 'JointMotor'
+                self.output[leg_lower_joint_str]['BodyA'] = leg_str
+                self.output[leg_lower_joint_str]['BodyB'] = lower_str
+                self.output[leg_lower_joint_str]['LocalAnchorA'] = [0, leg_height / 2]
+                self.output[leg_lower_joint_str]['LocalAnchorB'] = [0, lower_height / 2]
+                self.output[leg_lower_joint_str]['EnableMotor'] = True
+                self.output[leg_lower_joint_str]['EnableLimit'] = True
+                self.output[leg_lower_joint_str]['MaxMotorTorque'] = 80
+                self.output[leg_lower_joint_str]['MotorSpeed'] = 1
+                self.output[leg_lower_joint_str]['LowerAngle'] = -3.14
+                self.output[leg_lower_joint_str]['UpperAngle'] = 3.14
+                self.output[leg_lower_joint_str]['Speed'] = 6
+                self.output[leg_lower_joint_str]['Depth'] = sign + 1
+
+            # Build weld joint for all but frontmost body
+            if i < self.args['num_segments'] - 1:
+                next_hull_str = 'Hull' + str(i+1)
+                weld_str = hull_str + next_hull_str + 'Joint'
+                self.output[weld_str] = {}
+                self.output[weld_str]['DataType'] = 'Linkage'
+                self.output[weld_str]['BodyA'] = hull_str
+                self.output[weld_str]['BodyB'] = next_hull_str
+                self.output[weld_str]['Anchor'] = [start_x + i * (2 * hull_radius) + hull_radius, start_y]
+                self.output[weld_str]['Depth'] = 0
+
+    def write_to_json(self):
+        print(json.dumps(self.output, indent=4, separators=(',', ': ')))
+
+        outfile = open(self.args['filename'], 'w+')
+        outfile.write(json.dumps(self.output, indent=4, separators=(',', ' : ')))
 
 if __name__ == '__main__':
     args = parse_args()
 
-    output = {}
+    gen = GenerateCentipede(args)
 
-    build_fixtures(args, output)
+    gen.build()
 
-    add_segments(args['num_segments'], args, output)
-
-    print(json.dumps(output, indent=4, separators=(',', ': ')))
-
-    outfile = open(args['filename'], 'w+')
-    outfile.write(json.dumps(output, indent=4, separators=(',', ' : ')))
+    gen.write_to_json()
 
