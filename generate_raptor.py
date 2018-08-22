@@ -8,16 +8,22 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
+    parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
+    parser.set_defaults(rigid_spine=False)
+    parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
+    parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
+    parser.set_defaults(spine_motors=True)
     parser.add_argument(
         '--neck-segments',
         type=int,
         default=4,
-        help='Number of neck segments')
+        help='Number of neck segments (default 4)')
     parser.add_argument(
         '--tail-segments',
         type=int,
         default=4,
-        help='Number of tail segments')
+        help='Number of tail segments (default 4)')
     parser.add_argument(
         '--filename',
         type=str,
@@ -32,7 +38,7 @@ def parse_args():
         '--hull-height',
         type=float,
         default=28.0,
-        help='The height of an edge of the center hull segment (default 28.0)')
+        help='The height of the center hull segment (default 28.0)')
     parser.add_argument(
         '--head-width',
         type=float,
@@ -82,7 +88,7 @@ def parse_args():
         '--shin-width',
         type=float,
         default=7.0,
-        help='Shin (second highest leg segment) width (default 7)')
+        help='Shin (second highest leg segment) width (default 7.0)')
     parser.add_argument(
         '--shin-height',
         type=float,
@@ -325,7 +331,7 @@ class GenerateRaptor:
                 self.output[k]['Color2'] = LINE_COLOR
                 self.output[k]['CanTouchGround'] = True
                 self.output[k]['InitialForceScale'] =  0
-                self.output[k]['Depth'] = 1 if '-1' in k else 0
+                self.output[k]['Depth'] = 0 if '-1' in k else -1
 
                 # Add position and angle
                 # TODO(josh): make angle of legs an argument?
@@ -372,7 +378,7 @@ class GenerateRaptor:
             self.output[body_name]['Color2'] = LINE_COLOR
             self.output[body_name]['CanTouchGround'] = 'Tail' in body_name
             self.output[body_name]['InitialForceScale'] = 100 if body_name == 'Hull' else 0
-            self.output[body_name]['Depth'] = 1
+            self.output[body_name]['Depth'] = 0
 
         # Fill in position + angle for hull
         self.output['Hull']['Position'] = [start_x, start_y]
@@ -395,14 +401,21 @@ class GenerateRaptor:
             self.output[k] = {}
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Head'
-            self.output[k]['LocalAnchorA'] = [0.5 * self.args['hull_width'], 0]
-            self.output[k]['LocalAnchorB'] = [
-                -0.5 * self.args['head_width'],
-                0.25 * self.args['head_height']
-            ]
-            # Use neck upper/shin angles for this edge case
-            self.output[k]['LowerAngle'] = -0.5
-            self.output[k]['UpperAngle'] = 0.2
+
+            if self.args['rigid_spine']:
+                self.output[k]['Anchor'] = [
+                    self.start_x + 0.5 * self.args['hull_width'],
+                    self.start_y + 0.25 * self.args['hull_height']
+                ]
+            else:
+                self.output[k]['LocalAnchorA'] = [0.5 * self.args['hull_width'], 0]
+                self.output[k]['LocalAnchorB'] = [
+                    -0.5 * self.args['head_width'],
+                    0.25 * self.args['head_height']
+                ]
+                # Use neck upper/shin angles for this edge case
+                self.output[k]['LowerAngle'] = -0.5
+                self.output[k]['UpperAngle'] = 0.2
             return
         elif self.args[neck_or_tail + '_segments'] == 0:
             return
@@ -423,13 +436,18 @@ class GenerateRaptor:
             1,
             self.args[neck_or_tail + '_segments']
         )
-        self.output[k]['LocalAnchorA'] = [
-            x_dir * 0.5 * self.args['hull_width'],
-            0.5 * (self.args['hull_height'] - current_height)
-        ]
-        self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
-        self.output[k]['LowerAngle'] = -0.5
-        self.output[k]['UpperAngle'] = 0.2
+        current_x = self.start_x + x_dir * 0.5 * self.args['hull_width']
+        current_y = self.start_y + 0.5 * (self.args['hull_height'] - current_height)
+        if self.args['rigid_spine']:
+            self.output[k]['Anchor'] = [current_x, current_y]
+        else:
+            self.output[k]['LocalAnchorA'] = [
+                x_dir * 0.5 * self.args['hull_width'],
+                0.5 * (self.args['hull_height'] - current_height)
+            ]
+            self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+            self.output[k]['LowerAngle'] = -0.5
+            self.output[k]['UpperAngle'] = 0.2
         joint_counter += 1
 
         for i in range(self.args[neck_or_tail + '_segments'] - 1):
@@ -448,16 +466,21 @@ class GenerateRaptor:
                 i+2,
                 self.args[neck_or_tail + '_segments']
             )
+            current_x += x_dir * current_width
+            current_y += 0.5 * (prev_height - current_height)
             self.output[k] = {}
             self.output[k]['BodyA'] = title_neck_or_tail + str(i)
             self.output[k]['BodyB'] = title_neck_or_tail + str(i+1)
-            self.output[k]['LocalAnchorA'] = [
-                x_dir * 0.5 * prev_width,
-                0.5 * (prev_height - current_height)
-            ]
-            self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
-            self.output[k]['LowerAngle'] = -0.5
-            self.output[k]['UpperAngle'] = 0.2
+            if self.args['rigid_spine']:
+                self.output[k]['Anchor'] = [current_x, current_y]
+            else:
+                self.output[k]['LocalAnchorA'] = [
+                    x_dir * 0.5 * prev_width,
+                    0.5 * (prev_height - current_height)
+                ]
+                self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+                self.output[k]['LowerAngle'] = -0.5
+                self.output[k]['UpperAngle'] = 0.2
             joint_counter += 1
 
         # If building neck joints, build head joint
@@ -473,13 +496,16 @@ class GenerateRaptor:
                 self.args['neck_segments']+1,
                 self.args['neck_segments']
             )
-            self.output[k]['LocalAnchorA'] = [x_dir * 0.5 * current_width, 0]
-            self.output[k]['LocalAnchorB'] = [
-                -0.5 * self.args['head_width'],
-                0.25 * self.args['head_height']
-            ]
-            self.output[k]['LowerAngle'] = -0.9
-            self.output[k]['UpperAngle'] = 0.7
+            if self.args['rigid_spine']:
+                self.output[k]['Anchor'] = [current_x, current_y]
+            else:
+                self.output[k]['LocalAnchorA'] = [x_dir * 0.5 * current_width, 0]
+                self.output[k]['LocalAnchorB'] = [
+                    -0.5 * self.args['head_width'],
+                    0.25 * self.args['head_height']
+                ]
+                self.output[k]['LowerAngle'] = -0.9
+                self.output[k]['UpperAngle'] = 0.7
             joint_counter += 1
 
     def build_leg_joints(self):
@@ -487,7 +513,7 @@ class GenerateRaptor:
         leg_names = ['Thigh', 'Shin', 'Foot', 'Toes']
 
         for sign in [-1, +1]:
-            k = 'Joint' + str(joint_counter) + 'Hull' + 'Thigh' + str(sign)
+            k = 'Joint' + str(joint_counter) + '.Hull.Thigh' + str(sign)
             self.output[k] = {}
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Thigh' + str(sign)
@@ -525,15 +551,25 @@ class GenerateRaptor:
         # Build leg joints
         self.build_leg_joints()
 
+        body_names = ['Hull', 'Head', 'Neck', 'Tail']
+        # Write common parts of joints
         for k in self.output.keys():
             if 'Joint' in k:
-                self.output[k]['DataType'] = 'JointMotor'
-                self.output[k]['EnableMotor'] = True
-                self.output[k]['EnableLimit'] = True
-                self.output[k]['MaxMotorTorque'] = 80
-                self.output[k]['MotorSpeed'] = 0.0
-                self.output[k]['Speed'] = 1
-                self.output[k]['Depth'] = 0 if '-1' in k else 1
+                first_body_name = k.split('.')[1]
+                second_body_name = k.split('.')[2]
+
+                is_body_joint = any(name in first_body_name for name in body_names) and any(name in second_body_name for name in body_names)
+                if is_body_joint and self.args['rigid_spine']:
+                    self.output[k]['DataType'] = 'Linkage'
+                    self.output[k]['Depth'] = 0 if '-1' in k else 1
+                else:
+                    self.output[k]['DataType'] = 'JointMotor'
+                    self.output[k]['EnableMotor'] = self.args['spine_motors'] or not is_body_joint
+                    self.output[k]['EnableLimit'] = True
+                    self.output[k]['MaxMotorTorque'] = 80
+                    self.output[k]['MotorSpeed'] = 0.0
+                    self.output[k]['Speed'] = 1
+                    self.output[k]['Depth'] = 0 if '-1' in k else 1
 
     def write_to_json(self):
         print(json.dumps(self.output, indent=4, separators=(',', ': ')))
