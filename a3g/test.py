@@ -29,7 +29,10 @@ def test(args, shared_model, optimizer, all_scores):
     run_name = os.path.basename(args['save_directory'].strip('/'))
 
     gpu_id = args['gpu_ids'][-1]
-    ptitle('GPU{} Test Agent'.format(gpu_id))
+    if args['experiment_id'] == '':
+        ptitle('Test Agent')
+    else:
+        ptitle('EXPID: {} Test Agent'.format(args['experiment_id']))
     log = {}
     setup_logger('train.log', r'{0}/train.log'.format(save_dir))
     log['train.log'] = logging.getLogger('train.log')

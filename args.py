@@ -126,6 +126,10 @@ def parse_cmdline_args(additional_parser_args={}):
         '--amsgrad',
         metavar='AM',
         help='Adam optimizer amsgrad parameter')
+    parser.add_argument(
+        '--experiment-id',
+        metavar='EID',
+        help='Experiment ID for process-naming purposes (default: "")')
     for k in additional_parser_args.keys():
         parser.add_argument(
             additional_parser_args[k]['name'],
@@ -172,6 +176,7 @@ def parse_default_args(additional_default_args={}):
         'blur_discount' : 1.0,
         'gpu_ids' : [-1],
         'amsgrad' : True,
+        'experiment_id' : '',
     }
     for k in additional_default_args.keys():
         if k not in default_args:
