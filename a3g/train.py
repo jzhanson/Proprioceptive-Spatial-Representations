@@ -115,7 +115,7 @@ def train(rank, args, shared_model, optimizer):
                 (0.01 * player.entropies[i].sum())
 
         player.model.zero_grad()
-        (policy_loss + 0.5 * value_loss).backward(retain_graph=True)
+        (policy_loss + 0.5 * value_loss).backward()#retain_graph=True)
         ensure_shared_grads(player.model, shared_model, gpu=gpu_id >= 0)
         optimizer.step()
         player.clear_actions()
