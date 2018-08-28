@@ -478,7 +478,8 @@ class JSONWalker(gym.Env):
 
     def step(self, action):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
-        control_speed = False  # Should be easier as well
+        #control_speed = False  # Should be easier as well
+        control_speed = True
         if control_speed:
             for a in range(len(self.joint_action_order)):
                 k = self.joint_action_order[a]
