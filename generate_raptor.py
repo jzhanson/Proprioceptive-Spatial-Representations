@@ -14,6 +14,59 @@ def parse_args():
     parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
     parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
     parser.set_defaults(spine_motors=True)
+    # Add option to randomize density for each body part, or interpolate density on neck/tail
+    # Can also change restitution?
+    parser.add_argument(
+        '--hull-density',
+        type=float,
+        default=5.0,
+        help='The density of the center hull segment (default 5.0)')
+    parser.add_argument(
+        '--hull-friction',
+        type=float,
+        default=0.1,
+        help='The friction of the center hull segment (default 0.1)')
+    parser.add_argument(
+        '--head-density',
+        type=float,
+        default=5.0,
+        help='The density of the head (default 5.0)')
+    parser.add_argument(
+        '--head-friction',
+        type=float,
+        default=0.0,
+        help='The friction of the head (default 0.0)')
+    parser.add_argument(
+        '--neck-density',
+        type=float,
+        default=5.0,
+        help='The density of neck segments (default 5.0)')
+    parser.add_argument(
+        '--neck-friction',
+        type=float,
+        default=0.0,
+        help='The friction of neck segments (default 0.0)')
+    parser.add_argument(
+        '--tail-density',
+        type=float,
+        default=5.0,
+        help='The density of tail segments (default 5.0)')
+    parser.add_argument(
+        '--tail-friction',
+        type=float,
+        default=0.0,
+        help='The friction of tail segments (default 28.0)')
+    parser.add_argument(
+        '--leg-density',
+        type=float,
+        default=1.0,
+        help='The density of leg segments (default 1.0)')
+    parser.add_argument(
+        '--leg-friction',
+        type=float,
+        default=0.2,
+        help='The friction of leg segments (default 0.2)')
+
     parser.add_argument(
         '--neck-segments',
         type=int,
@@ -238,8 +291,16 @@ class GenerateRaptor:
                     [-half_width, half_height]
                 ]
 
-            self.output[f]['Friction'] = 0.1 if f == 'HullFixture' else (0.2 if f in leg_fixtures else 0.0)
-            self.output[f]['Density'] = 1.0 if f in leg_fixtures else 5.0
+            if 'Hull' in f:
+                prefix = 'hull'
+            elif f in leg_fixtures:
+                prefix = 'leg'
+            elif 'Neck' in f:
+                prefix = 'neck'
+            elif 'tail' in f:
+                prefix = 'tail'
+            self.output[f]['Friction'] = self.args[prefix + '_friction']
+            self.output[f]['Density'] = self.args[prefix + '_density']
             self.output[f]['Restitution'] = 0.0
             self.output[f]['MaskBits'] = 1
             self.output[f]['CategoryBits'] = 32
