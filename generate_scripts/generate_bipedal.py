@@ -200,10 +200,14 @@ class GenerateBipedal:
             self.output[k]['Speed'] = 6
             self.output[k]['Depth'] = 0 if sign == -1 else 1
 
-    def write_to_json(self):
+    def write_to_json(self, filename=None):
         print(json.dumps(self.output, indent=4, separators=(',', ': ')))
 
-        outfile = open(self.args['filename'], 'w+')
+        if filename is None:
+            outfile = open(self.args['filename'], 'w+')
+        else:
+            outfile = open(filename, 'w+')
+
         outfile.write(json.dumps(self.output, indent=4, separators=(',', ' : ')))
 
 if __name__ == '__main__':

@@ -178,10 +178,14 @@ class GenerateCentipede:
                 self.output[weld_str]['Anchor'] = [start_x + i * (2 * hull_radius) + hull_radius, start_y]
                 self.output[weld_str]['Depth'] = 0
 
-    def write_to_json(self):
+    def write_to_json(self, filename=None):
         print(json.dumps(self.output, indent=4, separators=(',', ': ')))
 
-        outfile = open(self.args['filename'], 'w+')
+        if filename is None:
+            outfile = open(self.args['filename'], 'w+')
+        else:
+            outfile = open(filename, 'w+')
+
         outfile.write(json.dumps(self.output, indent=4, separators=(',', ' : ')))
 
 if __name__ == '__main__':
