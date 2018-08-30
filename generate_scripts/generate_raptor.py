@@ -80,7 +80,7 @@ def parse_args():
     parser.add_argument(
         '--filename',
         type=str,
-        default='box2d-json/GeneratedRaptorWalker.json',
+        default='box2d-json-gen/GeneratedRaptorWalker.json',
         help='What to call the output JSON file')
     parser.add_argument(
         '--hull-width',

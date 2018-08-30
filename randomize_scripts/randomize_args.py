@@ -17,7 +17,7 @@ def parse_cmdline_args(additional_parser_args={}):
     parser.add_argument(
         '--outfile-prefix',
         type=str,
-        default='box2d-json/GeneratedRaptorWalker',
+        default='box2d-json-gen/GeneratedRaptorWalker',
         help='What to prefix the name of the generated JSON file'
     )
     parser.add_argument(

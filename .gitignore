@@ -13,3 +13,7 @@ saved/*
 !logs/save_logs_here.txt
 !logs/JSONWalker-box2d-json/save_json_logs_here.txt
 !trained_models/save_models_here.txt
+
+box2d-json-gen/*
+*.swp
+*.swo

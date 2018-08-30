@@ -13,7 +13,7 @@ def parse_args():
     parser.add_argument(
         '--filename',
         type=str,
-        default='box2d-json/GeneratedCentipedeWalker.json',
+        default='box2d-json-gen/GeneratedCentipedeWalker.json',
         help='What to call the output JSON file')
     parser.add_argument(
         '--hull-radius',
