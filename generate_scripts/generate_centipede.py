@@ -179,8 +179,6 @@ class GenerateCentipede:
                 self.output[weld_str]['Depth'] = 0
 
     def write_to_json(self, filename=None):
-        print(json.dumps(self.output, indent=4, separators=(',', ': ')))
-
         if filename is None:
             outfile = open(self.args['filename'], 'w+')
         else:

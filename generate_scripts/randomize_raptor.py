@@ -33,7 +33,7 @@ class RandomizeBodies:
             gen = GenerateRaptor(gen_args)
 
             gen.build()
-            print(self.args)
+
             gen.write_to_json(filename=self.args['outfile_prefix'] + str(i) + '.json')
 
 
