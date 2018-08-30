@@ -1,5 +1,7 @@
 import sys, math, random, json, copy, time
 import numpy as np
+from os import listdir
+from os.path import isfile, join
 
 import Box2D
 from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revoluteJointDef, contactListener)
@@ -71,7 +73,8 @@ class ContactDetector(contactListener):
             if self.env.bodies[k] in [contact.fixtureA.body, contact.fixtureB.body]:
                 self.env.bodies[k].ground_contact = False
 
-class JSONWalker(gym.Env):
+# TODO(josh): make this class inherit from JSONWalker but override reset/init?
+class RandomJSONWalker(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : FPS
@@ -79,7 +82,7 @@ class JSONWalker(gym.Env):
 
     hardcore = False
 
-    def __init__(self, jsonfile):
+    def __init__(self):
         self.seed()
         self.viewer = None
 
@@ -88,6 +91,25 @@ class JSONWalker(gym.Env):
 
         self.prev_shaping = None
 
+        self.fd_polygon = fixtureDef(
+                        shape = polygonShape(vertices=
+                        [(0, 0),
+                         (1, 0),
+                         (1, -1),
+                         (0, -1)]),
+                        friction = FRICTION)
+
+        self.fd_edge = fixtureDef(
+                    shape = edgeShape(vertices=
+                    [(0, 0),
+                     (1, 1)]),
+                    friction = FRICTION,
+                    categoryBits=0x0001,
+                )
+
+        self.reset()
+
+    def load_json(self, jsonfile):
         # JSON loading
         with open(jsonfile) as f:
             self.jsondata = json.load(f)
@@ -110,30 +132,12 @@ class JSONWalker(gym.Env):
             else:
                 assert(False)
 
-        self.fd_polygon = fixtureDef(
-                        shape = polygonShape(vertices=
-                        [(0, 0),
-                         (1, 0),
-                         (1, -1),
-                         (0, -1)]),
-                        friction = FRICTION)
-
-        self.fd_edge = fixtureDef(
-                    shape = edgeShape(vertices=
-                    [(0, 0),
-                     (1, 1)]),
-                    friction = FRICTION,
-                    categoryBits=0x0001,
-                )
-
         num_joints = len(self.joint_defs.keys())
         high = np.array( [np.inf]*(5*len(self.body_defs)+2*len(self.joint_defs)+10) )
 
         self.action_space = spaces.Box(
             np.array([-1.0]*num_joints), np.array([+1.0]*num_joints))
         self.observation_space = spaces.Box(-high, high)
-
-        self.reset()
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -294,6 +298,10 @@ class JSONWalker(gym.Env):
 
         self._generate_terrain(self.hardcore)
         self._generate_clouds()
+
+        files_list = [f for f in listdir('box2d-json-gen') if isfile(join('box2d-json-gen', f))]
+        chosen_json = random.choice(files_list)
+        self.load_json('box2d-json-gen/' + chosen_json)
 
         # Process the fixtures
         # PolygonShape: vertices
@@ -712,7 +720,7 @@ class JSONWalker(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-class JSONWalkerHardcore(JSONWalker):
+class RandomJSONWalkerHardcore(RandomJSONWalker):
     hardcore = True
 
 if __name__=="__main__":
@@ -720,7 +728,7 @@ if __name__=="__main__":
     # TODO(josh): add arguments for how many bodies to choose from, which types of bodies, etc
     body_number = random.randint(0, 9)
 
-    env = JSONWalker('box2d-json-gen/GeneratedRaptorWalker' + str(body_number) + '.json')
+    env = RandomJSONWalker()
 
     steps = 0
     total_reward = 0
