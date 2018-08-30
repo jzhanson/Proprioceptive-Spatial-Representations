@@ -718,9 +718,9 @@ class JSONWalkerHardcore(JSONWalker):
 if __name__=="__main__":
 
     # TODO(josh): add arguments for how many bodies to choose from, which types of bodies, etc
-    body_number = random.randint(0, 10)
+    body_number = random.randint(0, 9)
 
-    env = JSONWalker('box2d-json/GeneratedRaptorWalker' + str(body_number) + '.json')
+    env = JSONWalker('box2d-json-gen/GeneratedRaptorWalker' + str(body_number) + '.json')
 
     steps = 0
     total_reward = 0
