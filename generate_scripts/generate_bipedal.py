@@ -201,10 +201,12 @@ class GenerateBipedal:
             self.output[k]['Depth'] = 0 if sign == -1 else 1
 
     def write_to_json(self, filename=None):
+        if not os.path.exists('box2d-json-gen'):
+            os.mkdir('box2d-json-gen')
         if filename is None:
-            outfile = open(self.args['filename'], 'w+')
+            outfile = open('box2d-json-gen/' + self.args['filename'], 'w+')
         else:
-            outfile = open(filename, 'w+')
+            outfile = open('box2d-json-gen/' + filename, 'w+')
 
         outfile.write(json.dumps(self.output, indent=4, separators=(',', ' : ')))
 
