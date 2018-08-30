@@ -1,0 +1,720 @@
+{
+    "HullFixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -14.0,
+                    -14.0
+                ],
+                [
+                    14.0,
+                    -14.0
+                ],
+                [
+                    14.0,
+                    14.0
+                ],
+                [
+                    -14.0,
+                    14.0
+                ]
+            ]
+        },
+        "Friction": 0.1,
+        "Density": 5.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "HeadFixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -6.25,
+                    -12.0
+                ],
+                [
+                    6.25,
+                    -12.0
+                ],
+                [
+                    6.25,
+                    12.0
+                ],
+                [
+                    -6.25,
+                    12.0
+                ]
+            ]
+        },
+        "Friction": 0.0,
+        "Density": 5.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "ThighFixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -5.0,
+                    -17.0
+                ],
+                [
+                    5.0,
+                    -17.0
+                ],
+                [
+                    5.0,
+                    17.0
+                ],
+                [
+                    -5.0,
+                    17.0
+                ]
+            ]
+        },
+        "Friction": 0.2,
+        "Density": 1.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "ShinFixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -3.5,
+                    -12.0
+                ],
+                [
+                    3.5,
+                    -12.0
+                ],
+                [
+                    3.5,
+                    12.0
+                ],
+                [
+                    -3.5,
+                    12.0
+                ]
+            ]
+        },
+        "Friction": 0.2,
+        "Density": 1.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "FootFixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -3.2,
+                    -10.0
+                ],
+                [
+                    3.2,
+                    -10.0
+                ],
+                [
+                    3.2,
+                    10.0
+                ],
+                [
+                    -3.2,
+                    10.0
+                ]
+            ]
+        },
+        "Friction": 0.2,
+        "Density": 1.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "ToesFixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -2.8,
+                    -8.0
+                ],
+                [
+                    2.8,
+                    -8.0
+                ],
+                [
+                    2.8,
+                    8.0
+                ],
+                [
+                    -2.8,
+                    8.0
+                ]
+            ]
+        },
+        "Friction": 0.2,
+        "Density": 1.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "Neck0Fixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -4.5,
+                    -4.5
+                ],
+                [
+                    4.5,
+                    -4.5
+                ],
+                [
+                    4.5,
+                    4.5
+                ],
+                [
+                    -4.5,
+                    4.5
+                ]
+            ]
+        },
+        "Friction": 0.0,
+        "Density": 5.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "Tail0Fixture": {
+        "DataType": "Fixture",
+        "FixtureShape": {
+            "Type": "PolygonShape",
+            "Vertices": [
+                [
+                    -11.0,
+                    -2.0
+                ],
+                [
+                    11.0,
+                    -2.0
+                ],
+                [
+                    11.0,
+                    2.0
+                ],
+                [
+                    -11.0,
+                    2.0
+                ]
+            ]
+        },
+        "Friction": 0.0,
+        "Density": 5.0,
+        "Restitution": 0.0,
+        "MaskBits": 1,
+        "CategoryBits": 32
+    },
+    "Hull": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "HullFixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": false,
+        "InitialForceScale": 100,
+        "Depth": 0,
+        "Position": [
+            86.0,
+            166.6
+        ],
+        "Angle": 0
+    },
+    "Head": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "HeadFixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": false,
+        "InitialForceScale": 0,
+        "Depth": 0,
+        "Angle": 0.52,
+        "Position": [
+            119.25,
+            182.6
+        ]
+    },
+    "Neck0": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "Neck0Fixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": false,
+        "InitialForceScale": 0,
+        "Depth": 0,
+        "Angle": 0,
+        "Position": [
+            104.5,
+            176.1
+        ]
+    },
+    "Tail0": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "Tail0Fixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": 0,
+        "Angle": 0,
+        "Position": [
+            61.0,
+            178.6
+        ]
+    },
+    "Thigh-1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "ThighFixture"
+        ],
+        "Color1": [
+            0.35294117647058826,
+            0.4117647058823529,
+            0.47058823529411764
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": 0,
+        "Position": [
+            91.02384351324277,
+            150.3592796848647
+        ],
+        "Angle": 0.3
+    },
+    "Thigh1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "ThighFixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": -1,
+        "Position": [
+            91.02384351324277,
+            150.3592796848647
+        ],
+        "Angle": 0.3
+    },
+    "Shin-1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "ShinFixture"
+        ],
+        "Color1": [
+            0.35294117647058826,
+            0.4117647058823529,
+            0.47058823529411764
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": 0,
+        "Position": [
+            79.02384351324277,
+            133.3592796848647
+        ],
+        "Angle": -1.2
+    },
+    "Shin1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "ShinFixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": -1,
+        "Position": [
+            79.02384351324277,
+            133.3592796848647
+        ],
+        "Angle": -1.2
+    },
+    "Foot-1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "FootFixture"
+        ],
+        "Color1": [
+            0.35294117647058826,
+            0.4117647058823529,
+            0.47058823529411764
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": 0,
+        "Position": [
+            67.02384351324277,
+            123.3592796848647
+        ],
+        "Angle": 0.25
+    },
+    "Foot1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "FootFixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": -1,
+        "Position": [
+            67.02384351324277,
+            123.3592796848647
+        ],
+        "Angle": 0.25
+    },
+    "Toes-1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "ToesFixture"
+        ],
+        "Color1": [
+            0.35294117647058826,
+            0.4117647058823529,
+            0.47058823529411764
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": 0,
+        "Position": [
+            75.02384351324277,
+            113.3592796848647
+        ],
+        "Angle": 1.45
+    },
+    "Toes1": {
+        "DataType": "DynamicBody",
+        "FixtureNames": [
+            "ToesFixture"
+        ],
+        "Color1": [
+            0.47058823529411764,
+            0.5490196078431373,
+            0.6862745098039216
+        ],
+        "Color2": [
+            0.23921568627450981,
+            0.2823529411764706,
+            0.35294117647058826
+        ],
+        "CanTouchGround": true,
+        "InitialForceScale": 0,
+        "Depth": -1,
+        "Position": [
+            75.02384351324277,
+            113.3592796848647
+        ],
+        "Angle": 1.45
+    },
+    "Joint0.Hull.Neck0": {
+        "BodyA": "Hull",
+        "BodyB": "Neck0",
+        "Anchor": [
+            100.0,
+            176.1
+        ],
+        "DataType": "Linkage",
+        "Depth": 1
+    },
+    "Joint1.Neck0.Head": {
+        "BodyA": "Neck0",
+        "BodyB": "Head",
+        "Anchor": [
+            100.0,
+            176.1
+        ],
+        "DataType": "Linkage",
+        "Depth": 1
+    },
+    "Joint2.Hull.Tail0": {
+        "BodyA": "Hull",
+        "BodyB": "Tail0",
+        "Anchor": [
+            72.0,
+            178.6
+        ],
+        "DataType": "Linkage",
+        "Depth": 1
+    },
+    "Joint3.Hull.Thigh-1": {
+        "BodyA": "Hull",
+        "BodyB": "Thigh-1",
+        "LocalAnchorA": [
+            0.0,
+            0.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            17.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 1.1,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1,
+        "Depth": 0
+    },
+    "Joint4.Thigh-1.Shin-1": {
+        "BodyA": "Thigh-1",
+        "BodyB": "Shin-1",
+        "LocalAnchorA": [
+            0.0,
+            -17.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            12.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 1.1,
+        "Depth": 0,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1
+    },
+    "Joint5.Shin-1.Foot-1": {
+        "BodyA": "Shin-1",
+        "BodyB": "Foot-1",
+        "LocalAnchorA": [
+            0.0,
+            -12.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            10.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 0.5,
+        "Depth": 0,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1
+    },
+    "Joint6.Foot-1.Toes-1": {
+        "BodyA": "Foot-1",
+        "BodyB": "Toes-1",
+        "LocalAnchorA": [
+            0.0,
+            -10.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            8.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 0.8,
+        "Depth": 0,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1
+    },
+    "Joint7.Hull.Thigh1": {
+        "BodyA": "Hull",
+        "BodyB": "Thigh1",
+        "LocalAnchorA": [
+            0.0,
+            0.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            17.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 1.1,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1,
+        "Depth": 1
+    },
+    "Joint8.Thigh1.Shin1": {
+        "BodyA": "Thigh1",
+        "BodyB": "Shin1",
+        "LocalAnchorA": [
+            0.0,
+            -17.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            12.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 1.1,
+        "Depth": 1,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1
+    },
+    "Joint9.Shin1.Foot1": {
+        "BodyA": "Shin1",
+        "BodyB": "Foot1",
+        "LocalAnchorA": [
+            0.0,
+            -12.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            10.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 0.5,
+        "Depth": 1,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1
+    },
+    "Joint10.Foot1.Toes1": {
+        "BodyA": "Foot1",
+        "BodyB": "Toes1",
+        "LocalAnchorA": [
+            0.0,
+            -10.0
+        ],
+        "LocalAnchorB": [
+            0.0,
+            8.0
+        ],
+        "LowerAngle": -0.8,
+        "UpperAngle": 0.8,
+        "Depth": 1,
+        "DataType": "JointMotor",
+        "EnableMotor": true,
+        "EnableLimit": true,
+        "MaxMotorTorque": 80,
+        "MotorSpeed": 0.0,
+        "Speed": 1
+    }
+}
