@@ -79,7 +79,7 @@ def parse_args():
     parser.add_argument(
         '--filename',
         type=str,
-        default='GeneratedRaptorWalker.json',
+        default='box2d-json-gen/GeneratedRaptorWalker.json',
         help='What to call the output JSON file')
     parser.add_argument(
         '--hull-width',
@@ -635,11 +635,11 @@ class GenerateRaptor:
     def write_to_json(self, filename=None):
         if not os.path.exists('box2d-json-gen'):
             os.mkdir('box2d-json-gen')
-        if filename is None:
-            outfile = open('box2d-json-gen/' + self.args['filename'], 'w+')
-        else:
-            outfile = open('box2d-json-gen/' + filename, 'w+')
 
+        if filename is not None:
+            outfile = open(filename, 'w+')
+        else:
+            outfile = open(self.args['filename'], 'w+')
         outfile.write(json.dumps(self.output, indent=4, separators=(',', ' : ')))
 
 
