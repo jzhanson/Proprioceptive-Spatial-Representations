@@ -339,47 +339,47 @@ class GenerateRaptor:
             # TODO(josh): make this support a different position based on angle
             self.output[title_neck_or_tail + str(i)]['Position'] = [current_x, current_y]
 
-            current_x = current_x + x_dir * (0.5 * ith_between(
-                self.args['hull_width'],
-                self.args[neck_or_tail + '_width'],
-                i+1,
-                self.args[neck_or_tail + '_segments']
-            ) + 0.5 * ith_between(
-                self.args['hull_width'],
-                self.args[neck_or_tail + '_width'],
-                i+2,
-                self.args[neck_or_tail + '_segments']
-            ))
-            current_y = current_y + 0.5 * (ith_between(
-                self.args['hull_height'],
-                self.args[neck_or_tail + '_height'],
-                i+1,
-                self.args[neck_or_tail + '_segments']
-            ) - ith_between(
-                self.args['hull_height'],
-                self.args[neck_or_tail + '_height'],
-                i+2,
-                self.args[neck_or_tail + '_segments']
-            ))
-
-            # Add the head if building neck
+            # Set up current_x and current_y for building head if last of neck
             if neck_or_tail == 'neck' and i == self.args[neck_or_tail + '_segments'] - 1:
-                # Set up current_x and current_y for building head if last one
+                #
                 current_x = current_x + ith_between(
                     self.args['hull_width'],
                     self.args['neck_width'],
                     i+1,
                     self.args['neck_segments']
                 ) + 0.5 * self.args['head_width']
-                current_y = current_y + (ith_between(
+                current_y = current_y + 0.25 * (ith_between(
                     self.args['hull_height'],
                     self.args['neck_height'],
                     i+1,
                     self.args['neck_segments']
-                ) - 0.5 * self.args['head_height'])
+                ) - self.args['head_height'])
 
                 self.output['Head']['Angle'] = self.args['head_angle']
                 self.output['Head']['Position'] = [current_x, current_y]
+            else:
+                current_x = current_x + x_dir * (0.5 * ith_between(
+                    self.args['hull_width'],
+                    self.args[neck_or_tail + '_width'],
+                    i+1,
+                    self.args[neck_or_tail + '_segments']
+                ) + 0.5 * ith_between(
+                    self.args['hull_width'],
+                    self.args[neck_or_tail + '_width'],
+                    i+2,
+                    self.args[neck_or_tail + '_segments']
+                ))
+                current_y = current_y + 0.5 * (ith_between(
+                    self.args['hull_height'],
+                    self.args[neck_or_tail + '_height'],
+                    i+1,
+                    self.args[neck_or_tail + '_segments']
+                ) - ith_between(
+                    self.args['hull_height'],
+                    self.args[neck_or_tail + '_height'],
+                    i+2,
+                    self.args[neck_or_tail + '_segments']
+                ))
 
     def build_leg_bodies(self):
         for f in ['ThighFixture', 'ShinFixture', 'FootFixture', 'ToesFixture']:
@@ -527,7 +527,7 @@ class GenerateRaptor:
                 i+2,
                 self.args[neck_or_tail + '_segments']
             )
-            current_x += x_dir * current_width
+            current_x += x_dir * prev_width
             current_y += 0.5 * (prev_height - current_height)
             self.output[k] = {}
             self.output[k]['BodyA'] = title_neck_or_tail + str(i)
@@ -554,9 +554,10 @@ class GenerateRaptor:
             current_width = ith_between(
                 self.args['hull_width'],
                 self.args['neck_width'],
-                self.args['neck_segments']+1,
+                self.args['neck_segments'],
                 self.args['neck_segments']
             )
+            current_x += current_width
             if self.args['rigid_spine']:
                 self.output[k]['Anchor'] = [current_x, current_y]
             else:
