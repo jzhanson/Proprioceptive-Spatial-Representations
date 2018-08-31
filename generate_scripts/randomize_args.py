@@ -59,6 +59,18 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
             help='What to prefix the name of the generated JSON file'
         )
         parser.add_argument(
+            '--body-segments',
+            type=int,
+            nargs='+',
+            default=1,
+            help='How many body segments to split the hull into')
+        parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
+        parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
+        parser.set_defaults(rigid_spine=False)
+        parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
+        parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
+        parser.set_defaults(spine_motors=True)
+        parser.add_argument(
             '--hull-width',
             type=float,
             nargs='+',
@@ -97,6 +109,12 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
     elif body_type == 'CentipedeWalker':
         pass
     elif body_type == 'RaptorWalker':
+        parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
+        parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
+        parser.set_defaults(rigid_spine=False)
+        parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
+        parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
+        parser.set_defaults(spine_motors=True)
         parser.add_argument(
             '--outfile-prefix',
             type=str,
@@ -281,6 +299,9 @@ def parse_default_args(body_type, additional_default_args={}):
             'outfile_prefix' : 'GeneratedBipedalWalker',
             'num_bodies' : 1,
             'distribution' : 'uniform',
+            'body_segments' : 1,
+            'rigid_spine' : False,
+            'spine_motors' : True,
             'hull_density' : 5.0,
             'hull_friction' : 0.1,
             'leg_density' : 1.0,
@@ -300,6 +321,8 @@ def parse_default_args(body_type, additional_default_args={}):
             'outfile_prefix' : 'GeneratedRaptorWalker',
             'num_bodies' : 1,
             'distribution' : 'uniform',
+            'rigid_spine' : False,
+            'spine_motors' : True,
             'hull_density' : 5.0,
             'hull_friction' : 0.1,
             'head_density' : 5.0,

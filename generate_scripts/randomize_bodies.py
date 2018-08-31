@@ -20,7 +20,7 @@ class RandomizeBodies:
         for i in range(self.args['num_bodies']):
             gen_args = {}
             # TODO(josh): add these arguments to randomize_args
-            if body_type == 'RaptorWalker':
+            if body_type == 'RaptorWalker' or body_type == 'BipedalWalker':
                 gen_args['rigid_spine'] = False
                 gen_args['spine_motors'] = True
             gen_args['filename'] = 'box2d-json-gen/' + self.args['outfile_prefix'] + str(i) + '.json'
