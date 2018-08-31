@@ -9,15 +9,6 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--spine', dest='spine', action='store_true')
-    parser.add_argument('--no-spine', dest='spine', action='store_false')
-    parser.set_defaults(spine=False)
-    parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
-    parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
-    parser.set_defaults(rigid_spine=False)
-    parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
-    parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
-    parser.set_defaults(spine_motors=True)
     # Add option to randomize density for each body part, or interpolate density on neck/tail
     # Can also change restitution?
     parser.add_argument(
@@ -45,6 +36,17 @@ def parse_args():
         type=str,
         default='box2d-json-gen/GeneratedBipedalWalker.json',
         help='What to call the output JSON file')
+    parser.add_argument(
+        '--body-segments',
+        type=int,
+        default=1,
+        help='How many body segments to split the hull into')
+    parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
+    parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
+    parser.set_defaults(rigid_spine=False)
+    parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
+    parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
+    parser.set_defaults(spine_motors=True)
     parser.add_argument(
         '--hull-width',
         type=float,
@@ -99,6 +101,8 @@ class GenerateBipedal:
         # Currently, naively calculate total leg height
         for k in ['leg', 'lower']:
             self.start_y += self.args[k + '_height']
+        self.hull_segment_width = self.args['hull_width'] / self.args['body_segments']
+        self.odd_body_segments = self.args['body_segments'] % 2 == 1
 
     def build(self):
         self.build_fixtures()
@@ -108,7 +112,57 @@ class GenerateBipedal:
         self.build_joints()
 
     def build_fixtures(self):
-        for prefix in ['Hull', 'Leg', 'Lower']:
+        for i in range(self.args['body_segments']):
+            # TODO(josh): separate this logic out into a helper function, is_adj_to_hull or something
+            if (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+                f = 'Hull' + 'Fixture'
+            else:
+                f = 'Body' + str(i) + 'Fixture'
+            self.output[f] = {}
+            self.output[f]['DataType'] = 'Fixture'
+            self.output[f]['FixtureShape'] = {}
+            self.output[f]['FixtureShape']['Type'] = 'PolygonShape'
+            half_width = 0.5 * self.hull_segment_width
+            bottom_half_height = 0.5 * self.args['hull_height']
+            # If only one hull segment, build pentagon. Else, build segment
+            if self.args['body_segments'] == 1:
+                self.output[f]['FixtureShape']['Vertices'] = [
+                    [-half_width, bottom_half_height],
+                    [0, bottom_half_height],
+                    [half_width, 0],
+                    [half_width, -bottom_half_height],
+                    [-half_width, -bottom_half_height]
+                ]
+            else:
+                if (i < self.args['body_segments'] // 2):
+                    front_half_height = bottom_half_height
+                    back_half_height = bottom_half_height
+                else:
+                    front_half_height = ith_between(
+                        self.args['hull_height'] // 2,
+                        0,
+                        i - (self.args['body_segments'] // 2) + 1,
+                        self.args['body_segments']
+                    )
+                    back_half_height = ith_between(
+                        self.args['hull_height'] // 2,
+                        0,
+                        i - (self.args['body_segments'] // 2),
+                        self.args['body_segments']
+                    )
+                self.output[f]['FixtureShape']['Vertices'] = [
+                    [-half_width, back_half_height],
+                    [half_width, front_half_height],
+                    [half_width, -bottom_half_height],
+                    [-half_width, -bottom_half_height]
+                ]
+            self.output[f]['Friction'] = self.args['hull_friction']
+            self.output[f]['Density'] = self.args['hull_density']
+            self.output[f]['Restitution'] = 0.0
+            self.output[f]['MaskBits'] = 1
+            self.output[f]['CategoryBits'] = 32
+
+        for prefix in ['Leg', 'Lower']:
             lower = prefix.lower()
             f = prefix + 'Fixture'
             self.output[f] = {}
@@ -116,22 +170,12 @@ class GenerateBipedal:
             self.output[f]['FixtureShape'] = {}
             self.output[f]['FixtureShape']['Type'] = 'PolygonShape'
             half_width, half_height = 0.5 * self.args[lower + '_width'], 0.5 * self.args[lower + '_height']
-            if prefix == 'Hull':
-                eighth_width = 0.125 * self.args[lower + '_width']
-                self.output[f]['FixtureShape']['Vertices'] = [
-                    [-half_width, half_height],
-                    [0, half_height],
-                    [half_width, 0],
-                    [half_width, -half_height],
-                    [-half_width, -half_height]
-                ]
-            else:
-                self.output[f]['FixtureShape']['Vertices'] = [
-                    [-half_width, -half_height],
-                    [half_width, -half_height],
-                    [half_width, half_height],
-                    [-half_width, half_height]
-                ]
+            self.output[f]['FixtureShape']['Vertices'] = [
+                [-half_width, -half_height],
+                [half_width, -half_height],
+                [half_width, half_height],
+                [-half_width, half_height]
+            ]
             self.output[f]['Friction'] = self.args['hull_friction'] if prefix == 'Hull' else self.args['leg_friction']
             self.output[f]['Density'] = self.args['hull_density'] if prefix == 'Hull' else self.args['leg_density']
             self.output[f]['Restitution'] = 0.0
@@ -139,16 +183,38 @@ class GenerateBipedal:
             self.output[f]['CategoryBits'] = 32
 
     def build_bodies(self):
-        self.output['Hull'] = {}
-        self.output['Hull']['DataType'] = 'DynamicBody'
-        self.output['Hull']['Position'] = [self.start_x, self.start_y]
-        self.output['Hull']['Angle'] = 0.0
-        self.output['Hull']['FixtureNames'] = ['HullFixture']
-        self.output['Hull']['Color1'] = HULL_COLOR
-        self.output['Hull']['Color2'] = LINE_COLOR
-        self.output['Hull']['CanTouchGround'] = False
-        self.output['Hull']['InitialForceScale'] = 5
-        self.output['Hull']['Depth'] = 0
+        if self.args['body_segments'] == 1:
+            self.output['Hull'] = {}
+            self.output['Hull']['DataType'] = 'DynamicBody'
+            self.output['Hull']['Position'] = [self.start_x, self.start_y]
+            self.output['Hull']['Angle'] = 0.0
+            self.output['Hull']['FixtureNames'] = ['HullFixture']
+            self.output['Hull']['Color1'] = HULL_COLOR
+            self.output['Hull']['Color2'] = LINE_COLOR
+            self.output['Hull']['CanTouchGround'] = False
+            self.output['Hull']['InitialForceScale'] = 5
+            self.output['Hull']['Depth'] = 0
+        # Segment hull into even body pieces, back to front
+        else:
+            current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
+            for i in range(self.args['body_segments']):
+                # If even number of body pieces, 'Hull' will be left-of-center piece
+                if (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+                    # Body number self.args['body_segments'] / 2 is renamed as 'Hull'
+                    k = 'Hull'
+                else:
+                    k = 'Body' + str(i)
+                self.output[k] = {}
+                self.output[k]['DataType'] = 'DynamicBody'
+                self.output[k]['Position'] = [current_x, self.start_y]
+                self.output[k]['Angle'] = 0.0
+                self.output[k]['FixtureNames'] = [k + 'Fixture']
+                self.output[k]['Color1'] = HULL_COLOR
+                self.output[k]['Color2'] = LINE_COLOR
+                self.output[k]['CanTouchGround'] = False
+                self.output[k]['InitialForceScale'] = 5
+                self.output[k]['Depth'] = 0
+                current_x += self.hull_segment_width
 
         for sign in [-1, +1]:
             current_x = self.start_x
@@ -167,13 +233,47 @@ class GenerateBipedal:
                 current_y = current_y - 0.5 * self.args['lower_height']
 
     def build_joints(self):
+        current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
+        for i in range(self.args['body_segments'] - 1):
+            if (self.odd_body_segments and i == (self.args['body_segments'] // 2) - 1) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 2):
+                body_a = 'Body' + str(i)
+                body_b = 'Hull'
+            elif (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+                body_a = 'Hull'
+                body_b = 'Body' + str(i+1)
+            else:
+                body_a = 'Body' + str(i)
+                body_b = 'Body' + str(i+1)
+            k = body_a + body_b + 'Joint'
+            self.output[k] = {}
+            self.output[k]['DataType'] = 'Linkage' if self.args['rigid_spine'] else 'JointMotor'
+            self.output[k]['BodyA'] = body_a
+            self.output[k]['BodyB'] = body_b
+            if self.args['rigid_spine']:
+                self.output[k]['Anchor'] = [current_x, self.start_y]
+            else:
+                self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width, 0]
+                self.output[k]['LocalAnchorB'] = [-0.5 * self.hull_segment_width, 0]
+                self.output[k]['EnableMotor'] = self.args['spine_motors']
+                self.output[k]['EnableLimit'] = True
+                self.output[k]['MaxMotorTorque'] = 80
+                self.output[k]['MotorSpeed'] = 0.0
+                self.output[k]['LowerAngle'] = -0.5
+                self.output[k]['UpperAngle'] = 0.2
+                self.output[k]['Speed'] = 1
+                self.output[k]['Depth'] = 0
+
+
+            current_x += self.hull_segment_width
+
+
         for sign in [-1, +1]:
             k = 'HullLeg' + str(sign) + 'Joint'
             self.output[k] = {}
             self.output[k]['DataType'] = 'JointMotor'
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Leg' + str(sign)
-            self.output[k]['LocalAnchorA'] = [0, -0.5 * self.args['hull_height']]
+            self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width if self.args['body_segments'] % 2 == 0 else 0, -0.5 * self.args['hull_height']]
             self.output[k]['LocalAnchorB'] = [0, 0.5 * self.args['leg_height']]
             self.output[k]['EnableMotor'] = True
             self.output[k]['EnableLimit'] = True
