@@ -391,7 +391,6 @@ class JSONWalker(gym.Env):
                 bodyB=self.bodies[self.linkage_defs[k]['BodyB']],
                 anchor=[x/SCALE for x in self.linkage_defs[k]['Anchor']]
             )
-            self.linkages[k].depth = self.linkage_defs[k]['Depth']
 
         self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
         for i in range(len(self.joint_action_order)):

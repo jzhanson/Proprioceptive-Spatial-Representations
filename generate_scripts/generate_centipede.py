@@ -176,7 +176,7 @@ class GenerateCentipede:
                 self.output[weld_str]['BodyA'] = hull_str
                 self.output[weld_str]['BodyB'] = next_hull_str
                 self.output[weld_str]['Anchor'] = [start_x + i * (2 * hull_radius) + hull_radius, start_y]
-                self.output[weld_str]['Depth'] = 0
+                # No depth for linkage since they carry no useful info
 
     def write_to_json(self, filename=None):
         if not os.path.exists('box2d-json-gen'):

@@ -622,7 +622,7 @@ class GenerateRaptor:
                 is_body_joint = any(name in first_body_name for name in body_names) and any(name in second_body_name for name in body_names)
                 if is_body_joint and self.args['rigid_spine']:
                     self.output[k]['DataType'] = 'Linkage'
-                    self.output[k]['Depth'] = 0 if '-1' in k else 1
+                    # Depth doesn't matter for linkages since they have no information in them
                 else:
                     self.output[k]['DataType'] = 'JointMotor'
                     self.output[k]['EnableMotor'] = self.args['spine_motors'] or not is_body_joint
