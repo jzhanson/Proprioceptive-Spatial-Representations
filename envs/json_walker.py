@@ -395,7 +395,7 @@ class JSONWalker(gym.Env):
                 #              for x in self.joint_defs[k]['LocalAnchorA']],
                 #localAnchorB=[y/SCALE
                 #              for y in self.joint_defs[k]['LocalAnchorB']],
-            )
+            ))
 
         self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
         for i in range(len(self.joint_action_order)):
