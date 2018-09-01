@@ -16,73 +16,8 @@ from torch.autograd import Variable
 
 from json_walker import JSONWalker
 
-# This is simple 4-joints walker robot environment.
-#
-# There are two versions:
-#
-# - Normal, with slightly uneven terrain.
-#
-# - Hardcore with ladders, stumps, pitfalls.
-#
-# Reward is given for moving forward, total 300+ points up to the far end. If the robot falls,
-# it gets -100. Applying motor torque costs a small amount of points, more optimal agent
-# will get better score.
-#
-# Heuristic is provided for testing, it's also useful to get demonstrations to
-# learn from. To run heuristic:
-#
-# python gym/envs/box2d/bipedal_walker.py
-#
-# State consists of hull angle speed, angular velocity, horizontal speed, vertical speed,
-# position of joints and joints angular speed, legs contact with ground, and 10 lidar
-# rangefinder measurements to help to deal with the hardcore version. There's no coordinates
-# in the state vector. Lidar is less useful in normal version, but it works.
-#
-# To solve the game you need to get 300 points in 1600 time steps.
-#
-# To solve hardcore version you need 300 points in 2000 time steps.
-#
-# Created by Oleg Klimov. Licensed on the same terms as the rest of OpenAI Gym.
-
-FPS    = 50
-SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
-
-#LIDAR_RANGE = 160/SCALE
-LIDAR_RANGE   = 160/SCALE
-
-VIEWPORT_W = 600
-VIEWPORT_H = 400
-
-TERRAIN_STEP   = 14/SCALE
-TERRAIN_LENGTH = 200     # in steps
-TERRAIN_HEIGHT = VIEWPORT_H/SCALE/4
-TERRAIN_GRASS    = 10    # low long are grass spots, in steps
-TERRAIN_STARTPAD = 20    # in steps
-FRICTION = 2.5
-
-
-class ContactDetector(contactListener):
-    def __init__(self, env):
-        contactListener.__init__(self)
-        self.env = env
-    def BeginContact(self, contact):
-        for k in self.env.bodies:
-            if self.env.bodies[k] in [contact.fixtureA.body, contact.fixtureB.body]:
-                self.env.bodies[k].ground_contact = True
-                if not self.env.bodies[k].can_touch_ground:
-                    self.env.game_over = True
-    def EndContact(self, contact):
-        for k in self.env.bodies:
-            if self.env.bodies[k] in [contact.fixtureA.body, contact.fixtureB.body]:
-                self.env.bodies[k].ground_contact = False
-
 # TODO(josh): make this class inherit from JSONWalker but override reset/init?
 class RandomJSONWalker(JSONWalker):
-    metadata = {
-        'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second' : FPS
-    }
-
     hardcore = False
 
     def __init__(self):
