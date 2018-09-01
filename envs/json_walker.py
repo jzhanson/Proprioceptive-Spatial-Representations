@@ -2,7 +2,7 @@ import sys, math, json, copy, time
 import numpy as np
 
 import Box2D
-from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revoluteJointDef, contactListener)
+from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revoluteJointDef, weldJointDef, contactListener)
 
 import gym
 from gym import spaces
@@ -88,6 +88,26 @@ class JSONWalker(gym.Env):
 
         self.prev_shaping = None
 
+        self.fd_polygon = fixtureDef(
+                        shape = polygonShape(vertices=
+                        [(0, 0),
+                         (1, 0),
+                         (1, -1),
+                         (0, -1)]),
+                        friction = FRICTION)
+
+        self.fd_edge = fixtureDef(
+                    shape = edgeShape(vertices=
+                    [(0, 0),
+                     (1, 1)]),
+                    friction = FRICTION,
+                    categoryBits=0x0001,
+                )
+
+        self.load_json(jsonfile)
+        self.reset()
+
+    def load_json(self, jsonfile):
         # JSON loading
         with open(jsonfile) as f:
             self.jsondata = json.load(f)
@@ -110,31 +130,12 @@ class JSONWalker(gym.Env):
             else:
                 assert(False)
 
-
-        self.fd_polygon = fixtureDef(
-                        shape = polygonShape(vertices=
-                        [(0, 0),
-                         (1, 0),
-                         (1, -1),
-                         (0, -1)]),
-                        friction = FRICTION)
-
-        self.fd_edge = fixtureDef(
-                    shape = edgeShape(vertices=
-                    [(0, 0),
-                     (1, 1)]),
-                    friction = FRICTION,
-                    categoryBits=0x0001,
-                )
-
         num_joints = len(self.joint_defs.keys())
         high = np.array( [np.inf]*(5*len(self.body_defs)+2*len(self.joint_defs)+10) )
 
         self.action_space = spaces.Box(
-            np.array([-1.0]*num_joints), np.array([+1.0]*num_joints), dtype=np.float32)
-        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
-
-        self.reset()
+            np.array([-1.0]*num_joints), np.array([+1.0]*num_joints))
+        self.observation_space = spaces.Box(-high, high)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -386,10 +387,14 @@ class JSONWalker(gym.Env):
         # bodyA, bodyB, anchor
         self.linkages = {}
         for k in self.linkage_defs.keys():
-            self.linkages[k] = self.world.CreateWeldJoint(
+            self.linkages[k] = self.world.CreateJoint(weldJointDef(
                 bodyA=self.bodies[self.linkage_defs[k]['BodyA']],
                 bodyB=self.bodies[self.linkage_defs[k]['BodyB']],
                 anchor=[x/SCALE for x in self.linkage_defs[k]['Anchor']]
+                #localAnchorA=[x/SCALE
+                #              for x in self.joint_defs[k]['LocalAnchorA']],
+                #localAnchorB=[y/SCALE
+                #              for y in self.joint_defs[k]['LocalAnchorB']],
             )
 
         self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
