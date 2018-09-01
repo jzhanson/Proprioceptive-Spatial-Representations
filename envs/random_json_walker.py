@@ -1,6 +1,5 @@
 import sys, math, random, json, copy, time
 import numpy as np
-import os
 from os import listdir
 from os.path import isfile, join
 
@@ -14,27 +13,28 @@ from gym.utils import colorize, seeding
 import torch
 from torch.autograd import Variable
 
-from json_walker import JSONWalker
+from envs.json_walker import JSONWalker
 
 # TODO(josh): make this class inherit from JSONWalker but override reset/init?
 class RandomJSONWalker(JSONWalker):
     hardcore = False
 
-    def __init__(self):
-        # Load the json randomly
-        files_list = [f for f in listdir('box2d-json-gen') if isfile(join('box2d-json-gen', f))]
-        chosen_json = os.path.join('box2d-json-gen', random.choice(files_list))
-        print(chosen_json)
-        super(RandomJSONWalker, self).__init__(chosen_json)
+    def __init__(self, jsondir):
+
+        self.jsondir = jsondir
+        
+        # Load the first json randomly (place-holder)
+        super(RandomJSONWalker, self).__init__(self._sample_file())
 
         self.reset()
 
-    def reset(self):
-        # Load the json randomly
-        files_list = [f for f in listdir('box2d-json-gen') if isfile(join('box2d-json-gen', f))]
-        chosen_json = random.choice(files_list)
-        self.load_json('box2d-json-gen/' + chosen_json)
+    def _sample_file(self):
+        files_list = [f for f in listdir(self.jsondir) if isfile(join(self.jsondir, f))]
+        return join(self.jsondir, random.choice(files_list))
 
+    def reset(self):
+        # Load new json every episode
+        self.load_json(self._sample_file())
         return super(RandomJSONWalker, self).reset()
         
 
@@ -46,7 +46,8 @@ if __name__=="__main__":
     # TODO(josh): add arguments for how many bodies to choose from, which types of bodies, etc
     body_number = random.randint(0, 9)
 
-    env = RandomJSONWalker()
+    #env = RandomJSONWalker('box2d-json-gen')
+    env = RandomJSONWalkerHardcore('box2d-json-gen')
 
     steps = 0
     total_reward = 0
@@ -62,7 +63,7 @@ if __name__=="__main__":
         env.render()
         a = env.action_space.sample()
         #a = np.zeros(env.action_space.shape)
-        time.sleep(0.2)
+        #time.sleep(0.2)
         _, r, done, info = env.step(a)
         if done:
             env.reset()
