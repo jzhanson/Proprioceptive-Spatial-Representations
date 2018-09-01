@@ -14,6 +14,9 @@ def parse_args():
     parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
     parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
     parser.set_defaults(spine_motors=True)
+    parser.add_argument('--rigid-foot', dest='rigid_foot', action='store_true')
+    parser.add_argument('--no-rigid-foot', dest='rigid_foot', action='store_false')
+    parser.set_defaults(rigid_foot=False)
     # Add option to randomize density for each body part, or interpolate density on neck/tail
     # Can also change restitution?
     parser.add_argument(
@@ -592,13 +595,19 @@ class GenerateRaptor:
                 self.output[k]['BodyB'] = leg_names[i+1] + str(sign)
                 self.output[k]['LocalAnchorA'] = [0.0, -0.5 * self.args[leg_names[i].lower() + '_height']]
                 self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args[leg_names[i+1].lower() + '_height']]
-                self.output[k]['LowerAngle'] = -0.8
                 if leg_names[i] == 'Thigh':
+                    self.output[k]['LowerAngle'] = -0.8
                     self.output[k]['UpperAngle'] = 1.1
                 elif leg_names[i] == 'Shin':
+                    self.output[k]['LowerAngle'] = -0.8
                     self.output[k]['UpperAngle'] = 0.5
                 elif leg_names[i] == 'Foot':
-                    self.output[k]['UpperAngle'] = 0.8
+                    if self.args['rigid_foot']:
+                        self.output[k]['LowerAngle'] = 0.4
+                        self.output[k]['UpperAngle'] = 0.4
+                    else:
+                        self.output[k]['LowerAngle'] = -0.8
+                        self.output[k]['UpperAngle'] = 0.8
 
                 self.output[k]['Depth'] = 0 if sign == -1 else 1
 
