@@ -1,5 +1,3 @@
-# TODO(josh): can simplify script by not making distinction between 'Head', 'Neck', 'Tail', and
-# 'Hull', make them all 'Body' but name the center body 'Hull' for json_walker.py purposes
 import sys
 import os
 import math
@@ -104,6 +102,19 @@ class GenerateBipedal:
         self.hull_segment_width = self.args['hull_width'] / self.args['body_segments']
         self.odd_body_segments = self.args['body_segments'] % 2 == 1
 
+    # Returns True if i is the "hull" segment and False otherwise
+    def is_hull_segment(self, i):
+        return (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1)
+
+    # Returns 'left' if i is the segment/number left of hull and 'right' if i is directly right of hull and '' otherwise
+    def is_adj_to_hull(self, i):
+        if (self.odd_body_segments and i == (self.args['body_segments'] // 2) - 1) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 2):
+            return 'left'
+        elif (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+            return 'right'
+        else:
+            return ''
+
     def build(self):
         self.build_fixtures()
 
@@ -114,7 +125,7 @@ class GenerateBipedal:
     def build_fixtures(self):
         for i in range(self.args['body_segments']):
             # TODO(josh): separate this logic out into a helper function, is_adj_to_hull or something
-            if (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+            if self.is_hull_segment(i):
                 f = 'Hull' + 'Fixture'
             else:
                 f = 'Body' + str(i) + 'Fixture'
@@ -199,7 +210,7 @@ class GenerateBipedal:
             current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
             for i in range(self.args['body_segments']):
                 # If even number of body pieces, 'Hull' will be left-of-center piece
-                if (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+                if self.is_hull_segment(i):
                     # Body number self.args['body_segments'] / 2 is renamed as 'Hull'
                     k = 'Hull'
                 else:
@@ -235,10 +246,10 @@ class GenerateBipedal:
     def build_joints(self):
         current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
         for i in range(self.args['body_segments'] - 1):
-            if (self.odd_body_segments and i == (self.args['body_segments'] // 2) - 1) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 2):
+            if self.is_adj_to_hull(i) == 'left':
                 body_a = 'Body' + str(i)
                 body_b = 'Hull'
-            elif (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+            elif self.is_adj_to_hull(i) == 'right':
                 body_a = 'Hull'
                 body_b = 'Body' + str(i+1)
             else:
