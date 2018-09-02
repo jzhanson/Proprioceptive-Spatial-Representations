@@ -623,7 +623,7 @@ class GenerateRaptor:
                         self.output[k]['LowerAngle'] = -0.8
                         self.output[k]['UpperAngle'] = 0.8
 
-                self.output[k]['Depth'] = 0 if sign == -1 else 1
+                self.output[k]['Depth'] = sign + 1
 
                 joint_counter += 1
 
