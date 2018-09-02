@@ -13,7 +13,7 @@ from gym.utils import colorize, seeding
 import torch
 from torch.autograd import Variable
 
-from envs.json_walker import JSONWalker
+from json_walker import JSONWalker
 
 # TODO(josh): make this class inherit from JSONWalker but override reset/init?
 class RandomJSONWalker(JSONWalker):
@@ -22,21 +22,22 @@ class RandomJSONWalker(JSONWalker):
     def __init__(self, jsondir):
 
         self.jsondir = jsondir
-        
+
         # Load the first json randomly (place-holder)
         super(RandomJSONWalker, self).__init__(self._sample_file())
 
         self.reset()
 
     def _sample_file(self):
-        files_list = [f for f in listdir(self.jsondir) if isfile(join(self.jsondir, f))]
+        files_list = [f for f in listdir(self.jsondir)
+                      if isfile(join(self.jsondir, f)) and f.endswith('.json')]
         return join(self.jsondir, random.choice(files_list))
 
     def reset(self):
         # Load new json every episode
         self.load_json(self._sample_file())
         return super(RandomJSONWalker, self).reset()
-        
+
 
 class RandomJSONWalkerHardcore(RandomJSONWalker):
     hardcore = True
@@ -47,7 +48,8 @@ if __name__=="__main__":
     body_number = random.randint(0, 9)
 
     #env = RandomJSONWalker('box2d-json-gen')
-    env = RandomJSONWalkerHardcore('box2d-json-gen')
+    #env = RandomJSONWalkerHardcore('box2d-json-gen')
+    env = RandomJSONWalker('box2d-json-gen-bipedal-segments')
 
     steps = 0
     total_reward = 0
