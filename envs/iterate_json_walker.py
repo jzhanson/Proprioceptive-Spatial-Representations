@@ -13,32 +13,38 @@ from gym.utils import colorize, seeding
 import torch
 from torch.autograd import Variable
 
-from envs.json_walker import JSONWalker
+#from envs.json_walker import JSONWalker
+from json_walker import JSONWalker
 
-class RandomJSONWalker(JSONWalker):
+class IterateJSONWalker(JSONWalker):
     hardcore = False
 
     def __init__(self, jsondir):
 
+        # Store the file list here
         self.jsondir = jsondir
+        self.files_list = [f for f in listdir(self.jsondir)
+                           if isfile(join(self.jsondir, f)) and f.endswith('.json')]
+        self.files_list.sort()
+        self.file_iterator = -1
 
         # Load the first json randomly (place-holder)
-        super(RandomJSONWalker, self).__init__(self._sample_file())
+        super(IterateJSONWalker, self).__init__(self._next_file())
 
         self.reset()
 
-    def _sample_file(self):
-        files_list = [f for f in listdir(self.jsondir)
-                      if isfile(join(self.jsondir, f)) and f.endswith('.json')]
-        return join(self.jsondir, random.choice(files_list))
+    def _next_file(self):
+        self.file_iterator += 1
+        return join(self.jsondir,
+                    self.files_list[self.file_iterator%len(self.files_list)])
 
     def reset(self):
         # Load new json every episode
-        self.load_json(self._sample_file())
-        return super(RandomJSONWalker, self).reset()
+        self.load_json(self._next_file())
+        return super(IterateJSONWalker, self).reset()
 
 
-class RandomJSONWalkerHardcore(RandomJSONWalker):
+class IterateJSONWalkerHardcore(IterateJSONWalker):
     hardcore = True
 
 if __name__=="__main__":
@@ -46,9 +52,9 @@ if __name__=="__main__":
     # TODO(josh): add arguments for how many bodies to choose from, which types of bodies, etc
     body_number = random.randint(0, 9)
 
-    #env = RandomJSONWalker('box2d-json-gen')
-    #env = RandomJSONWalkerHardcore('box2d-json-gen')
-    env = RandomJSONWalker('box2d-json-gen-bipedal-segments')
+    #env = IterateJSONWalker('box2d-json-gen')
+    #env = IterateJSONWalkerHardcore('box2d-json-gen')
+    env = IterateJSONWalker('box2d-json-gen-bipedal-segments')
 
     steps = 0
     total_reward = 0
@@ -62,8 +68,8 @@ if __name__=="__main__":
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
         env.render()
-        a = env.action_space.sample()
-        #a = np.zeros(env.action_space.shape)
+        #a = env.action_space.sample()
+        a = np.zeros(env.action_space.shape)
         #time.sleep(0.2)
         _, r, done, info = env.step(a)
         if done:
