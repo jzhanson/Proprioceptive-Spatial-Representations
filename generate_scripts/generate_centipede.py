@@ -15,6 +15,12 @@ def parse_args():
         type=str,
         default='box2d-json-gen/GeneratedCentipedeWalker.json',
         help='What to call the output JSON file')
+    parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
+    parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
+    parser.set_defaults(rigid_spine=False)
+    parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
+    parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
+    parser.set_defaults(spine_motors=True)
     parser.add_argument(
         '--hull-radius',
         type=float,
@@ -167,16 +173,26 @@ class GenerateCentipede:
                 self.output[leg_lower_joint_str]['Speed'] = 6
                 self.output[leg_lower_joint_str]['Depth'] = sign + 1
 
-            # Build weld joint for all but frontmost body
+            # Build joint for all but frontmost body
             if i < self.args['num_segments'] - 1:
                 next_hull_str = 'Hull' + str(i+1)
-                weld_str = hull_str + next_hull_str + 'Joint'
-                self.output[weld_str] = {}
-                self.output[weld_str]['DataType'] = 'Linkage'
-                self.output[weld_str]['BodyA'] = hull_str
-                self.output[weld_str]['BodyB'] = next_hull_str
-                self.output[weld_str]['LocalAnchorA'] = [hull_radius, start_y]
-                self.output[weld_str]['LocalAnchorB'] = [-hull_radius, start_y]
+                k = hull_str + next_hull_str + 'Joint'
+                self.output[k] = {}
+                self.output[k]['DataType'] = 'Linkage' if self.args['rigid_spine'] else 'JointMotor'
+                self.output[k]['BodyA'] = hull_str
+                self.output[k]['BodyB'] = next_hull_str
+                self.output[k]['LocalAnchorA'] = [hull_radius, start_y]
+                self.output[k]['LocalAnchorB'] = [-hull_radius, start_y]
+
+                if not self.args['rigid_spine']:
+                    self.output[k]['EnableMotor'] = self.args['spine_motors']
+                    self.output[k]['EnableLimit'] = True
+                    self.output[k]['MaxMotorTorque'] = 80
+                    self.output[k]['MotorSpeed'] = 1
+                    self.output[k]['LowerAngle'] = -0.5
+                    self.output[k]['UpperAngle'] = 0.2
+                    self.output[k]['Speed'] = 1
+                    self.output[k]['Depth'] = sign + 1
 
                 # No depth for linkage since they carry no useful info
 
