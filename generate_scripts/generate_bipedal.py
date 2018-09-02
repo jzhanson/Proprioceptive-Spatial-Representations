@@ -240,7 +240,7 @@ class GenerateBipedal:
                 self.output[k]['Color1'] = LIGHT_COLOR if sign == 1 else DARK_COLOR
                 self.output[k]['Color2'] = LINE_COLOR
                 self.output[k]['CanTouchGround'] = True
-                self.output[k]['Depth'] = sign + 1
+                self.output[k]['Depth'] = (sign + 1)//2
                 current_y = current_y - 0.5 * self.args['lower_height']
 
     def build_joints(self):
@@ -292,7 +292,7 @@ class GenerateBipedal:
             self.output[k]['LowerAngle'] = -0.8
             self.output[k]['UpperAngle'] = 1.1
             self.output[k]['Speed'] = 4
-            self.output[k]['Depth'] = sign + 1
+            self.output[k]['Depth'] = (sign + 1)//2
 
             k = 'Leg' + str(sign) + 'Lower' + str(sign) + 'Joint'
             self.output[k] = {}
@@ -308,7 +308,7 @@ class GenerateBipedal:
             self.output[k]['LowerAngle'] = -1.6
             self.output[k]['UpperAngle'] = -0.1
             self.output[k]['Speed'] = 6
-            self.output[k]['Depth'] = sign + 1
+            self.output[k]['Depth'] = (sign + 1)//2
 
     def write_to_json(self, filename=None):
         if not os.path.exists('box2d-json-gen'):
@@ -328,4 +328,3 @@ if __name__ == '__main__':
     gen.build()
 
     gen.write_to_json()
-

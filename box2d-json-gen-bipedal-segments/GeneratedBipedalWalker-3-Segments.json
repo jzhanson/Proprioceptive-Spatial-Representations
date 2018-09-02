@@ -283,7 +283,7 @@
             0.5
         ],
         "CanTouchGround" : true,
-        "Depth" : 2
+        "Depth" : 1
     },
     "Lower1" : {
         "DataType" : "DynamicBody",
@@ -306,7 +306,7 @@
             0.5
         ],
         "CanTouchGround" : true,
-        "Depth" : 2
+        "Depth" : 1
     },
     "Body0HullJoint" : {
         "DataType" : "JointMotor",
@@ -411,7 +411,7 @@
         "LowerAngle" : -0.8,
         "UpperAngle" : 1.1,
         "Speed" : 4,
-        "Depth" : 2
+        "Depth" : 1
     },
     "Leg1Lower1Joint" : {
         "DataType" : "JointMotor",
@@ -432,6 +432,6 @@
         "LowerAngle" : -1.6,
         "UpperAngle" : -0.1,
         "Speed" : 6,
-        "Depth" : 2
+        "Depth" : 1
     }
 }
