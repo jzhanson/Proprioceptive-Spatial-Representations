@@ -6,6 +6,8 @@ from gym import spaces
 
 from envs.bipedal_walker import BipedalWalker, BipedalWalkerHardcore
 from envs.humanoid_walker import HumanoidWalker, HumanoidWalkerHardcore
+from envs.gish_walker import GishWalker, GishWalkerHardcore
+
 from envs.json_walker import JSONWalker, JSONWalkerHardcore
 from envs.random_json_walker import RandomJSONWalker, RandomJSONWalkerHardcore
 from envs.grid_bipedal_walker import GridBipedalWalker, GridBipedalWalkerHardcore
@@ -20,6 +22,10 @@ def create_env(env_id, args):
         env = HumanoidWalker()
     elif env_id == 'HumanoidWalkerHardcore-v0':
         env = HumanoidWalkerHardcore()
+    elif env_id == 'GishWalker-v0':
+        env = GishWalker()
+    elif env_id == 'GishWalkerHardcore-v0':
+        env = GishWalkerHardcore()
     elif env_id.startswith('JSONWalker-'):
         env = JSONWalker(env_id[len('JSONWalker-'):])
     elif env_id.startswith('JSONWalkerHardcore-'):
