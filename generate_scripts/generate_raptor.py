@@ -17,6 +17,9 @@ def parse_args():
     parser.add_argument('--rigid-foot', dest='rigid_foot', action='store_true')
     parser.add_argument('--no-rigid-foot', dest='rigid_foot', action='store_false')
     parser.set_defaults(rigid_foot=False)
+    parser.add_argument('--bipedal-legs', dest='bipedal_legs', action='store_true')
+    parser.add_argument('--no-bipedal-legs', dest='bipedal_legs', action='store_false')
+    parser.set_defaults(bipedal_legs=False)
     # Add option to randomize density for each body part, or interpolate density on neck/tail
     # Can also change restitution?
     parser.add_argument(
@@ -197,11 +200,14 @@ class GenerateRaptor:
         self.start_x += 0.5 * self.args['hull_width']
         # Ground starts at y=100
         self.start_y = 100
-        # Currently, naively calculate total leg height
-        for k in ['thigh', 'foot']:
-            self.start_y += self.args[k + '_height']
-        for k in ['shin', 'toes']:
-            self.start_y += self.args[k + '_width']
+        # TODO(josh): calculate total leg height taking into account start angles of legs
+        if self.args['bipedal_legs']:
+            self.start_y += self.args['thigh_height'] + self.args['shin_height']
+        else:
+            for k in ['thigh', 'foot']:
+                self.start_y += self.args[k + '_height']
+            for k in ['shin', 'toes']:
+                self.start_y += self.args[k + '_width']
 
     def build(self):
         self.build_fixtures()
@@ -384,7 +390,8 @@ class GenerateRaptor:
                 ))
 
     def build_leg_bodies(self):
-        for f in ['ThighFixture', 'ShinFixture', 'FootFixture', 'ToesFixture']:
+        fixtures_to_build = ['ThighFixture', 'ShinFixture'] if self.args['bipedal_legs'] else ['ThighFixture', 'ShinFixture', 'FootFixture', 'ToesFixture']
+        for f in fixtures_to_build:
             for sign in [-1, +1]:
                 k = f.split('Fixture')[0] + str(sign)
                 self.output[k] = {}
@@ -408,12 +415,20 @@ class GenerateRaptor:
                 toes_x = foot_x + 0.5 * self.args['toes_height']
                 toes_y = foot_y - 0.5 * self.args['foot_height']
                 if 'Thigh' in k:
-                    self.output[k]['Position'] = [thigh_x, thigh_y]
-                    self.output[k]['Angle'] = 0.3
+                    if self.args['bipedal_legs']:
+                        self.output[k]['Position'] = [self.start_x, self.start_y - 0.5 * self.args['thigh_height']]
+                        self.output[k]['Angle'] = sign * 0.05
+                    else:
+                        self.output[k]['Position'] = [thigh_x, thigh_y]
+                        self.output[k]['Angle'] = 0.3
                 elif 'Shin' in k:
-                    # Note: shin is sideways
-                    self.output[k]['Position'] = [shin_x, shin_y]
-                    self.output[k]['Angle'] = -1.2
+                    if self.args['bipedal_legs']:
+                        self.output[k]['Position'] = [self.start_x, self.start_y - self.args['thigh_height'] - 0.5 * self.args['shin_height']]
+                        self.output[k]['Angle'] = sign * 0.05
+                    else:
+                        # Note: shin is sideways
+                        self.output[k]['Position'] = [shin_x, shin_y]
+                        self.output[k]['Angle'] = -1.2
                 elif 'Foot' in k:
                     self.output[k]['Position'] = [foot_x, foot_y]
                     self.output[k]['Angle'] = 0.25
@@ -569,7 +584,7 @@ class GenerateRaptor:
 
     def build_leg_joints(self):
         joint_counter = self.args['neck_segments'] + self.args['tail_segments'] + 1
-        leg_names = ['Thigh', 'Shin', 'Foot', 'Toes']
+        leg_names = ['Thigh', 'Shin'] if self.args['bipedal_legs'] else ['Thigh', 'Shin', 'Foot', 'Toes']
 
         for sign in [-1, +1]:
             k = 'Joint' + str(joint_counter) + '.Hull.Thigh' + str(sign)
@@ -591,8 +606,12 @@ class GenerateRaptor:
                 self.output[k]['LocalAnchorA'] = [0.0, -0.5 * self.args[leg_names[i].lower() + '_height']]
                 self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args[leg_names[i+1].lower() + '_height']]
                 if leg_names[i] == 'Thigh':
-                    self.output[k]['LowerAngle'] = -0.8
-                    self.output[k]['UpperAngle'] = 1.1
+                    if self.args['bipedal_legs']:
+                        self.output[k]['LowerAngle'] = -1.6
+                        self.output[k]['UpperAngle'] = -0.1
+                    else:
+                        self.output[k]['LowerAngle'] = -0.8
+                        self.output[k]['UpperAngle'] = 1.1
                 elif leg_names[i] == 'Shin':
                     self.output[k]['LowerAngle'] = -0.8
                     self.output[k]['UpperAngle'] = 0.5
