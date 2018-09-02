@@ -13,7 +13,7 @@ from gym.utils import colorize, seeding
 import torch
 from torch.autograd import Variable
 
-from json_walker import JSONWalker
+from envs.json_walker import JSONWalker
 
 # TODO(josh): make this class inherit from JSONWalker but override reset/init?
 class RandomJSONWalker(JSONWalker):
