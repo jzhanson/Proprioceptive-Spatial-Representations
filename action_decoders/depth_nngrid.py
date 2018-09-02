@@ -13,7 +13,6 @@ class NNGrid(torch.nn.Module):
     def __init__(self, action_space, args):
         super(NNGrid, self).__init__()
 
-        self.action_space = action_space
         self.grid_edge  = args['grid_edge']
         self.grid_scale = args['grid_scale']
 
@@ -26,7 +25,7 @@ class NNGrid(torch.nn.Module):
         # Expose current action grid to be passed to env for rendering
         self.current_actiongrid = action.data.cpu().numpy()
 
-        decoded_action = torch.zeros(action.size(0), self.action_space.shape[0])
+        decoded_action = torch.zeros(action.size(0), len(info['joints']))
         if action.is_cuda:
             with torch.cuda.device(action.get_device()):
                 decoded_action = decoded_action.cuda()
