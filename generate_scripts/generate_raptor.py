@@ -658,7 +658,7 @@ class GenerateRaptor:
                     self.output[k]['MotorSpeed'] = 0.0
                     # TODO(josh): want faster body joint?
                     if is_body_joint:
-                        self.output[k]['Speed'] = 1
+                        self.output[k]['Speed'] = 4
                     elif is_hip_joint:
                         self.output[k]['Speed'] = 4
                     else:
@@ -684,4 +684,3 @@ if __name__ == '__main__':
     gen.build()
 
     gen.write_to_json()
-
