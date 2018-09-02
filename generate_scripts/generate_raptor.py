@@ -20,6 +20,9 @@ def parse_args():
     parser.add_argument('--bipedal-legs', dest='bipedal_legs', action='store_true')
     parser.add_argument('--no-bipedal-legs', dest='bipedal_legs', action='store_false')
     parser.set_defaults(bipedal_legs=False)
+    parser.add_argument('--build-head', dest='build_head', action='store_true')
+    parser.add_argument('--no-build-head', dest='build_head', action='store_false')
+    parser.set_defaults(build_head=True)
     # Add option to randomize density for each body part, or interpolate density on neck/tail
     # Can also change restitution?
     parser.add_argument(
@@ -218,7 +221,8 @@ class GenerateRaptor:
 
     def build_fixtures(self):
         self.output['HullFixture'] = {}
-        self.output['HeadFixture'] = {}
+        if self.args['build_head']:
+            self.output['HeadFixture'] = {}
 
         leg_fixtures = ['ThighFixture', 'ShinFixture', 'FootFixture', 'ToesFixture']
 
@@ -332,7 +336,7 @@ class GenerateRaptor:
                 1,
                 self.args[neck_or_tail + '_segments']
             ))
-        elif neck_or_tail == 'neck':
+        elif neck_or_tail == 'neck' and self.args['build_head']:
             head_x = self.start_x + 0.5 * self.args['hull_width'] + 0.5 * self.args['head_width']
             head_y = self.start_y + 0.5 * (self.args['hull_height'] - self.args['head_height'])
             self.output['Head']['Angle'] = 0.0
@@ -348,8 +352,7 @@ class GenerateRaptor:
             self.output[title_neck_or_tail + str(i)]['Position'] = [current_x, current_y]
 
             # Set up current_x and current_y for building head if last of neck
-            if neck_or_tail == 'neck' and i == self.args[neck_or_tail + '_segments'] - 1:
-                #
+            if neck_or_tail == 'neck' and i == self.args[neck_or_tail + '_segments'] - 1 and self.args['build_head']:
                 current_x = current_x + ith_between(
                     self.args['hull_width'],
                     self.args['neck_width'],
@@ -474,7 +477,7 @@ class GenerateRaptor:
         x_dir = 1.0 if neck_or_tail == 'neck' else -1.0
         joint_counter = 0 if neck_or_tail == 'neck' else self.args['neck_segments'] + 1
 
-        if neck_or_tail == 'neck' and self.args['neck_segments'] == 0:
+        if neck_or_tail == 'neck' and self.args['neck_segments'] == 0 and self.args['build_head']:
             k = 'Joint' + str(joint_counter) + '.Hull.Head'
             self.output[k] = {}
             self.output[k]['BodyA'] = 'Hull'
@@ -558,7 +561,7 @@ class GenerateRaptor:
             joint_counter += 1
 
         # If building neck joints, build head joint
-        if neck_or_tail == 'neck':
+        if neck_or_tail == 'neck' and self.args['build_head']:
             # Head-neck joint
             k = 'Joint' + str(joint_counter) + '.Neck' + str(self.args['neck_segments'] - 1) + '.Head'
             self.output[k] = {}
@@ -643,16 +646,23 @@ class GenerateRaptor:
                 second_body_name = k.split('.')[2]
 
                 is_body_joint = any(name in first_body_name for name in body_names) and any(name in second_body_name for name in body_names)
+                is_hip_joint = 'Hull' in first_body_name and 'Thigh' in second_body_name
                 if is_body_joint and self.args['rigid_spine']:
                     self.output[k]['DataType'] = 'Linkage'
                     # Depth doesn't matter for linkages since they have no information in them
                 else:
                     self.output[k]['DataType'] = 'JointMotor'
-                    self.output[k]['EnableMotor'] = self.args['spine_motors'] or not is_body_joint
+                    self.output[k]['EnableMotor'] = self.args['spine_motors'] if is_body_joint else True
                     self.output[k]['EnableLimit'] = True
                     self.output[k]['MaxMotorTorque'] = 80
                     self.output[k]['MotorSpeed'] = 0.0
-                    self.output[k]['Speed'] = 1
+                    # TODO(josh): want faster body joint?
+                    if is_body_joint:
+                        self.output[k]['Speed'] = 1
+                    elif is_hip_joint:
+                        self.output[k]['Speed'] = 4
+                    else:
+                        self.output[k]['Speed'] = 6
                     self.output[k]['Depth'] = 0 if '-1' in k else 1
 
     def write_to_json(self, filename=None):
