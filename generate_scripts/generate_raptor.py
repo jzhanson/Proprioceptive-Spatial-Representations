@@ -465,18 +465,13 @@ class GenerateRaptor:
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Head'
 
-            if self.args['rigid_spine']:
-                self.output[k]['Anchor'] = [
-                    self.start_x + 0.5 * self.args['hull_width'],
-                    self.start_y + 0.25 * self.args['hull_height']
-                ]
-            else:
-                self.output[k]['LocalAnchorA'] = [0.5 * self.args['hull_width'], 0]
-                self.output[k]['LocalAnchorB'] = [
-                    -0.5 * self.args['head_width'],
-                    0.25 * self.args['head_height']
-                ]
-                # Use neck upper/shin angles for this edge case
+            self.output[k]['LocalAnchorA'] = [0.5 * self.args['hull_width'], 0]
+            self.output[k]['LocalAnchorB'] = [
+                -0.5 * self.args['head_width'],
+                0.25 * self.args['head_height']
+            ]
+            # Use neck upper/shin angles for this edge case
+            if not self.args['rigid_spine']:
                 self.output[k]['LowerAngle'] = -0.5
                 self.output[k]['UpperAngle'] = 0.2
             return
@@ -499,16 +494,17 @@ class GenerateRaptor:
             1,
             self.args[neck_or_tail + '_segments']
         )
+        # Used to use current_x and current_y for building weld joints, don't anymore
         current_x = self.start_x + x_dir * 0.5 * self.args['hull_width']
         current_y = self.start_y + 0.5 * (self.args['hull_height'] - current_height)
-        if self.args['rigid_spine']:
-            self.output[k]['Anchor'] = [current_x, current_y]
-        else:
-            self.output[k]['LocalAnchorA'] = [
-                x_dir * 0.5 * self.args['hull_width'],
-                0.5 * (self.args['hull_height'] - current_height)
-            ]
-            self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+
+        self.output[k]['LocalAnchorA'] = [
+            x_dir * 0.5 * self.args['hull_width'],
+            0.5 * (self.args['hull_height'] - current_height)
+        ]
+        self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+
+        if not self.args['rigid_spine']:
             self.output[k]['LowerAngle'] = -0.5
             self.output[k]['UpperAngle'] = 0.2
         joint_counter += 1
@@ -534,14 +530,14 @@ class GenerateRaptor:
             self.output[k] = {}
             self.output[k]['BodyA'] = title_neck_or_tail + str(i)
             self.output[k]['BodyB'] = title_neck_or_tail + str(i+1)
-            if self.args['rigid_spine']:
-                self.output[k]['Anchor'] = [current_x, current_y]
-            else:
-                self.output[k]['LocalAnchorA'] = [
-                    x_dir * 0.5 * prev_width,
-                    0.5 * (prev_height - current_height)
-                ]
-                self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+            #self.output[k]['Anchor'] = [current_x, current_y]
+            self.output[k]['LocalAnchorA'] = [
+                x_dir * 0.5 * prev_width,
+                0.5 * (prev_height - current_height)
+            ]
+            self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+
+            if not self.args['rigid_spine']:
                 self.output[k]['LowerAngle'] = -0.5
                 self.output[k]['UpperAngle'] = 0.2
             joint_counter += 1
@@ -560,14 +556,13 @@ class GenerateRaptor:
                 self.args['neck_segments']
             )
             current_x += current_width
-            if self.args['rigid_spine']:
-                self.output[k]['Anchor'] = [current_x, current_y]
-            else:
-                self.output[k]['LocalAnchorA'] = [x_dir * 0.5 * current_width, 0]
-                self.output[k]['LocalAnchorB'] = [
-                    -0.5 * self.args['head_width'],
-                    0.25 * self.args['head_height']
-                ]
+            self.output[k]['LocalAnchorA'] = [x_dir * 0.5 * current_width, 0]
+            self.output[k]['LocalAnchorB'] = [
+                -0.5 * self.args['head_width'],
+                0.25 * self.args['head_height']
+            ]
+
+            if not self.args['rigid_spine']:
                 self.output[k]['LowerAngle'] = -0.9
                 self.output[k]['UpperAngle'] = 0.7
             joint_counter += 1

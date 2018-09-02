@@ -244,6 +244,7 @@ class GenerateBipedal:
                 current_y = current_y - 0.5 * self.args['lower_height']
 
     def build_joints(self):
+        # current_x is unused, used to be used for calculating 'Anchor' for weld joints
         current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
         for i in range(self.args['body_segments'] - 1):
             if self.is_adj_to_hull(i) == 'left':
@@ -260,11 +261,10 @@ class GenerateBipedal:
             self.output[k]['DataType'] = 'Linkage' if self.args['rigid_spine'] else 'JointMotor'
             self.output[k]['BodyA'] = body_a
             self.output[k]['BodyB'] = body_b
-            if self.args['rigid_spine']:
-                self.output[k]['Anchor'] = [current_x, self.start_y]
-            else:
-                self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width, 0]
-                self.output[k]['LocalAnchorB'] = [-0.5 * self.hull_segment_width, 0]
+            self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width, 0]
+            self.output[k]['LocalAnchorB'] = [-0.5 * self.hull_segment_width, 0]
+
+            if not self.args['rigid_spine']:
                 self.output[k]['EnableMotor'] = self.args['spine_motors']
                 self.output[k]['EnableLimit'] = True
                 self.output[k]['MaxMotorTorque'] = 80
@@ -273,7 +273,6 @@ class GenerateBipedal:
                 self.output[k]['UpperAngle'] = 0.2
                 self.output[k]['Speed'] = 1
                 self.output[k]['Depth'] = 0
-
 
             current_x += self.hull_segment_width
 

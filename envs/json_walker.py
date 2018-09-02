@@ -130,11 +130,12 @@ class JSONWalker(gym.Env):
             else:
                 assert(False)
 
-        num_joints = len(self.joint_defs.keys())
+        self.enabled_joints_keys = [k for k in self.joint_defs.keys() if self.joint_defs[k]['EnableMotor']]
+        num_enabled_joints = len(self.enabled_joints_keys)
         high = np.array( [np.inf]*(5*len(self.body_defs)+2*len(self.joint_defs)+10) )
 
         self.action_space = spaces.Box(
-            np.array([-1.0]*num_joints), np.array([+1.0]*num_joints))
+            np.array([-1.0]*num_enabled_joints), np.array([+1.0]*num_enabled_joints))
         self.observation_space = spaces.Box(-high, high)
 
     def seed(self, seed=None):
@@ -390,14 +391,11 @@ class JSONWalker(gym.Env):
             self.linkages[k] = self.world.CreateJoint(weldJointDef(
                 bodyA=self.bodies[self.linkage_defs[k]['BodyA']],
                 bodyB=self.bodies[self.linkage_defs[k]['BodyB']],
-                anchor=[x/SCALE for x in self.linkage_defs[k]['Anchor']]
-                #localAnchorA=[x/SCALE
-                #              for x in self.joint_defs[k]['LocalAnchorA']],
-                #localAnchorB=[y/SCALE
-                #              for y in self.joint_defs[k]['LocalAnchorB']],
+                localAnchorA=[x/SCALE for x in self.linkage_defs[k]['LocalAnchorA']],
+                localAnchorB=[x/SCALE for x in self.linkage_defs[k]['LocalAnchorB']]
             ))
 
-        self.joint_action_order = copy.deepcopy(list(self.joints.keys()))
+        self.joint_action_order = copy.deepcopy(list(self.enabled_joints_keys))
         for i in range(len(self.joint_action_order)):
             k = self.joint_action_order[i]
             self.joints[k].index = i
