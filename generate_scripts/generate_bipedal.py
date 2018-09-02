@@ -271,7 +271,7 @@ class GenerateBipedal:
                 self.output[k]['MotorSpeed'] = 0.0
                 self.output[k]['LowerAngle'] = -0.5
                 self.output[k]['UpperAngle'] = 0.2
-                self.output[k]['Speed'] = 1
+                self.output[k]['Speed'] = 4
                 self.output[k]['Depth'] = 0
 
             current_x += self.hull_segment_width
