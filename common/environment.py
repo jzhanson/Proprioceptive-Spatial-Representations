@@ -10,6 +10,7 @@ from envs.gish_walker import GishWalker, GishWalkerHardcore
 
 from envs.json_walker import JSONWalker, JSONWalkerHardcore
 from envs.random_json_walker import RandomJSONWalker, RandomJSONWalkerHardcore
+from envs.iterate_json_walker import IterateJSONWalker, IterateJSONWalkerHardcore
 from envs.grid_bipedal_walker import GridBipedalWalker, GridBipedalWalkerHardcore
 from envs.halfgrid_bipedal_walker import HalfGridBipedalWalker, HalfGridBipedalWalkerHardcore
 
@@ -34,6 +35,10 @@ def create_env(env_id, args):
         env = RandomJSONWalker(env_id[len('RandomJSONWalker-'):])
     elif env_id.startswith('RandomJSONWalkerHardcore-'):
         env = RandomJSONWalkerHardcore(env_id[len('RandomJSONWalkerHardcore-'):])
+    elif env_id.startswith('IterateJSONWalker-'):
+        env = IterateJSONWalker(env_id[len('IterateJSONWalker-'):])
+    elif env_id.startswith('IterateJSONWalkerHardcore-'):
+        env = IterateJSONWalkerHardcore(env_id[len('IterateJSONWalkerHardcore-'):])
     elif env_id == 'GridBipedalWalker-v0':
         env = GridBipedalWalker()
     elif env_id == 'GridBipedalWalkerHardcore-v0':

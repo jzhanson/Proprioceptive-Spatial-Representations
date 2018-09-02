@@ -13,8 +13,7 @@ from gym.utils import colorize, seeding
 import torch
 from torch.autograd import Variable
 
-#from envs.json_walker import JSONWalker
-from json_walker import JSONWalker
+from envs.json_walker import JSONWalker
 
 class IterateJSONWalker(JSONWalker):
     hardcore = False
