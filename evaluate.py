@@ -54,7 +54,8 @@ def evaluate(args):
     player = Agent(None, env, args, None)
 
     # Wrap the environment so that it saves a video
-    player.env = gym.wrappers.Monitor(player.env, output_dir, force=True)
+    if args['render_video']:
+        player.env = gym.wrappers.Monitor(player.env, output_dir, force=True)
 
     AC = importlib.import_module(args['model_name'])
     player.model = AC.ActorCritic(
@@ -112,9 +113,15 @@ if __name__=='__main__':
                 'type' : int,
                 'metavar' : 'NE',
                 'help' : 'how many epiosdes in evaluation (default: 100)'
+            },
+            'render_video' : {
+                'name' : '--render-video',
+                'metavar' : 'RV',
+                'help' : 'whether to render evaluation episodes'
             }
         },
         additional_default_args={
-            'num_episodes' : 100
+            'num_episodes' : 100,
+            'render_video' : False
         }
     ))

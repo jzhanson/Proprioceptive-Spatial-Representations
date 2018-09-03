@@ -131,12 +131,19 @@ def parse_cmdline_args(additional_parser_args={}):
         metavar='EID',
         help='Experiment ID for process-naming purposes (default: "")')
     for k in additional_parser_args.keys():
-        parser.add_argument(
-            additional_parser_args[k]['name'],
-            type=additional_parser_args[k]['type'],
-            metavar=additional_parser_args[k]['metavar'],
-            help=additional_parser_args[k]['help']
-        )
+        if 'type' in additional_parser_args[k]:
+            parser.add_argument(
+                additional_parser_args[k]['name'],
+                type=additional_parser_args[k]['type'],
+                metavar=additional_parser_args[k]['metavar'],
+                help=additional_parser_args[k]['help']
+            )
+        else:
+            parser.add_argument(
+                additional_parser_args[k]['name'],
+                metavar=additional_parser_args[k]['metavar'],
+                help=additional_parser_args[k]['help'],
+            )
     return vars(parser.parse_args())
 
 def parse_json_args(jsonfn):
