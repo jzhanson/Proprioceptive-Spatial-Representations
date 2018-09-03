@@ -56,6 +56,8 @@ class ActorCritic(torch.nn.Module):
             self.memsizes.append(copy.deepcopy(_is))
             self.convh0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
             self.convc0.append(nn.Parameter(torch.zeros((1,)+self.memsizes[i])))
+        self._convh0_module = nn.ParameterList(self.convh0)
+        self._convc0_module = nn.ParameterList(self.convc0)
  
         self.critic_linear = nn.Conv2d(128, 2, 3, stride=1, padding=1)
         self.actor_linear  = nn.Conv2d(128, 2, 3, stride=1, padding=1)
