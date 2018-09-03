@@ -397,8 +397,9 @@ class JSONWalker(gym.Env):
             ))
 
         self.joint_action_order = copy.deepcopy(list(self.enabled_joints_keys))
-        for i in range(len(self.joint_action_order)):
-            k = self.joint_action_order[i]
+        self.all_joints_order = copy.deepcopy(self.joint_action_order) + copy.deepcopy([k for k in self.joint_defs.keys() if k not in self.joint_action_order])
+        for i in range(len(self.all_joints_order)):
+            k = self.all_joints_order[i]
             self.joints[k].index = i
 
         # Construct index links between bodies and joints
@@ -468,14 +469,14 @@ class JSONWalker(gym.Env):
                 0.3*self.bodies[k].linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
                 1.0 if self.bodies[k].ground_contact else 0.0
             ]
-        for i in range(len(self.joint_action_order)):
-            k = self.joint_action_order[i]
+        for i in range(len(self.all_joints_order)):
+            k = self.all_joints_order[i]
             state += [
                 self.joints[k].angle,
                 self.joints[k].speed / self.joint_defs[k]['Speed'],
             ]
         state += [l.fraction for l in self.lidar]
-        assert len(state)==(5*len(self.body_state_order)+2*len(self.joint_action_order)+10)
+        assert len(state)==(5*len(self.body_state_order)+2*len(self.all_joints_order)+10)
 
         return state
 
@@ -552,8 +553,8 @@ class JSONWalker(gym.Env):
                 b.connected_joints
             ))
         info['joints'] = []
-        for i in range(len(self.joint_action_order)):
-            k = self.joint_action_order[i]
+        for i in range(len(self.all_joints_order)):
+            k = self.all_joints_order[i]
             j = self.joints[k]
             info['joints'].append((
                 j.anchorA.x, j.anchorA.y, j.anchorB.x, j.anchorB.y,
