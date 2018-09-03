@@ -1,5 +1,6 @@
 from __future__ import division
 import os
+import datetime
 os.environ["OMP_NUM_THREADS"] = "1"
 import argparse
 import importlib
@@ -26,10 +27,17 @@ def evaluate(args):
 
     pthfile = torch.load(args['load_file'], map_location=lambda storage, loc: storage.cpu())
 
-    save_dir = args['save_directory']+'/'
+    # Create the output directory
+    output_dir = os.path.join(os.path.dirname(args['load_file']), 'evaluation-'+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f"))
+    try:
+        os.makedirs(output_dir)
+    except OSError:
+        if not os.path.isdir(output_dir):
+            raise
+    print('saving to: '+output_dir+'/')
 
     log = {}
-    setup_logger('test.log', r'{0}/test.log'.format(save_dir))
+    setup_logger('test.log', r'{0}/test.log'.format(output_dir))
     log['test.log'] = logging.getLogger('test.log')
 
     gpu_id = args['gpu_ids'][-1]
@@ -44,6 +52,9 @@ def evaluate(args):
 
     env = create_env(args['env'], args)
     player = Agent(None, env, args, None)
+
+    # Wrap the environment so that it saves a video
+    player.env = gym.wrappers.Monitor(player.env, output_dir, force=True)
 
     AC = importlib.import_module(args['model_name'])
     player.model = AC.ActorCritic(
