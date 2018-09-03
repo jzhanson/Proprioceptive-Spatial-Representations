@@ -8,21 +8,42 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
-    parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
-    parser.set_defaults(rigid_spine=False)
+    parser.add_argument('--rigid-neck', dest='rigid_neck', action='store_true')
+    parser.add_argument('--no-rigid-neck', dest='rigid_neck', action='store_false')
+    parser.set_defaults(rigid_neck=False)
+    parser.add_argument('--rigid-tail', dest='rigid_tail', action='store_true')
+    parser.add_argument('--no-rigid-tail', dest='rigid_tail', action='store_false')
+    parser.set_defaults(rigid_tail=False)
+    parser.add_argument('--rigid-legs', dest='rigid_legs', action='store_true')
+    parser.add_argument('--no-rigid-legs', dest='rigid_legs', action='store_false')
+    parser.set_defaults(rigid_legs=False)
     parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
     parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
     parser.set_defaults(spine_motors=True)
-    parser.add_argument('--rigid-foot', dest='rigid_foot', action='store_true')
-    parser.add_argument('--no-rigid-foot', dest='rigid_foot', action='store_false')
-    parser.set_defaults(rigid_foot=False)
+    parser.add_argument('--fixed-foot', dest='fixed_foot', action='store_true')
+    parser.add_argument('--no-fixed-foot', dest='fixed_foot', action='store_false')
+    parser.set_defaults(fixed_foot=False)
     parser.add_argument('--bipedal-legs', dest='bipedal_legs', action='store_true')
     parser.add_argument('--no-bipedal-legs', dest='bipedal_legs', action='store_false')
     parser.set_defaults(bipedal_legs=False)
     parser.add_argument('--build-head', dest='build_head', action='store_true')
     parser.add_argument('--no-build-head', dest='build_head', action='store_false')
     parser.set_defaults(build_head=True)
+    parser.add_argument(
+        '--neck-frequency',
+        type=float,
+        default=1.0,
+        help='FrequencyHz of neck weld joint if rigid-neck option used (default 1.0)')
+    parser.add_argument(
+        '--tail-frequency',
+        type=float,
+        default=1.0,
+        help='FrequencyHz of tail weld joint if rigid-tail option used (default 1.0)')
+    parser.add_argument(
+        '--leg-frequency',
+        type=float,
+        default=1.0,
+        help='FrequencyHz of leg weld joint if rigid-leg option used (default 1.0)')
     # Add option to randomize density for each body part, or interpolate density on neck/tail
     # Can also change restitution?
     parser.add_argument(
@@ -477,29 +498,37 @@ class GenerateRaptor:
         x_dir = 1.0 if neck_or_tail == 'neck' else -1.0
         joint_counter = 0 if neck_or_tail == 'neck' else self.args['neck_segments'] + 1
 
-        if neck_or_tail == 'neck' and self.args['neck_segments'] == 0 and self.args['build_head']:
-            k = 'Joint' + str(joint_counter) + '.Hull.Head'
-            self.output[k] = {}
-            self.output[k]['BodyA'] = 'Hull'
-            self.output[k]['BodyB'] = 'Head'
+        joint_types = ['Joint', 'Weld'] if self.args['rigid_' + neck_or_tail] else ['Joint']
 
-            self.output[k]['LocalAnchorA'] = [0.5 * self.args['hull_width'], 0]
-            self.output[k]['LocalAnchorB'] = [
-                -0.5 * self.args['head_width'],
-                0.25 * self.args['head_height']
-            ]
-            # Use neck upper/shin angles for this edge case
-            if not self.args['rigid_spine']:
-                self.output[k]['LowerAngle'] = -0.5
-                self.output[k]['UpperAngle'] = 0.2
+        # First, special case if no neck-segments
+        if neck_or_tail == 'neck' and self.args['neck_segments'] == 0 and self.args['build_head']:
+            for joint_type in joint_types:
+                k = joint_type + str(joint_counter) + '.Hull.Head'
+                self.output[k] = {}
+                self.output[k]['BodyA'] = 'Hull'
+                self.output[k]['BodyB'] = 'Head'
+
+                self.output[k]['LocalAnchorA'] = [0.5 * self.args['hull_width'], 0]
+                self.output[k]['LocalAnchorB'] = [
+                    -0.5 * self.args['head_width'],
+                    0.25 * self.args['head_height']
+                ]
+                # Use neck upper/shin angles for this edge case
+                if joint_type == 'Joint':
+                    self.output[k]['LowerAngle'] = -0.5
+                    self.output[k]['UpperAngle'] = 0.2
+                elif joint_type == 'Weld':
+                    self.output[k]['FrequencyHz'] = self.args['neck_frequencyhz']
             return
         elif self.args[neck_or_tail + '_segments'] == 0:
             return
 
-        k = 'Joint' + str(joint_counter) + '.Hull.' + title_neck_or_tail + '0'
-        self.output[k] = {}
-        self.output[k]['BodyA'] = 'Hull'
-        self.output[k]['BodyB'] = title_neck_or_tail + '0'
+        # Second, build joint adjacent to hull
+        for joint_type in joint_types:
+            k = joint_type + str(joint_counter) + '.Hull.' + title_neck_or_tail + '0'
+            self.output[k] = {}
+            self.output[k]['BodyA'] = 'Hull'
+            self.output[k]['BodyB'] = title_neck_or_tail + '0'
         current_width = ith_between(
             self.args['hull_width'],
             self.args[neck_or_tail + '_width'],
@@ -516,19 +545,24 @@ class GenerateRaptor:
         current_x = self.start_x + x_dir * 0.5 * self.args['hull_width']
         current_y = self.start_y + 0.5 * (self.args['hull_height'] - current_height)
 
-        self.output[k]['LocalAnchorA'] = [
-            x_dir * 0.5 * self.args['hull_width'],
-            0.5 * (self.args['hull_height'] - current_height)
-        ]
-        self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+        for joint_type in joint_types:
+            k = joint_type + str(joint_counter) + '.Hull.' + title_neck_or_tail + '0'
+            self.output[k]['LocalAnchorA'] = [
+                x_dir * 0.5 * self.args['hull_width'],
+                0.5 * (self.args['hull_height'] - current_height)
+            ]
+            self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
 
-        if not self.args['rigid_spine']:
-            self.output[k]['LowerAngle'] = -0.5
-            self.output[k]['UpperAngle'] = 0.2
+            if joint_type == 'Joint':
+                self.output[k]['LowerAngle'] = -0.5
+                self.output[k]['UpperAngle'] = 0.2
+            elif joint_type == 'Weld':
+                self.output[k]['FrequencyHz'] = self.args[neck_or_tail + '_frequency']
+
         joint_counter += 1
 
+        # Third, build rest of joints
         for i in range(self.args[neck_or_tail + '_segments'] - 1):
-            k = 'Joint' + str(joint_counter) + '.' + title_neck_or_tail + str(i) + '.' + title_neck_or_tail + str(i+1)
             prev_width = current_width
             prev_height = current_height
             current_width= ith_between(
@@ -545,28 +579,29 @@ class GenerateRaptor:
             )
             current_x += x_dir * prev_width
             current_y += 0.5 * (prev_height - current_height)
-            self.output[k] = {}
-            self.output[k]['BodyA'] = title_neck_or_tail + str(i)
-            self.output[k]['BodyB'] = title_neck_or_tail + str(i+1)
-            #self.output[k]['Anchor'] = [current_x, current_y]
-            self.output[k]['LocalAnchorA'] = [
-                x_dir * 0.5 * prev_width,
-                0.5 * (prev_height - current_height)
-            ]
-            self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
 
-            if not self.args['rigid_spine']:
-                self.output[k]['LowerAngle'] = -0.5
-                self.output[k]['UpperAngle'] = 0.2
+            for joint_type in joint_types:
+                k = joint_type + str(joint_counter) + '.' + title_neck_or_tail + str(i) + '.' + title_neck_or_tail + str(i+1)
+                self.output[k] = {}
+                self.output[k]['BodyA'] = title_neck_or_tail + str(i)
+                self.output[k]['BodyB'] = title_neck_or_tail + str(i+1)
+                #self.output[k]['Anchor'] = [current_x, current_y]
+                self.output[k]['LocalAnchorA'] = [
+                    x_dir * 0.5 * prev_width,
+                    0.5 * (prev_height - current_height)
+                ]
+                self.output[k]['LocalAnchorB'] = [-x_dir * 0.5 * current_width, 0]
+
+                if joint_type == 'Joint':
+                    self.output[k]['LowerAngle'] = -0.5
+                    self.output[k]['UpperAngle'] = 0.2
+                elif joint_type == 'Weld':
+                    self.output[k]['FrequencyHz'] = self.args[neck_or_tail + '_frequency']
+
             joint_counter += 1
 
-        # If building neck joints, build head joint
+        # Fourth, if building neck joints, build head joint
         if neck_or_tail == 'neck' and self.args['build_head']:
-            # Head-neck joint
-            k = 'Joint' + str(joint_counter) + '.Neck' + str(self.args['neck_segments'] - 1) + '.Head'
-            self.output[k] = {}
-            self.output[k]['BodyA'] = 'Neck' + str(self.args['neck_segments'] - 1)
-            self.output[k]['BodyB'] = 'Head'
             current_width = ith_between(
                 self.args['hull_width'],
                 self.args['neck_width'],
@@ -574,59 +609,78 @@ class GenerateRaptor:
                 self.args['neck_segments']
             )
             current_x += current_width
-            self.output[k]['LocalAnchorA'] = [x_dir * 0.5 * current_width, 0]
-            self.output[k]['LocalAnchorB'] = [
-                -0.5 * self.args['head_width'],
-                0.25 * self.args['head_height']
-            ]
+            for joint_type in joint_types:
+                # Head-neck joint
+                k = joint_type + str(joint_counter) + '.Neck' + str(self.args['neck_segments'] - 1) + '.Head'
+                self.output[k] = {}
+                self.output[k]['BodyA'] = 'Neck' + str(self.args['neck_segments'] - 1)
+                self.output[k]['BodyB'] = 'Head'
+                self.output[k]['LocalAnchorA'] = [x_dir * 0.5 * current_width, 0]
+                self.output[k]['LocalAnchorB'] = [
+                    -0.5 * self.args['head_width'],
+                    0.25 * self.args['head_height']
+                ]
 
-            if not self.args['rigid_spine']:
-                self.output[k]['LowerAngle'] = -0.9
-                self.output[k]['UpperAngle'] = 0.7
+                if joint_type == 'Joint':
+                    self.output[k]['LowerAngle'] = -0.9
+                    self.output[k]['UpperAngle'] = 0.7
+                elif joint_type == 'Weld':
+                    self.output[k]['FrequencyHz'] = self.args['neck_frequency']
+
             joint_counter += 1
 
     def build_leg_joints(self):
         joint_counter = self.args['neck_segments'] + self.args['tail_segments'] + 1
         leg_names = ['Thigh', 'Shin'] if self.args['bipedal_legs'] else ['Thigh', 'Shin', 'Foot', 'Toes']
 
+        joint_types = ['Joint', 'Weld'] if self.args['rigid_legs'] else ['Joint']
+
         for sign in [-1, +1]:
-            k = 'Joint' + str(joint_counter) + '.Hull.Thigh' + str(sign)
-            self.output[k] = {}
-            self.output[k]['BodyA'] = 'Hull'
-            self.output[k]['BodyB'] = 'Thigh' + str(sign)
-            self.output[k]['LocalAnchorA'] = [0.0, 0.0]
-            self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args['thigh_height']]
-            self.output[k]['LowerAngle'] = -0.8
-            self.output[k]['UpperAngle'] = 1.1
+            for joint_type in joint_types:
+                k = joint_type + str(joint_counter) + '.Hull.Thigh' + str(sign)
+                self.output[k] = {}
+                self.output[k]['BodyA'] = 'Hull'
+                self.output[k]['BodyB'] = 'Thigh' + str(sign)
+                self.output[k]['LocalAnchorA'] = [0.0, 0.0]
+                self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args['thigh_height']]
+                if joint_type == 'Joint':
+                    self.output[k]['LowerAngle'] = -0.8
+                    self.output[k]['UpperAngle'] = 1.1
+                elif joint_type == 'Weld':
+                    self.output[k]['FrequencyHz'] = self.args['leg_frequency']
 
             joint_counter += 1
 
             for i in range(len(leg_names)-1):
-                k = 'Joint' + str(joint_counter) + '.' + leg_names[i] + str(sign) + '.' + leg_names[i+1] + str(sign)
-                self.output[k] = {}
-                self.output[k]['BodyA'] = leg_names[i] + str(sign)
-                self.output[k]['BodyB'] = leg_names[i+1] + str(sign)
-                self.output[k]['LocalAnchorA'] = [0.0, -0.5 * self.args[leg_names[i].lower() + '_height']]
-                self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args[leg_names[i+1].lower() + '_height']]
-                if leg_names[i] == 'Thigh':
-                    if self.args['bipedal_legs']:
-                        self.output[k]['LowerAngle'] = -1.6
-                        self.output[k]['UpperAngle'] = -0.1
-                    else:
-                        self.output[k]['LowerAngle'] = -0.8
-                        self.output[k]['UpperAngle'] = 1.1
-                elif leg_names[i] == 'Shin':
-                    self.output[k]['LowerAngle'] = -0.8
-                    self.output[k]['UpperAngle'] = 0.5
-                elif leg_names[i] == 'Foot':
-                    if self.args['rigid_foot']:
-                        self.output[k]['LowerAngle'] = 0.4
-                        self.output[k]['UpperAngle'] = 0.4
-                    else:
-                        self.output[k]['LowerAngle'] = -0.8
-                        self.output[k]['UpperAngle'] = 0.8
+                for joint_type in joint_types:
+                    k = joint_type + str(joint_counter) + '.' + leg_names[i] + str(sign) + '.' + leg_names[i+1] + str(sign)
+                    self.output[k] = {}
+                    self.output[k]['BodyA'] = leg_names[i] + str(sign)
+                    self.output[k]['BodyB'] = leg_names[i+1] + str(sign)
+                    self.output[k]['LocalAnchorA'] = [0.0, -0.5 * self.args[leg_names[i].lower() + '_height']]
+                    self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args[leg_names[i+1].lower() + '_height']]
+                    if joint_type == 'Joint':
+                        if leg_names[i] == 'Thigh':
+                            if self.args['bipedal_legs']:
+                                self.output[k]['LowerAngle'] = -1.6
+                                self.output[k]['UpperAngle'] = -0.1
+                            else:
+                                self.output[k]['LowerAngle'] = -0.8
+                                self.output[k]['UpperAngle'] = 1.1
+                        elif leg_names[i] == 'Shin':
+                            self.output[k]['LowerAngle'] = -0.8
+                            self.output[k]['UpperAngle'] = 0.5
+                        elif leg_names[i] == 'Foot':
+                            if self.args['fixed_foot']:
+                                self.output[k]['LowerAngle'] = 0.4
+                                self.output[k]['UpperAngle'] = 0.4
+                            else:
+                                self.output[k]['LowerAngle'] = -0.8
+                                self.output[k]['UpperAngle'] = 0.8
 
-                self.output[k]['Depth'] = sign + 1
+                        self.output[k]['Depth'] = sign + 1
+                    elif joint_type == 'Weld':
+                        self.output[k]['FrequencyHz'] = self.args['leg_frequency']
 
                 joint_counter += 1
 
@@ -641,23 +695,24 @@ class GenerateRaptor:
         body_names = ['Hull', 'Head', 'Neck', 'Tail']
         # Write common parts of joints
         for k in self.output.keys():
-            if 'Joint' in k:
+            if 'Joint' in k or 'Weld' in k:
                 first_body_name = k.split('.')[1]
                 second_body_name = k.split('.')[2]
 
-                is_body_joint = any(name in first_body_name for name in body_names) and any(name in second_body_name for name in body_names)
+                is_neck_joint = 'Neck' in first_body_name or 'Neck' in second_body_name
+                is_tail_joint = 'Tail' in first_body_name or 'Tail' in second_body_name
                 is_hip_joint = 'Hull' in first_body_name and 'Thigh' in second_body_name
-                if is_body_joint and self.args['rigid_spine']:
+                if 'Weld' in k:
                     self.output[k]['DataType'] = 'Linkage'
                     # Depth doesn't matter for linkages since they have no information in them
                 else:
                     self.output[k]['DataType'] = 'JointMotor'
-                    self.output[k]['EnableMotor'] = self.args['spine_motors'] if is_body_joint else True
+                    self.output[k]['EnableMotor'] = self.args['spine_motors'] if is_neck_joint or is_tail_joint else True
                     self.output[k]['EnableLimit'] = True
                     self.output[k]['MaxMotorTorque'] = 80
                     self.output[k]['MotorSpeed'] = 0.0
                     # TODO(josh): want faster body joint?
-                    if is_body_joint:
+                    if is_neck_joint or is_tail_joint:
                         self.output[k]['Speed'] = 4
                     elif is_hip_joint:
                         self.output[k]['Speed'] = 4

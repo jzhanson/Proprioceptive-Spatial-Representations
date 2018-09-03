@@ -392,7 +392,8 @@ class JSONWalker(gym.Env):
                 bodyA=self.bodies[self.linkage_defs[k]['BodyA']],
                 bodyB=self.bodies[self.linkage_defs[k]['BodyB']],
                 localAnchorA=[x/SCALE for x in self.linkage_defs[k]['LocalAnchorA']],
-                localAnchorB=[x/SCALE for x in self.linkage_defs[k]['LocalAnchorB']]
+                localAnchorB=[x/SCALE for x in self.linkage_defs[k]['LocalAnchorB']],
+                frequencyHz=self.linkage_defs[k]['FrequencyHz']
             ))
 
         self.joint_action_order = copy.deepcopy(list(self.enabled_joints_keys))
