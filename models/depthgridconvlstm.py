@@ -111,8 +111,16 @@ class ActorCritic(torch.nn.Module):
         return critic_out, actor_out, actor_out2, (convhx, convcx, frames)
 
     def initialize_memory(self):
+        #print(np.sum([torch.norm(ch0).item() for ch0 in self.convh0]),
+        #      np.sum([torch.norm(cc0).item() for cc0 in self.convc0]))
         return (
-            self.convh0, self.convc0,
+            #self.convh0,
+            #self.convc0,
+            # <!> DO NOT REMOVE BELOW CODE <!>
+            # Below code is needed to fix a strange bug in graph backprop
+            # TODO(eparisot): debug this further (low priority, might be pytorch..)
+            [ch0 for ch0 in self.convh0],
+            [cc0 for cc0 in self.convc0],
             self.frame_stack.initialize_memory())
 
     def reinitialize_memory(self, old_memory):
