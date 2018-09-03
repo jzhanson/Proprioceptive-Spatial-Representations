@@ -35,22 +35,22 @@ def parse_args():
     parser.add_argument(
         '--neck-frequency',
         type=float,
-        default=1.0,
+        default=0.0,
         help='FrequencyHz of neck weld joint if rigid-neck option used (default 1.0)')
     parser.add_argument(
         '--tail-frequency',
         type=float,
-        default=1.0,
+        default=0.0,
         help='FrequencyHz of tail weld joint if rigid-tail option used (default 1.0)')
     parser.add_argument(
         '--leg-frequency',
         type=float,
-        default=1.0,
+        default=0.0,
         help='FrequencyHz of leg weld joint if rigid-leg option used (default 1.0)')
     parser.add_argument(
         '--foot-frequency',
         type=float,
-        default=1.0,
+        default=0.0,
         help='FrequencyHz of foot weld joint if rigid-foot option used (default 1.0)')
     # Add option to randomize density for each body part, or interpolate density on neck/tail
     # Can also change restitution?
