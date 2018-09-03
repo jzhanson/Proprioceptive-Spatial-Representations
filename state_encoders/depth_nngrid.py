@@ -97,7 +97,8 @@ class NNGrid(torch.nn.Module):
             for l in info['lidar']:
                 p2_x, p2_y = self._coord_to_grid(l.p2[0], zero_x), self._coord_to_grid(l.p2[1], zero_y)
 
-                grid_state[20,p2_x,p2_y] = 1.
+                if (p2_x >= 0) and (p2_x < grid_state.size(1)) and (p2_y >= 0) and (p2_y < grid_size.size(2)):
+                    grid_state[20,p2_x,p2_y] = 1.
 
         return grid_state[None]
 
