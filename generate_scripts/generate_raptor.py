@@ -17,6 +17,9 @@ def parse_args():
     parser.add_argument('--rigid-legs', dest='rigid_legs', action='store_true')
     parser.add_argument('--no-rigid-legs', dest='rigid_legs', action='store_false')
     parser.set_defaults(rigid_legs=False)
+    parser.add_argument('--rigid-foot', dest='rigid_foot', action='store_true')
+    parser.add_argument('--no-rigid-foot', dest='rigid_foot', action='store_false')
+    parser.set_defaults(rigid_foot=False)
     parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
     parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
     parser.set_defaults(spine_motors=True)
@@ -44,6 +47,11 @@ def parse_args():
         type=float,
         default=1.0,
         help='FrequencyHz of leg weld joint if rigid-leg option used (default 1.0)')
+    parser.add_argument(
+        '--foot-frequency',
+        type=float,
+        default=1.0,
+        help='FrequencyHz of foot weld joint if rigid-foot option used (default 1.0)')
     # Add option to randomize density for each body part, or interpolate density on neck/tail
     # Can also change restitution?
     parser.add_argument(
@@ -678,7 +686,17 @@ class GenerateRaptor:
                                 self.output[k]['LowerAngle'] = -0.8
                                 self.output[k]['UpperAngle'] = 0.8
 
-                        self.output[k]['Depth'] = sign + 1
+                            # Special case, make foot rigid but not rest of legs
+                            if not self.args['rigid_legs'] and self.args['rigid_foot']:
+                                k = 'Weld' + str(joint_counter) + '.' + leg_names[i] + str(sign) + '.' + leg_names[i+1] + str(sign)
+                                self.output[k] = {}
+                                self.output[k]['BodyA'] = leg_names[i] + str(sign)
+                                self.output[k]['BodyB'] = leg_names[i+1] + str(sign)
+                                self.output[k]['LocalAnchorA'] = [0.0, -0.5 * self.args[leg_names[i].lower() + '_height']]
+                                self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args[leg_names[i+1].lower() + '_height']]
+                                self.output[k]['FrequencyHz'] =  self.args['foot_frequency']
+
+                        self.output[k]['Depth'] = (sign + 1) // 2
                     elif joint_type == 'Weld':
                         self.output[k]['FrequencyHz'] = self.args['leg_frequency']
 
