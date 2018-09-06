@@ -113,14 +113,17 @@ class ActorCritic(torch.nn.Module):
     def initialize_memory(self):
         #print(np.sum([torch.norm(ch0).item() for ch0 in self.convh0]),
         #      np.sum([torch.norm(cc0).item() for cc0 in self.convc0]))
+        use_gpu = next(self.parameters()).is_cuda
         return (
             #self.convh0,
             #self.convc0,
             # <!> DO NOT REMOVE BELOW CODE <!>
             # Below code is needed to fix a strange bug in graph backprop
             # TODO(eparisot): debug this further (low priority, might be pytorch..)
-            [ch0 for ch0 in self.convh0],
-            [cc0 for cc0 in self.convc0],
+            #[ch0 for ch0 in self.convh0],
+            #[cc0 for cc0 in self.convc0],
+            [Variable(torch.zeros(ch0.size()).cuda()) if use_gpu else Variable(torch.zeros(ch0.size())) for ch0 in self.convh0],
+            [Variable(torch.zeros(cc0.size()).cuda()) if use_gpu else Variable(torch.zeros(cc0.size())) for cc0 in self.convc0],
             self.frame_stack.initialize_memory())
 
     def reinitialize_memory(self, old_memory):
