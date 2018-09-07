@@ -12,9 +12,8 @@ class RandomizeBodies:
     def __init__(self, body_type, args):
         self.body_type = body_type
         self.args = args
-        # TODO(josh): add option to write to a different directory?
-        if not os.path.exists('box2d-json-gen'):
-            os.mkdir('box2d-json-gen')
+        if not os.path.exists(self.args['directory']):
+            os.mkdir(self.args['directory'])
 
     def build_bodies(self):
         for i in range(self.args['num_bodies']):
@@ -23,7 +22,7 @@ class RandomizeBodies:
             if body_type == 'RaptorWalker' or body_type == 'BipedalWalker':
                 gen_args['rigid_spine'] = False
                 gen_args['spine_motors'] = True
-            gen_args['filename'] = 'box2d-json-gen/' + self.args['outfile_prefix'] + str(i) + '.json'
+            gen_args['filename'] = self.args['directory'] + '/' + self.args['outfile_prefix'] + str(i) + '.json'
             for k in self.args.keys():
                 if k not in ['outfile_prefix', 'num_bodies', 'distribution']:
                     # No distribution params provided

@@ -21,6 +21,14 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
         help='How many bodies to generate'
     )
     parser.add_argument(
+        '--directory',
+        type=str,
+        default='box2d-json-gen',
+        metavar='DIR',
+        help='Directory in which to generate the randomized bodies. Will be created if does not exist. Default: box2d-json-gen'
+    )
+
+    parser.add_argument(
         '--distribution',
         type=str,
         default='uniform',
@@ -299,6 +307,7 @@ def parse_default_args(body_type, additional_default_args={}):
     if body_type == 'BipedalWalker':
         default_args = {
             'json_file' : '',
+            'directory' : 'box2d-json-gen',
             'outfile_prefix' : 'GeneratedBipedalWalker',
             'num_bodies' : 1,
             'distribution' : 'uniform',
@@ -321,6 +330,7 @@ def parse_default_args(body_type, additional_default_args={}):
     elif body_type == 'RaptorWalker':
         default_args = {
             'json_file' : '',
+            'directory' : 'box2d-json-gen',
             'outfile_prefix' : 'GeneratedRaptorWalker',
             'num_bodies' : 1,
             'distribution' : 'uniform',
