@@ -5,7 +5,7 @@ import random
 from generate_bipedal import GenerateBipedal
 from generate_centipede import GenerateCentipede
 from generate_raptor import GenerateRaptor
-from generate_dog import GenerateDog
+#from generate_dog import GenerateDog
 from randomize_args import parse_args
 
 class RandomizeBodies:
@@ -40,8 +40,8 @@ class RandomizeBodies:
                 gen = GenerateCentipede(gen_args)
             elif self.body_type == 'RaptorWalker':
                 gen = GenerateRaptor(gen_args)
-            elif self.body_type == 'DogWalker':
-                gen = GenerateDog(gen_args)
+            #elif self.body_type == 'DogWalker':
+            #    gen = GenerateDog(gen_args)
 
             gen.build()
 

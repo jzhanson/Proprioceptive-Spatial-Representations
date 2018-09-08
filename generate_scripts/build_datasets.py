@@ -34,22 +34,24 @@ class BuildDatasets:
 
         elif dataset == 'valid':
             for i in range(self.args['num_bodies']):
-                args['num_segments'] = random.choice(self.dataset_split[len(self.dataset_split) // 2:len(self.dataset_split) // 2 + len(self.dataset_split) // 4])
-                args['num_bodies'] = 1
-                randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies()
-            else:
-                randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies()
+                if type(self.dataset_split) is list:
+                    args['num_segments'] = random.choice(self.dataset_split[len(self.dataset_split) // 2:len(self.dataset_split) // 2 + len(self.dataset_split) // 4])
+                    args['num_bodies'] = 1
+                    randomize = RandomizeBodies(self.body_type, args)
+                    randomize.build_bodies()
+                else:
+                    randomize = RandomizeBodies(self.body_type, args)
+                    randomize.build_bodies()
         elif dataset == 'test':
             for i in range(self.args['num_bodies']):
-                args['num_segments'] = random.choice(self.dataset_split[len(self.dataset_split) // 2 + len(self.dataset_split) // 4:])
-                args['num_bodies'] = 1
-                randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies()
-            else:
-                randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies()
+                if type(self.dataset_split) is list:
+                    args['num_segments'] = random.choice(self.dataset_split[len(self.dataset_split) // 2 + len(self.dataset_split) // 4:])
+                    args['num_bodies'] = 1
+                    randomize = RandomizeBodies(self.body_type, args)
+                    randomize.build_bodies()
+                else:
+                    randomize = RandomizeBodies(self.body_type, args)
+                    randomize.build_bodies()
 
 if __name__ == '__main__':
     body_type = sys.argv[1] if len(sys.argv) > 1 else 'BipedalWalker'
