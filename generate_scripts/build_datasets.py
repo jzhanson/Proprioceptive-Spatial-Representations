@@ -1,3 +1,4 @@
+import copy
 import sys
 import random
 import numpy as np
@@ -16,8 +17,8 @@ class BuildDatasets:
         print(self.dataset_split)
 
     def build_dataset(self, dataset):
-        args = self.args
-        args['directory'] = self.directory + '-' + dataset
+        args = copy.deepcopy(self.args)
+        args['directory'] = self.directory + '/' + dataset
 
         # Assume even # of dataset splits
         # TODO(josh): add ways to split datasets on things besides number of body segments

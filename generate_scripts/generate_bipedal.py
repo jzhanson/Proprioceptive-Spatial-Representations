@@ -35,7 +35,7 @@ def parse_args():
         default='box2d-json-gen/GeneratedBipedalWalker.json',
         help='What to call the output JSON file')
     parser.add_argument(
-        '--body-segments',
+        '--num-segments',
         type=int,
         default=1,
         help='How many body segments to split the hull into')
