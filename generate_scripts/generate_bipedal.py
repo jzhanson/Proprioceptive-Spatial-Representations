@@ -99,18 +99,18 @@ class GenerateBipedal:
         # Currently, naively calculate total leg height
         for k in ['leg', 'lower']:
             self.start_y += self.args[k + '_height']
-        self.hull_segment_width = self.args['hull_width'] / self.args['body_segments']
-        self.odd_body_segments = self.args['body_segments'] % 2 == 1
+        self.hull_segment_width = self.args['hull_width'] / self.args['num_segments']
+        self.odd_body_segments = self.args['num_segments'] % 2 == 1
 
     # Returns True if i is the "hull" segment and False otherwise
     def is_hull_segment(self, i):
-        return (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1)
+        return (self.odd_body_segments and i == self.args['num_segments'] // 2) or (not self.odd_body_segments and i == self.args['num_segments'] // 2 - 1)
 
     # Returns 'left' if i is the segment/number left of hull and 'right' if i is directly right of hull and '' otherwise
     def is_adj_to_hull(self, i):
-        if (self.odd_body_segments and i == (self.args['body_segments'] // 2) - 1) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 2):
+        if (self.odd_body_segments and i == (self.args['num_segments'] // 2) - 1) or (not self.odd_body_segments and i == self.args['num_segments'] // 2 - 2):
             return 'left'
-        elif (self.odd_body_segments and i == self.args['body_segments'] // 2) or (not self.odd_body_segments and i == self.args['body_segments'] // 2 - 1):
+        elif (self.odd_body_segments and i == self.args['num_segments'] // 2) or (not self.odd_body_segments and i == self.args['num_segments'] // 2 - 1):
             return 'right'
         else:
             return ''
@@ -123,7 +123,7 @@ class GenerateBipedal:
         self.build_joints()
 
     def build_fixtures(self):
-        for i in range(self.args['body_segments']):
+        for i in range(self.args['num_segments']):
             # TODO(josh): separate this logic out into a helper function, is_adj_to_hull or something
             if self.is_hull_segment(i):
                 f = 'Hull' + 'Fixture'
@@ -136,7 +136,7 @@ class GenerateBipedal:
             half_width = 0.5 * self.hull_segment_width
             bottom_half_height = 0.5 * self.args['hull_height']
             # If only one hull segment, build pentagon. Else, build segment
-            if self.args['body_segments'] == 1:
+            if self.args['num_segments'] == 1:
                 self.output[f]['FixtureShape']['Vertices'] = [
                     [-half_width, bottom_half_height],
                     [0, bottom_half_height],
@@ -145,21 +145,21 @@ class GenerateBipedal:
                     [-half_width, -bottom_half_height]
                 ]
             else:
-                if (i < self.args['body_segments'] // 2):
+                if (i < self.args['num_segments'] // 2):
                     front_half_height = bottom_half_height
                     back_half_height = bottom_half_height
                 else:
                     front_half_height = ith_between(
                         self.args['hull_height'] // 2,
                         0,
-                        i - (self.args['body_segments'] // 2) + 1,
-                        self.args['body_segments']
+                        i - (self.args['num_segments'] // 2) + 1,
+                        self.args['num_segments']
                     )
                     back_half_height = ith_between(
                         self.args['hull_height'] // 2,
                         0,
-                        i - (self.args['body_segments'] // 2),
-                        self.args['body_segments']
+                        i - (self.args['num_segments'] // 2),
+                        self.args['num_segments']
                     )
                 self.output[f]['FixtureShape']['Vertices'] = [
                     [-half_width, back_half_height],
@@ -194,7 +194,7 @@ class GenerateBipedal:
             self.output[f]['CategoryBits'] = 32
 
     def build_bodies(self):
-        if self.args['body_segments'] == 1:
+        if self.args['num_segments'] == 1:
             self.output['Hull'] = {}
             self.output['Hull']['DataType'] = 'DynamicBody'
             self.output['Hull']['Position'] = [self.start_x, self.start_y]
@@ -208,10 +208,10 @@ class GenerateBipedal:
         # Segment hull into even body pieces, back to front
         else:
             current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
-            for i in range(self.args['body_segments']):
+            for i in range(self.args['num_segments']):
                 # If even number of body pieces, 'Hull' will be left-of-center piece
                 if self.is_hull_segment(i):
-                    # Body number self.args['body_segments'] / 2 is renamed as 'Hull'
+                    # Body number self.args['num_segments'] / 2 is renamed as 'Hull'
                     k = 'Hull'
                 else:
                     k = 'Body' + str(i)
@@ -246,7 +246,7 @@ class GenerateBipedal:
     def build_joints(self):
         # current_x is unused, used to be used for calculating 'Anchor' for weld joints
         current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
-        for i in range(self.args['body_segments'] - 1):
+        for i in range(self.args['num_segments'] - 1):
             if self.is_adj_to_hull(i) == 'left':
                 body_a = 'Body' + str(i)
                 body_b = 'Hull'
@@ -283,7 +283,7 @@ class GenerateBipedal:
             self.output[k]['DataType'] = 'JointMotor'
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Leg' + str(sign)
-            self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width if self.args['body_segments'] % 2 == 0 else 0, -0.5 * self.args['hull_height']]
+            self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width if self.args['num_segments'] % 2 == 0 else 0, -0.5 * self.args['hull_height']]
             self.output[k]['LocalAnchorB'] = [0, 0.5 * self.args['leg_height']]
             self.output[k]['EnableMotor'] = True
             self.output[k]['EnableLimit'] = True

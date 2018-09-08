@@ -18,18 +18,11 @@ class RandomizeBodies:
     def build_bodies(self):
         for i in range(self.args['num_bodies']):
             gen_args = {}
-            # TODO(josh): add these arguments to randomize_args
-            if body_type == 'RaptorWalker' or body_type == 'BipedalWalker':
-                gen_args['rigid_spine'] = False
-                gen_args['spine_motors'] = True
             gen_args['filename'] = self.args['directory'] + '/' + self.args['outfile_prefix'] + str(i) + '.json'
             for k in self.args.keys():
                 if k not in ['outfile_prefix', 'num_bodies', 'distribution']:
-                    # No distribution params provided
-                    if type(self.args[k]) is float or type(self.args[k]) is int:
-                        gen_args[k] = self.args[k]
                     # Distribution parameters provided
-                    elif type(self.args[k]) is list:
+                    if type(self.args[k]) is list:
                         if self.args['distribution'] == 'uniform':
                             lo = self.args[k][0]
                             hi = self.args[k][1]
@@ -37,14 +30,17 @@ class RandomizeBodies:
                                 gen_args[k] = random.randint(lo, hi)
                             else:
                                 gen_args[k] = random.uniform(lo, hi)
+                    # No distribution parameters provided
+                    else:
+                        gen_args[k] = self.args[k]
 
-            if body_type == 'BipedalWalker':
+            if self.body_type == 'BipedalWalker':
                 gen = GenerateBipedal(gen_args)
-            elif body_type == 'CentipedeWalker':
+            elif self.body_type == 'CentipedeWalker':
                 gen = GenerateCentipede(gen_args)
-            elif body_type == 'RaptorWalker':
+            elif self.body_type == 'RaptorWalker':
                 gen = GenerateRaptor(gen_args)
-            elif body_type == 'DogWalker':
+            elif self.body_type == 'DogWalker':
                 gen = GenerateDog(gen_args)
 
             gen.build()

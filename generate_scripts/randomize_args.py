@@ -67,7 +67,7 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
             help='What to prefix the name of the generated JSON file'
         )
         parser.add_argument(
-            '--body-segments',
+            '--num-segments',
             type=int,
             nargs='+',
             default=1,
@@ -311,7 +311,7 @@ def parse_default_args(body_type, additional_default_args={}):
             'outfile_prefix' : 'GeneratedBipedalWalker',
             'num_bodies' : 1,
             'distribution' : 'uniform',
-            'body_segments' : 1,
+            'num_segments' : 1,
             'rigid_spine' : False,
             'spine_motors' : True,
             'hull_density' : 5.0,
