@@ -30,7 +30,7 @@ class RandomizeBodies:
                                 gen_args[k] = random.randint(lo, hi)
                             else:
                                 gen_args[k] = random.uniform(lo, hi)
-                    # No distribution parameters provided
+                    # No distribution parameters provided or boolean parameter
                     else:
                         gen_args[k] = self.args[k]
 

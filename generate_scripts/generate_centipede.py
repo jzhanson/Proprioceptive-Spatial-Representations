@@ -21,6 +21,9 @@ def parse_args():
     parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
     parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
     parser.set_defaults(spine_motors=True)
+    parser.add_argument('--report-extra-segments', dest='report_extra_segments', action='store_true')
+    parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
+    parser.set_defaults(report_extra_segments=True)
     parser.add_argument(
         '--hull-radius',
         type=float,
@@ -113,6 +116,7 @@ class GenerateCentipede:
             self.output[hull_str]['Color2'] = [0.3, 0.3, 0.5]
             self.output[hull_str]['CanTouchGround'] = False
             self.output[hull_str]['InitialForceScale'] = 5
+            self.output[hull_str]['ReportState'] = i == 0 or self.args['report_extra_segments']
             self.output[hull_str]['Depth'] = 0
 
             # Build legs
@@ -128,7 +132,7 @@ class GenerateCentipede:
                 self.output[leg_str]['Color1'] = [0.7, 0.4, 0.6] if sign == -1 else [0.4, 0.2, 0.4]
                 self.output[leg_str]['Color2'] = [0.5, 0.3, 0.5] if sign == -1 else [0.3, 0.1, 0.2]
                 self.output[leg_str]['CanTouchGround'] = True
-                self.output[leg_str]['Depth'] = sign + 1
+                self.output[leg_str]['Depth'] = (sign + 1) % 2
 
                 hull_leg_joint_str = hull_str + leg_str + 'Joint'
                 self.output[hull_leg_joint_str] = {}
@@ -144,7 +148,8 @@ class GenerateCentipede:
                 self.output[hull_leg_joint_str]['LowerAngle'] = -3.14
                 self.output[hull_leg_joint_str]['UpperAngle'] = 3.14
                 self.output[hull_leg_joint_str]['Speed'] = 4
-                self.output[hull_leg_joint_str]['Depth'] = sign + 1
+                self.output[hull_leg_joint_str]['ReportState'] = i == 0 or self.args['report_extra_segments']
+                self.output[hull_leg_joint_str]['Depth'] = (sign + 1) % 2
 
                 lower_str = 'Lower-' + str(i) if sign == -1 else 'Lower' + str(i)
                 self.output[lower_str] = {}
@@ -155,7 +160,7 @@ class GenerateCentipede:
                 self.output[lower_str]['Color1'] = [0.7, 0.4, 0.6] if sign == -1 else [0.4, 0.2, 0.4]
                 self.output[lower_str]['Color2'] = [0.5, 0.3, 0.5] if sign == -1 else [0.3, 0.1, 0.2]
                 self.output[lower_str]['CanTouchGround'] = True
-                self.output[lower_str]['Depth'] = sign + 1
+                self.output[lower_str]['Depth'] = (sign + 1) % 2
 
                 leg_lower_joint_str = leg_str + lower_str + 'Joint'
                 self.output[leg_lower_joint_str] = {}
@@ -171,7 +176,9 @@ class GenerateCentipede:
                 self.output[leg_lower_joint_str]['LowerAngle'] = -3.14
                 self.output[leg_lower_joint_str]['UpperAngle'] = 3.14
                 self.output[leg_lower_joint_str]['Speed'] = 6
-                self.output[leg_lower_joint_str]['Depth'] = sign + 1
+                self.output[leg_lower_joint_str]['ReportState'] = i == 0 or self.args['report_extra_segments']
+
+                self.output[leg_lower_joint_str]['Depth'] = (sign + 1) % 2
 
             # Build joint for all but frontmost body
             if i < self.args['num_segments'] - 1:
@@ -192,7 +199,8 @@ class GenerateCentipede:
                     self.output[k]['LowerAngle'] = -0.5
                     self.output[k]['UpperAngle'] = 0.2
                     self.output[k]['Speed'] = 1
-                    self.output[k]['Depth'] = sign + 1
+                    self.output[k]['ReportState'] = i == 0 or self.args['report_extra_segments']
+                    self.output[k]['Depth'] = (sign + 1) % 2
 
                 # No depth for linkage since they carry no useful info
 

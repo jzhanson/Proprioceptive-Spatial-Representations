@@ -32,6 +32,10 @@ def parse_args():
     parser.add_argument('--build-head', dest='build_head', action='store_true')
     parser.add_argument('--no-build-head', dest='build_head', action='store_false')
     parser.set_defaults(build_head=True)
+    # TODO(josh): implement report-extra-segments and decide whether to report all segments > 1 or only segments > 4
+    parser.add_argument('--report-extra-segments', dest='report_extra_segments', action='store_true')
+    parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
+    parser.set_defaults(report_extra_segments=True)
     parser.add_argument(
         '--neck-frequency',
         type=float,
@@ -433,6 +437,7 @@ class GenerateRaptor:
                 self.output[k]['Color2'] = LINE_COLOR
                 self.output[k]['CanTouchGround'] = True
                 self.output[k]['InitialForceScale'] =  0
+                self.output[k]['ReportState'] = True
                 self.output[k]['Depth'] = 0 if '-1' in k else -1
 
                 # Add position and angle
@@ -488,6 +493,7 @@ class GenerateRaptor:
             self.output[body_name]['Color2'] = LINE_COLOR
             self.output[body_name]['CanTouchGround'] = 'Tail' in body_name
             self.output[body_name]['InitialForceScale'] = 100 if body_name == 'Hull' else 0
+            self.output[body_name]['ReportState'] = True
             self.output[body_name]['Depth'] = 0
 
         # Fill in position + angle for hull
@@ -736,6 +742,7 @@ class GenerateRaptor:
                         self.output[k]['Speed'] = 4
                     else:
                         self.output[k]['Speed'] = 6
+                    self.output[k]['ReportState'] = True
                     self.output[k]['Depth'] = 0 if '-1' in k else 1
 
     def write_to_json(self, filename=None):

@@ -45,6 +45,9 @@ def parse_args():
     parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
     parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
     parser.set_defaults(spine_motors=True)
+    parser.add_argument('--report-extra-segments', dest='report_extra_segments', action='store_true')
+    parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
+    parser.set_defaults(report_extra_segments=True)
     parser.add_argument(
         '--hull-width',
         type=float,
@@ -205,6 +208,7 @@ class GenerateBipedal:
             self.output['Hull']['CanTouchGround'] = False
             self.output['Hull']['InitialForceScale'] = 5
             self.output['Hull']['Depth'] = 0
+            self.output['Hull']['ReportState'] = True
         # Segment hull into even body pieces, back to front
         else:
             current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
@@ -224,6 +228,7 @@ class GenerateBipedal:
                 self.output[k]['Color2'] = LINE_COLOR
                 self.output[k]['CanTouchGround'] = False
                 self.output[k]['InitialForceScale'] = 5
+                self.output[k]['ReportState'] = k == 'Hull' or self.args['report_extra_segments']
                 self.output[k]['Depth'] = 0
                 current_x += self.hull_segment_width
 
@@ -240,6 +245,7 @@ class GenerateBipedal:
                 self.output[k]['Color1'] = LIGHT_COLOR if sign == 1 else DARK_COLOR
                 self.output[k]['Color2'] = LINE_COLOR
                 self.output[k]['CanTouchGround'] = True
+                self.output[k]['ReportState'] = True
                 self.output[k]['Depth'] = (sign + 1)//2
                 current_y = current_y - 0.5 * self.args['lower_height']
 
@@ -272,6 +278,7 @@ class GenerateBipedal:
                 self.output[k]['LowerAngle'] = -0.5
                 self.output[k]['UpperAngle'] = 0.2
                 self.output[k]['Speed'] = 4
+                self.output[k]['ReportState'] = self.args['report_extra_segments']
                 self.output[k]['Depth'] = 0
 
             current_x += self.hull_segment_width
@@ -292,6 +299,7 @@ class GenerateBipedal:
             self.output[k]['LowerAngle'] = -0.8
             self.output[k]['UpperAngle'] = 1.1
             self.output[k]['Speed'] = 4
+            self.output[k]['ReportState'] = True
             self.output[k]['Depth'] = (sign + 1)//2
 
             k = 'Leg' + str(sign) + 'Lower' + str(sign) + 'Joint'
@@ -308,6 +316,7 @@ class GenerateBipedal:
             self.output[k]['LowerAngle'] = -1.6
             self.output[k]['UpperAngle'] = -0.1
             self.output[k]['Speed'] = 6
+            self.output[k]['ReportState'] = True
             self.output[k]['Depth'] = (sign + 1)//2
 
     def write_to_json(self, filename=None):

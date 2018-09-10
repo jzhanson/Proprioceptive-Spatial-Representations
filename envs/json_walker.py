@@ -131,8 +131,10 @@ class JSONWalker(gym.Env):
                 assert(False)
 
         self.enabled_joints_keys = [k for k in self.joint_defs.keys() if self.joint_defs[k]['EnableMotor']]
+        self.joints_to_report_keys = [k for k in self.joint_defs.keys() if self.joint_defs[k]['ReportState']]
+        self.bodies_to_report_keys = [k for k in self.body_defs.keys() if self.body_defs[k]['ReportState']]
         num_enabled_joints = len(self.enabled_joints_keys)
-        high = np.array( [np.inf]*(5*len(self.body_defs)+2*len(self.joint_defs)+10) )
+        high = np.array( [np.inf]*(5*len(self.bodies_to_report_keys)+2*len(self.joints_to_report_keys)+10) )
 
         self.action_space = spaces.Box(
             np.array([-1.0]*num_enabled_joints), np.array([+1.0]*num_enabled_joints), dtype=np.float32)
@@ -356,9 +358,10 @@ class JSONWalker(gym.Env):
                 self.bodies[k].ApplyForceToCenter(
                     (self.np_random.uniform(-self.body_defs[k]['InitialForceScale'], self.body_defs[k]['InitialForceScale']),
                      0), True)
-        self.body_state_order = copy.deepcopy(list(self.bodies.keys()))
-        for i in range(len(self.body_state_order)):
-            k = self.body_state_order[i]
+        self.body_state_order = copy.deepcopy(list(self.bodies_to_report_keys))
+        self.all_bodies_order = copy.deepcopy(self.body_state_order) + copy.deepcopy([k for k in self.body_defs.keys() if k not in self.body_state_order])
+        for i in range(len(self.all_bodies_order)):
+            k = self.all_bodies_order[i]
             self.bodies[k].index = i
 
         # Process the joint motors
@@ -396,8 +399,10 @@ class JSONWalker(gym.Env):
                 frequencyHz=self.linkage_defs[k]['FrequencyHz']
             ))
 
+        # Joints we want to report state is a superset of joints we want to allow action
         self.joint_action_order = copy.deepcopy(list(self.enabled_joints_keys))
-        self.all_joints_order = copy.deepcopy(self.joint_action_order) + copy.deepcopy([k for k in self.joint_defs.keys() if k not in self.joint_action_order])
+        self.joint_state_order = copy.deepcopy(self.joint_action_order) + copy.deepcopy([k for k in self.joint_defs.keys() if k not in self.joint_action_order and self.joint_defs[k]['ReportState']])
+        self.all_joints_order = copy.deepcopy(self.joint_state_order) + copy.deepcopy([k for k in self.joint_defs.keys() if k not in self.joint_state_order])
         for i in range(len(self.all_joints_order)):
             k = self.all_joints_order[i]
             self.joints[k].index = i
@@ -469,14 +474,14 @@ class JSONWalker(gym.Env):
                 0.3*self.bodies[k].linearVelocity.y*(VIEWPORT_H/SCALE)/FPS,
                 1.0 if self.bodies[k].ground_contact else 0.0
             ]
-        for i in range(len(self.all_joints_order)):
-            k = self.all_joints_order[i]
+        for i in range(len(self.joint_state_order)):
+            k = self.joint_state_order[i]
             state += [
                 self.joints[k].angle,
                 self.joints[k].speed / self.joint_defs[k]['Speed'],
             ]
         state += [l.fraction for l in self.lidar]
-        assert len(state)==(5*len(self.body_state_order)+2*len(self.all_joints_order)+10)
+        assert len(state)==(5*len(self.body_state_order)+2*len(self.joint_state_order)+10)
 
         return state
 
@@ -553,8 +558,8 @@ class JSONWalker(gym.Env):
                 b.connected_joints
             ))
         info['joints'] = []
-        for i in range(len(self.all_joints_order)):
-            k = self.all_joints_order[i]
+        for i in range(len(self.joint_state_order)):
+            k = self.joint_state_order[i]
             j = self.joints[k]
             info['joints'].append((
                 j.anchorA.x, j.anchorA.y, j.anchorB.x, j.anchorB.y,
@@ -725,10 +730,12 @@ if __name__=="__main__":
     #env = JSONWalker("box2d-json/BipedalWalker.json")
     #env = JSONWalker('box2d-json/HumanoidWalker.json')
     #env = JSONWalker('box2d-json/HumanoidFeetWalker.json')
-    env = JSONWalker('box2d-json/RaptorWalker.json')
+    #env = JSONWalker('box2d-json/RaptorWalker.json')
     #env = JSONWalkerHardcore('box2d-json/DogWalker.json')
     #env = JSONWalker('box2d-json/CentipedeWalker.json')
-    #env = JSONWalker('box2d-json/GeneratedCentipedeWalker.json')
+    env = JSONWalker('box2d-json-gen-bipedal-segments-baseline/train/GeneratedBipedalWalker0.json')
+    #env = JSONWalker('box2d-json-gen/GeneratedCentipedeWalker.json')
+    #env = JSONWalker('box2d-json-gen/GeneratedRaptorWalker.json')
 
     steps = 0
     total_reward = 0
@@ -742,7 +749,9 @@ if __name__=="__main__":
     supporting_knee_angle = SUPPORT_KNEE_ANGLE
     while True:
         env.render()
-        a = np.zeros(env.action_space.shape)
+        a = env.action_space.sample()
+        #a = np.zeros(env.action_space.shape)
+        time.sleep(0.2)
         _, r, done, info = env.step(a)
         if done:
             env.reset()
