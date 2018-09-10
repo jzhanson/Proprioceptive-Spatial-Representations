@@ -433,7 +433,7 @@ class JSONWalker(gym.Env):
         # Construct index links between joints connected to same body
         for k_joint in self.joints.keys():
             for i_body in self.joints[k_joint].connected_body:
-                k_body = self.body_state_order[i_body]
+                k_body = self.all_bodies_order[i_body]
                 for i_jointB in self.bodies[k_body].connected_joints:
                     # Avoid adding self-links
                     if self.joints[k_joint].index == i_jointB:
