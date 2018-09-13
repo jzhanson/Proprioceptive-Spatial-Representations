@@ -15,7 +15,7 @@ class RandomizeBodies:
         if not os.path.exists(self.args['directory']):
             os.mkdir(self.args['directory'])
 
-    def build_bodies(self):
+    def build_bodies(self, metafile=None):
         for i in range(self.args['num_bodies']):
             gen_args = {}
             gen_args['filename'] = self.args['directory'] + '/' + self.args['outfile_prefix'] + str(i) + '.json'
@@ -33,6 +33,9 @@ class RandomizeBodies:
                     # No distribution parameters provided or boolean parameter
                     else:
                         gen_args[k] = self.args[k]
+
+            if metafile is not None:
+                metafile.write(gen_args['filename'] + '\n' + str(gen_args) + '\n\n')
 
             if self.body_type == 'BipedalWalker':
                 gen = GenerateBipedal(gen_args)

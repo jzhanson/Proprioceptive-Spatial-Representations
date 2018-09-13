@@ -14,11 +14,15 @@ class BuildDatasets:
             self.dataset_split = list(np.random.permutation(range(self.args['num_segments'][0], self.args['num_segments'][1] + 1)))
         else:
             self.dataset_split = self.args['num_segments']
+        self.metafile = open(self.directory + '/info.meta', "w")
+        self.metafile.write('Dataset split: ' + str(self.dataset_split) + '\n')
         print(self.dataset_split)
 
     def build_dataset(self, dataset):
         args = copy.deepcopy(self.args)
         args['directory'] = self.directory + '/' + dataset
+
+        self.metafile.write(dataset + '\n')
 
         num_training_segment_configs = len(self.dataset_split) // 2
         num_validation_segment_configs = len(self.dataset_split) // 4
@@ -29,40 +33,38 @@ class BuildDatasets:
         if dataset == 'train':
             if type(self.dataset_split) is list:
                 for i in range(0, num_training_segment_configs):
-                    for j in range(self.args['num_bodies']):
-                        #args['num_segments'] = random.choice(self.dataset_split[0:(len(self.dataset_split) // 2)])
-                        args['num_segments'] = self.dataset_split[i]
-                        args['num_bodies'] = 1
-                        randomize = RandomizeBodies(self.body_type, args)
-                        randomize.build_bodies()
+                    args['num_segments'] = self.dataset_split[i]
+                    args['num_bodies'] = self.args['num_bodies']
+                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(i) + 'segments-'
+                    randomize = RandomizeBodies(self.body_type, args)
+                    randomize.build_bodies(self.metafile)
             else:
                 randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies()
+                randomize.build_bodies(self.metafile)
 
         elif dataset == 'valid':
             if type(self.dataset_split) is list:
                 for i in range(num_training_segment_configs, num_training_segment_configs+num_validation_segment_configs):
-                    for j in range(self.args['num_bodies']):
-                        #args['num_segments'] = random.choice(self.dataset_split[len(self.dataset_split) // 2:len(self.dataset_split) // 2 + len(self.dataset_split) // 4])
-                        args['num_segments'] = self.dataset_split[i]
-                        args['num_bodies'] = 1
-                        randomize = RandomizeBodies(self.body_type, args)
-                        randomize.build_bodies()
+                    args['num_segments'] = self.dataset_split[i]
+                    args['num_bodies'] = self.args['num_bodies']
+                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(i) + 'segs-'
+                    randomize = RandomizeBodies(self.body_type, args)
+                    randomize.build_bodies(self.metafile)
             else:
                 randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies()
+                randomize.build_bodies(self.metafile)
         elif dataset == 'test':
             if type(self.dataset_split) is list:
                 for i in range(num_training_segment_configs+num_validation_segment_configs, len(self.dataset_split)):
-                    for j in range(self.args['num_bodies']):
-                        #args['num_segments'] = random.choice(self.dataset_split[len(self.dataset_split) // 2 + len(self.dataset_split) // 4:])
-                        args['num_segments'] = self.dataset_split[i]
-                        args['num_bodies'] = 1
-                        randomize = RandomizeBodies(self.body_type, args)
-                        randomize.build_bodies()
+                    args['num_segments'] = self.dataset_split[i]
+                    args['num_bodies'] = self.args['num_bodies']
+                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(i) + 'segs-'
+                    randomize = RandomizeBodies(self.body_type, args)
+                    randomize.build_bodies(self.metafile)
+
             else:
                 randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies()
+                randomize.build_bodies(self.metafile)
 
 if __name__ == '__main__':
     body_type = sys.argv[1] if len(sys.argv) > 1 else 'BipedalWalker'
