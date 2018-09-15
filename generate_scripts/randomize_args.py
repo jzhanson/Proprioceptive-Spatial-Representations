@@ -72,12 +72,19 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
             nargs='+',
             default=1,
             help='How many body segments to split the hull into')
+        # hull-lengthening-factor is only used for randomize_bodies
+        parser.add_argument(
+            '--hull-lengthening-factor',
+            type=float,
+            nargs='+',
+            default=1.0,
+            help='How much to lengthen the hull per added body segment')
         parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
         parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
         parser.set_defaults(rigid_spine=False)
         parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
         parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
-        parser.set_defaults(spine_motors=True)
+        parser.set_de1aults(spine_motors=True)
         parser.add_argument('--report-extra-segments', dest='report_extra_segments', action='store_true')
         parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
         parser.set_defaults(report_extra_segments=True)

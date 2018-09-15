@@ -34,10 +34,8 @@ class RandomizeBodies:
                     else:
                         gen_args[k] = self.args[k]
 
-            if metafile is not None:
-                metafile.write(gen_args['filename'] + '\n' + str(gen_args) + '\n\n')
-
             if self.body_type == 'BipedalWalker':
+                gen_args['hull_width'] = gen_args['hull_width'] * self.args['hull_lengthening_factor'] ** (gen_args['num_segments'] - 1)
                 gen = GenerateBipedal(gen_args)
             elif self.body_type == 'CentipedeWalker':
                 gen = GenerateCentipede(gen_args)
@@ -50,6 +48,13 @@ class RandomizeBodies:
 
             gen.write_to_json()
 
+            if metafile is not None:
+                metafile.write(gen_args['filename'] + '\n')
+                metafile.write('num_segments : ' + gen_args['num_segments'] + '\n')
+                for k in gen_args.keys():
+                    if k != 'num_segments':
+                        metafile.write(k + ' : ' + str(gen_args[k]) + '\n')
+                metafile.write('\n')
 
 if __name__ == '__main__':
     # TODO(josh): figure out a way to avoid double-parsing arguments (but we need to know which body type it is before we parse arguments because some attributes have different defaults)
