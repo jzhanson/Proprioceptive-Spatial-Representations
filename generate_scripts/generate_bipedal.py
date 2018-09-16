@@ -118,6 +118,9 @@ class GenerateBipedal:
             # If even number of body pieces, 'Hull' will be left-of-center piece
             self.hull_segment = self.args['num_segments'] // 2  - 1
 
+        # If an even number of hull segments and hull is center segment, center legs in the middle joint
+        self.centered_hull_and_even_segments = self.args['num_segments'] % 2 == 0 and self.hull_segment == self.args['num_segments'] // 2 - 1
+
     # Returns 'left' if i is the segment/number left of hull and 'right' if i is directly right of hull and 'hull' if the segment in question is the hull and '' otherwise
     def is_adj_to_hull(self, i):
         if i == self.hull_segment - 1:
@@ -242,7 +245,10 @@ class GenerateBipedal:
                 current_x += self.hull_segment_width
 
         for sign in [-1, +1]:
-            current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width + self.hull_segment_width * self.hull_segment
+            if self.centered_hull_and_even_segments:
+                current_x = self.start_x
+            else:
+                current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width + self.hull_segment_width * self.hull_segment
             current_y = self.start_y - 0.5 * self.args['leg_height']
             for prefix in ['Leg', 'Lower']:
                 k = prefix + str(sign)
@@ -299,7 +305,7 @@ class GenerateBipedal:
             self.output[k]['DataType'] = 'JointMotor'
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Leg' + str(sign)
-            self.output[k]['LocalAnchorA'] = [0, -0.5 * self.args['hull_height']]
+            self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width if self.centered_hull_and_even_segments else 0, -0.5 * self.args['hull_height']]
             self.output[k]['LocalAnchorB'] = [0, 0.5 * self.args['leg_height']]
             self.output[k]['EnableMotor'] = True
             self.output[k]['EnableLimit'] = True
