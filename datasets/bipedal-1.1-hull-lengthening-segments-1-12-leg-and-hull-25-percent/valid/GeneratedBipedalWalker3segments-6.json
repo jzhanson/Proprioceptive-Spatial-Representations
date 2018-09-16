@@ -1,0 +1,450 @@
+{
+    "Body0Fixture" : {
+        "DataType" : "Fixture",
+        "FixtureShape" : {
+            "Type" : "PolygonShape",
+            "Vertices" : [
+                [
+                    -11.598851154090426,
+                    6.650180430030746
+                ],
+                [
+                    11.598851154090426,
+                    6.650180430030746
+                ],
+                [
+                    11.598851154090426,
+                    -6.650180430030746
+                ],
+                [
+                    -11.598851154090426,
+                    -6.650180430030746
+                ]
+            ]
+        },
+        "Friction" : 0.1,
+        "Density" : 5.0,
+        "Restitution" : 0.0,
+        "MaskBits" : 1,
+        "CategoryBits" : 32
+    },
+    "HullFixture" : {
+        "DataType" : "Fixture",
+        "FixtureShape" : {
+            "Type" : "PolygonShape",
+            "Vertices" : [
+                [
+                    -11.598851154090426,
+                    6.0
+                ],
+                [
+                    11.598851154090426,
+                    4.0
+                ],
+                [
+                    11.598851154090426,
+                    -6.650180430030746
+                ],
+                [
+                    -11.598851154090426,
+                    -6.650180430030746
+                ]
+            ]
+        },
+        "Friction" : 0.1,
+        "Density" : 5.0,
+        "Restitution" : 0.0,
+        "MaskBits" : 1,
+        "CategoryBits" : 32
+    },
+    "Body2Fixture" : {
+        "DataType" : "Fixture",
+        "FixtureShape" : {
+            "Type" : "PolygonShape",
+            "Vertices" : [
+                [
+                    -11.598851154090426,
+                    4.0
+                ],
+                [
+                    11.598851154090426,
+                    2.0
+                ],
+                [
+                    11.598851154090426,
+                    -6.650180430030746
+                ],
+                [
+                    -11.598851154090426,
+                    -6.650180430030746
+                ]
+            ]
+        },
+        "Friction" : 0.1,
+        "Density" : 5.0,
+        "Restitution" : 0.0,
+        "MaskBits" : 1,
+        "CategoryBits" : 32
+    },
+    "LegFixture" : {
+        "DataType" : "Fixture",
+        "FixtureShape" : {
+            "Type" : "PolygonShape",
+            "Vertices" : [
+                [
+                    -4.307102956327845,
+                    -13.249078609388595
+                ],
+                [
+                    4.307102956327845,
+                    -13.249078609388595
+                ],
+                [
+                    4.307102956327845,
+                    13.249078609388595
+                ],
+                [
+                    -4.307102956327845,
+                    13.249078609388595
+                ]
+            ]
+        },
+        "Friction" : 0.2,
+        "Density" : 1.0,
+        "Restitution" : 0.0,
+        "MaskBits" : 1,
+        "CategoryBits" : 32
+    },
+    "LowerFixture" : {
+        "DataType" : "Fixture",
+        "FixtureShape" : {
+            "Type" : "PolygonShape",
+            "Vertices" : [
+                [
+                    -3.2795963841498086,
+                    -13.752987523361982
+                ],
+                [
+                    3.2795963841498086,
+                    -13.752987523361982
+                ],
+                [
+                    3.2795963841498086,
+                    13.752987523361982
+                ],
+                [
+                    -3.2795963841498086,
+                    13.752987523361982
+                ]
+            ]
+        },
+        "Friction" : 0.2,
+        "Density" : 1.0,
+        "Restitution" : 0.0,
+        "MaskBits" : 1,
+        "CategoryBits" : 32
+    },
+    "Body0" : {
+        "DataType" : "DynamicBody",
+        "Position" : [
+            61.598851154090426,
+            154.00413226550117
+        ],
+        "Angle" : 0.0,
+        "FixtureNames" : [
+            "Body0Fixture"
+        ],
+        "Color1" : [
+            0.5,
+            0.4,
+            0.9
+        ],
+        "Color2" : [
+            0.3,
+            0.3,
+            0.5
+        ],
+        "CanTouchGround" : false,
+        "InitialForceScale" : 5,
+        "ReportState" : false,
+        "Depth" : 0
+    },
+    "Hull" : {
+        "DataType" : "DynamicBody",
+        "Position" : [
+            84.79655346227128,
+            154.00413226550117
+        ],
+        "Angle" : 0.0,
+        "FixtureNames" : [
+            "HullFixture"
+        ],
+        "Color1" : [
+            0.5,
+            0.4,
+            0.9
+        ],
+        "Color2" : [
+            0.3,
+            0.3,
+            0.5
+        ],
+        "CanTouchGround" : false,
+        "InitialForceScale" : 5,
+        "ReportState" : true,
+        "Depth" : 0
+    },
+    "Body2" : {
+        "DataType" : "DynamicBody",
+        "Position" : [
+            107.99425577045213,
+            154.00413226550117
+        ],
+        "Angle" : 0.0,
+        "FixtureNames" : [
+            "Body2Fixture"
+        ],
+        "Color1" : [
+            0.5,
+            0.4,
+            0.9
+        ],
+        "Color2" : [
+            0.3,
+            0.3,
+            0.5
+        ],
+        "CanTouchGround" : false,
+        "InitialForceScale" : 5,
+        "ReportState" : false,
+        "Depth" : 0
+    },
+    "Leg-1" : {
+        "DataType" : "DynamicBody",
+        "Position" : [
+            84.79655346227128,
+            140.75505365611258
+        ],
+        "Angle" : -0.05,
+        "FixtureNames" : [
+            "LegFixture"
+        ],
+        "Color1" : [
+            0.7,
+            0.4,
+            0.6
+        ],
+        "Color2" : [
+            0.3,
+            0.3,
+            0.5
+        ],
+        "CanTouchGround" : true,
+        "ReportState" : true,
+        "Depth" : 0
+    },
+    "Lower-1" : {
+        "DataType" : "DynamicBody",
+        "Position" : [
+            84.79655346227128,
+            127.0020661327506
+        ],
+        "Angle" : -0.05,
+        "FixtureNames" : [
+            "LowerFixture"
+        ],
+        "Color1" : [
+            0.7,
+            0.4,
+            0.6
+        ],
+        "Color2" : [
+            0.3,
+            0.3,
+            0.5
+        ],
+        "CanTouchGround" : true,
+        "ReportState" : true,
+        "Depth" : 0
+    },
+    "Leg1" : {
+        "DataType" : "DynamicBody",
+        "Position" : [
+            84.79655346227128,
+            140.75505365611258
+        ],
+        "Angle" : 0.05,
+        "FixtureNames" : [
+            "LegFixture"
+        ],
+        "Color1" : [
+            0.4,
+            0.2,
+            0.4
+        ],
+        "Color2" : [
+            0.3,
+            0.3,
+            0.5
+        ],
+        "CanTouchGround" : true,
+        "ReportState" : true,
+        "Depth" : 1
+    },
+    "Lower1" : {
+        "DataType" : "DynamicBody",
+        "Position" : [
+            84.79655346227128,
+            127.0020661327506
+        ],
+        "Angle" : 0.05,
+        "FixtureNames" : [
+            "LowerFixture"
+        ],
+        "Color1" : [
+            0.4,
+            0.2,
+            0.4
+        ],
+        "Color2" : [
+            0.3,
+            0.3,
+            0.5
+        ],
+        "CanTouchGround" : true,
+        "ReportState" : true,
+        "Depth" : 1
+    },
+    "Body0HullJoint" : {
+        "DataType" : "JointMotor",
+        "BodyA" : "Body0",
+        "BodyB" : "Hull",
+        "LocalAnchorA" : [
+            11.598851154090426,
+            0
+        ],
+        "LocalAnchorB" : [
+            -11.598851154090426,
+            0
+        ],
+        "EnableMotor" : false,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 0.0,
+        "LowerAngle" : -0.5,
+        "UpperAngle" : 0.2,
+        "Speed" : 4,
+        "ReportState" : false,
+        "Depth" : 0
+    },
+    "HullBody2Joint" : {
+        "DataType" : "JointMotor",
+        "BodyA" : "Hull",
+        "BodyB" : "Body2",
+        "LocalAnchorA" : [
+            11.598851154090426,
+            0
+        ],
+        "LocalAnchorB" : [
+            -11.598851154090426,
+            0
+        ],
+        "EnableMotor" : false,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 0.0,
+        "LowerAngle" : -0.5,
+        "UpperAngle" : 0.2,
+        "Speed" : 4,
+        "ReportState" : false,
+        "Depth" : 0
+    },
+    "HullLeg-1Joint" : {
+        "DataType" : "JointMotor",
+        "BodyA" : "Hull",
+        "BodyB" : "Leg-1",
+        "LocalAnchorA" : [
+            0,
+            -6.650180430030746
+        ],
+        "LocalAnchorB" : [
+            0,
+            13.249078609388595
+        ],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -0.8,
+        "UpperAngle" : 1.1,
+        "Speed" : 4,
+        "ReportState" : true,
+        "Depth" : 0
+    },
+    "Leg-1Lower-1Joint" : {
+        "DataType" : "JointMotor",
+        "BodyA" : "Leg-1",
+        "BodyB" : "Lower-1",
+        "LocalAnchorA" : [
+            0,
+            -13.249078609388595
+        ],
+        "LocalAnchorB" : [
+            0,
+            13.752987523361982
+        ],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -1.6,
+        "UpperAngle" : -0.1,
+        "Speed" : 6,
+        "ReportState" : true,
+        "Depth" : 0
+    },
+    "HullLeg1Joint" : {
+        "DataType" : "JointMotor",
+        "BodyA" : "Hull",
+        "BodyB" : "Leg1",
+        "LocalAnchorA" : [
+            0,
+            -6.650180430030746
+        ],
+        "LocalAnchorB" : [
+            0,
+            13.249078609388595
+        ],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -0.8,
+        "UpperAngle" : 1.1,
+        "Speed" : 4,
+        "ReportState" : true,
+        "Depth" : 1
+    },
+    "Leg1Lower1Joint" : {
+        "DataType" : "JointMotor",
+        "BodyA" : "Leg1",
+        "BodyB" : "Lower1",
+        "LocalAnchorA" : [
+            0,
+            -13.249078609388595
+        ],
+        "LocalAnchorB" : [
+            0,
+            13.752987523361982
+        ],
+        "EnableMotor" : true,
+        "EnableLimit" : true,
+        "MaxMotorTorque" : 80,
+        "MotorSpeed" : 1,
+        "LowerAngle" : -1.6,
+        "UpperAngle" : -0.1,
+        "Speed" : 6,
+        "ReportState" : true,
+        "Depth" : 1
+    }
+}
