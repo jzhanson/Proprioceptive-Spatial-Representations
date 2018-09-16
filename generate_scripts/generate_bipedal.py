@@ -49,6 +49,11 @@ def parse_args():
     parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
     parser.set_defaults(report_extra_segments=True)
     parser.add_argument(
+        '--hull-segment',
+        type=int,
+        default=-1,
+        help='Which segment should be designated as the "hull" and attach the legs to (-1 to choose centermost segment)')
+    parser.add_argument(
         '--hull-width',
         type=float,
         default=64.0,
@@ -105,16 +110,22 @@ class GenerateBipedal:
         self.hull_segment_width = self.args['hull_width'] / self.args['num_segments']
         self.odd_body_segments = self.args['num_segments'] % 2 == 1
 
-    # Returns True if i is the "hull" segment and False otherwise
-    def is_hull_segment(self, i):
-        return (self.odd_body_segments and i == self.args['num_segments'] // 2) or (not self.odd_body_segments and i == self.args['num_segments'] // 2 - 1)
+        if self.args['hull_segment'] != -1 and self.args['hull_segment'] < self.args['num_segments']:
+            self.hull_segment = self.args['hull_segment']
+        elif self.odd_body_segments:
+            self.hull_segment = self.args['num_segments'] // 2
+        else:
+            # If even number of body pieces, 'Hull' will be left-of-center piece
+            self.hull_segment = self.args['num_segments'] // 2  - 1
 
-    # Returns 'left' if i is the segment/number left of hull and 'right' if i is directly right of hull and '' otherwise
+    # Returns 'left' if i is the segment/number left of hull and 'right' if i is directly right of hull and 'hull' if the segment in question is the hull and '' otherwise
     def is_adj_to_hull(self, i):
-        if (self.odd_body_segments and i == (self.args['num_segments'] // 2) - 1) or (not self.odd_body_segments and i == self.args['num_segments'] // 2 - 2):
+        if i == self.hull_segment - 1:
             return 'left'
-        elif (self.odd_body_segments and i == self.args['num_segments'] // 2) or (not self.odd_body_segments and i == self.args['num_segments'] // 2 - 1):
+        elif i == self.hull_segment + 1:
             return 'right'
+        elif i == self.hull_segment:
+            return 'hull'
         else:
             return ''
 
@@ -128,7 +139,7 @@ class GenerateBipedal:
     def build_fixtures(self):
         for i in range(self.args['num_segments']):
             # TODO(josh): separate this logic out into a helper function, is_adj_to_hull or something
-            if self.is_hull_segment(i):
+            if i == self.hull_segment:
                 f = 'Hull' + 'Fixture'
             else:
                 f = 'Body' + str(i) + 'Fixture'
@@ -213,9 +224,7 @@ class GenerateBipedal:
         else:
             current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width
             for i in range(self.args['num_segments']):
-                # If even number of body pieces, 'Hull' will be left-of-center piece
-                if self.is_hull_segment(i):
-                    # Body number self.args['num_segments'] / 2 is renamed as 'Hull'
+                if i == self.hull_segment:
                     k = 'Hull'
                 else:
                     k = 'Body' + str(i)
@@ -233,7 +242,7 @@ class GenerateBipedal:
                 current_x += self.hull_segment_width
 
         for sign in [-1, +1]:
-            current_x = self.start_x
+            current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width + self.hull_segment_width * self.hull_segment
             current_y = self.start_y - 0.5 * self.args['leg_height']
             for prefix in ['Leg', 'Lower']:
                 k = prefix + str(sign)
@@ -256,7 +265,7 @@ class GenerateBipedal:
             if self.is_adj_to_hull(i) == 'left':
                 body_a = 'Body' + str(i)
                 body_b = 'Hull'
-            elif self.is_adj_to_hull(i) == 'right':
+            elif self.is_adj_to_hull(i) == 'hull':
                 body_a = 'Hull'
                 body_b = 'Body' + str(i+1)
             else:
@@ -290,7 +299,7 @@ class GenerateBipedal:
             self.output[k]['DataType'] = 'JointMotor'
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Leg' + str(sign)
-            self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width if self.args['num_segments'] % 2 == 0 else 0, -0.5 * self.args['hull_height']]
+            self.output[k]['LocalAnchorA'] = [0, -0.5 * self.args['hull_height']]
             self.output[k]['LocalAnchorB'] = [0, 0.5 * self.args['leg_height']]
             self.output[k]['EnableMotor'] = True
             self.output[k]['EnableLimit'] = True
