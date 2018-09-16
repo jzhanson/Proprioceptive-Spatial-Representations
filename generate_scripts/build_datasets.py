@@ -1,5 +1,5 @@
 import copy
-import sys
+import sys, os
 import random
 import numpy as np
 from randomize_bodies import RandomizeBodies
@@ -14,7 +14,9 @@ class BuildDatasets:
             self.dataset_split = list(np.random.permutation(range(self.args['num_segments'][0], self.args['num_segments'][1] + 1)))
         else:
             self.dataset_split = self.args['num_segments']
-        self.metafile = open(self.directory + '/info.meta', "w")
+        if not os.path.exists(self.directory):
+            os.mkdir(self.directory)
+        self.metafile = open(self.directory + '/info.meta', 'w+')
         self.metafile.write('Dataset split: ' + str(self.dataset_split) + '\n')
         print(self.dataset_split)
 
@@ -35,7 +37,7 @@ class BuildDatasets:
                 for i in range(0, num_training_segment_configs):
                     args['num_segments'] = self.dataset_split[i]
                     args['num_bodies'] = self.args['num_bodies']
-                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(i) + 'segments-'
+                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(args['num_segments']) + 'segments-'
                     randomize = RandomizeBodies(self.body_type, args)
                     randomize.build_bodies(self.metafile)
             else:
@@ -47,7 +49,7 @@ class BuildDatasets:
                 for i in range(num_training_segment_configs, num_training_segment_configs+num_validation_segment_configs):
                     args['num_segments'] = self.dataset_split[i]
                     args['num_bodies'] = self.args['num_bodies']
-                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(i) + 'segs-'
+                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(args['num_segments']) + 'segments-'
                     randomize = RandomizeBodies(self.body_type, args)
                     randomize.build_bodies(self.metafile)
             else:
@@ -58,7 +60,7 @@ class BuildDatasets:
                 for i in range(num_training_segment_configs+num_validation_segment_configs, len(self.dataset_split)):
                     args['num_segments'] = self.dataset_split[i]
                     args['num_bodies'] = self.args['num_bodies']
-                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(i) + 'segs-'
+                    args['outfile_prefix'] = self.args['outfile_prefix'] + str(args['num_segments']) + 'segments-'
                     randomize = RandomizeBodies(self.body_type, args)
                     randomize.build_bodies(self.metafile)
 

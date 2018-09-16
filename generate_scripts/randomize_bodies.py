@@ -64,7 +64,7 @@ class RandomizeBodies:
 
             if metafile is not None:
                 metafile.write(gen_args['filename'] + '\n')
-                metafile.write('num_segments : ' + gen_args['num_segments'] + '\n')
+                metafile.write('num_segments : ' + str(gen_args['num_segments']) + '\n')
                 for k in gen_args.keys():
                     if k != 'num_segments':
                         metafile.write(k + ' : ' + str(gen_args[k]) + '\n')

@@ -84,7 +84,7 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
         parser.set_defaults(rigid_spine=False)
         parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
         parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
-        parser.set_de1aults(spine_motors=True)
+        parser.set_defaults(spine_motors=True)
         parser.add_argument('--report-extra-segments', dest='report_extra_segments', action='store_true')
         parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
         parser.set_defaults(report_extra_segments=True)
@@ -330,9 +330,11 @@ def parse_default_args(body_type, additional_default_args={}):
             'num_bodies' : 1,
             'distribution' : 'uniform',
             'num_segments' : 1,
+            'hull_lengthening_factor' : 1.0,
             'rigid_spine' : False,
             'spine_motors' : True,
             'report_extra_segments' : True,
+            'hull_segment' : 'center',
             'hull_density' : 5.0,
             'hull_friction' : 0.1,
             'leg_density' : 1.0,
