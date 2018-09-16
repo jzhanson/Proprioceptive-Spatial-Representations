@@ -36,6 +36,20 @@ class RandomizeBodies:
 
             if self.body_type == 'BipedalWalker':
                 gen_args['hull_width'] = gen_args['hull_width'] * self.args['hull_lengthening_factor'] ** (gen_args['num_segments'] - 1)
+                if self.args['hull_segment'] == 'center':
+                    gen_args['hull_segment'] = -1
+                elif self.args['hull_segment'] == 'leftexcl':
+                    # Don't allow the center segment to be chosen (excl vs incl only matters on odd segments bodies)
+                    gen_args['hull_segment'] = random.choice(range(0, gen_args['num_segments'] // 2 ))
+                elif self.args['hull_segment'] == 'leftincl':
+                    gen_args['hull_segment'] = random.choice(range(0, gen_args['num_segments'] // 2 + gen_args['num_segments'] % 2))
+                elif self.args['hull_segment'] == 'rightexcl':
+                    gen_args['hull_segment'] = random.choice(range(gen_args['num_segments'] // 2 + 1, gen_args['num_segments']))
+                elif self.args['hull_segment'] == 'rightincl':
+                    gen_args['hull_segment'] = random.choice(range(gen_args['num_segments'] // 2 + (gen_args['num_segments'] + 1) % 2, gen_args['num_segments']))
+                elif self.args['hull_segment'] == 'random':
+                    gen_args['hull_segment'] = random.choice(range(0, gen_args['num_segments']))
+
                 gen = GenerateBipedal(gen_args)
             elif self.body_type == 'CentipedeWalker':
                 gen = GenerateCentipede(gen_args)

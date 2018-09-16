@@ -89,6 +89,11 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
         parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
         parser.set_defaults(report_extra_segments=True)
         parser.add_argument(
+            '--hull-segment',
+            type=str,
+            default='center',
+            help='Generate bodies with the hull segment center, leftexcl, leftincl, rightexcl, rightincl, or random')
+        parser.add_argument(
             '--hull-width',
             type=float,
             nargs='+',
