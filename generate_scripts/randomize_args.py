@@ -141,15 +141,18 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
         parser.add_argument('--rigid-foot', dest='rigid_foot', action='store_true')
         parser.add_argument('--no-rigid-foot', dest='rigid_foot', action='store_false')
         parser.set_defaults(rigid_foot=False)
-        parser.add_argument('--report-extra-segments', dest='report_extra_segments', action='store_true')
-        parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
-        parser.set_defaults(report_extra_segments=True)
         parser.add_argument(
             '--outfile-prefix',
             type=str,
             default='GeneratedRaptorWalker',
             help='What to prefix the name of the generated JSON file'
         )
+        # This should be constant and not randomized
+        parser.add_argument(
+            '--report-segments',
+            type=int,
+            default=-1,
+            help='Number of segments to report in total (-1 for all segments)')
         parser.add_argument(
             '--head-density',
             type=float,
@@ -358,7 +361,7 @@ def parse_default_args(body_type, additional_default_args={}):
             'rigid_spine' : False,
             'spine_motors' : True,
             'rigid_foot' : False,
-            'report-extra-segments': True,
+            'report-segments': -1,
             'hull_density' : 5.0,
             'hull_friction' : 0.1,
             'head_density' : 5.0,

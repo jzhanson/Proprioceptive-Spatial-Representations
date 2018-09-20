@@ -5,6 +5,7 @@ import os
 import math
 import json
 import argparse
+import itertools
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -32,10 +33,12 @@ def parse_args():
     parser.add_argument('--build-head', dest='build_head', action='store_true')
     parser.add_argument('--no-build-head', dest='build_head', action='store_false')
     parser.set_defaults(build_head=True)
-    # TODO(josh): implement report-extra-segments and decide whether to report all segments > 1 or only segments > 4
-    parser.add_argument('--report-extra-segments', dest='report_extra_segments', action='store_true')
-    parser.add_argument('--no-report-extra-segments', dest='report_extra_segments', action='store_false')
-    parser.set_defaults(report_extra_segments=True)
+    # We report segments in the following order: hull, then head, then tail, then starting from hull and going outwards
+    parser.add_argument(
+        '--report-segments',
+        type=int,
+        default=-1,
+        help='Number of segments to report in total (-1 for all segments)')
     parser.add_argument(
         '--neck-frequency',
         type=float,
@@ -244,6 +247,15 @@ class GenerateRaptor:
                 self.start_y += self.args[k + '_height']
             for k in ['shin', 'toes']:
                 self.start_y += self.args[k + '_width']
+        rev_neck_bodies = ['Neck' + str(i) for i in range(self.args['neck_segments']-1, -1, -1)]
+        rev_tail_bodies = ['Tail' + str(i) for i in range(self.args['tail_segments']-1, -1, -1)]
+        interleaved_neck_tail = list(itertools.zip_longest(rev_neck_bodies, rev_tail_bodies))
+
+        self.spine_body_report_order = ['Hull', 'Head', 'Tail'] + [body for pair in interleaved_neck_tail for body in pair if body is not None]
+        if self.args['report_segments'] == -1:
+            self.spine_bodies_to_report = self.spine_body_report_order
+        else:
+            self.spine_bodies_to_report = self.spine_body_report_order[0:self.args['report_segments']]
 
     def build(self):
         self.build_fixtures()
@@ -493,7 +505,7 @@ class GenerateRaptor:
             self.output[body_name]['Color2'] = LINE_COLOR
             self.output[body_name]['CanTouchGround'] = 'Tail' in body_name
             self.output[body_name]['InitialForceScale'] = 100 if body_name == 'Hull' else 0
-            self.output[body_name]['ReportState'] = True
+            self.output[body_name]['ReportState'] = body_name in self.spine_bodies_to_report
             self.output[body_name]['Depth'] = 0
 
         # Fill in position + angle for hull
@@ -742,7 +754,7 @@ class GenerateRaptor:
                         self.output[k]['Speed'] = 4
                     else:
                         self.output[k]['Speed'] = 6
-                    self.output[k]['ReportState'] = True
+                    self.output[k]['ReportState'] = second_body_name in self.spine_bodies_to_report
                     self.output[k]['Depth'] = 0 if '-1' in k else 1
 
     def write_to_json(self, filename=None):
