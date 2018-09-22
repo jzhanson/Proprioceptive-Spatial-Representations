@@ -63,7 +63,7 @@ class Agent(object):
         self.rewards.append(reward)
         return self
 
-    def action_test(self):
+    def action_test(self, episode_step):
         with torch.no_grad():
             if self.done:
                 if self.gpu_id >= 0:
@@ -78,6 +78,8 @@ class Agent(object):
                 (Variable(self.state), self.info, self.memory))
         mu = torch.clamp(mu.data, -1.0, 1.0)
         action = mu.cpu().numpy()[0]
+        #if episode_step < 500: # only render first 500
+        #    self.env.render()
         state, self.reward, self.done, self.info = self.env.step(action)
         self.state = torch.from_numpy(state).float()
         if self.gpu_id >= 0:

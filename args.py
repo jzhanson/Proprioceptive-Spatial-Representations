@@ -118,6 +118,10 @@ def parse_cmdline_args(additional_parser_args={}):
         metavar='BD',
         help='Choose discount factor for motion blur')
     parser.add_argument(
+        '--test-every-n-steps',
+        type=int,
+        help='Approximately how many update steps before a test episode is run')
+    parser.add_argument(
         '--gpu-ids',
         type=int,
         nargs='+',
@@ -181,6 +185,7 @@ def parse_default_args(additional_default_args={}):
         'grid_use_lidar' : False,
         'blur_frames' : 1,
         'blur_discount' : 1.0,
+        'test_every_n_steps' : 100,
         'gpu_ids' : [-1],
         'amsgrad' : True,
         'experiment_id' : '',

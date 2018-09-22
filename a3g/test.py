@@ -23,7 +23,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
-def test(args, shared_model, optimizer, all_scores):
+def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_counters):
     # Shortcut to save directory
     save_dir = args['save_directory']+'/'
     run_name = os.path.basename(args['save_directory'].strip('/'))
@@ -67,10 +67,24 @@ def test(args, shared_model, optimizer, all_scores):
             player.state = player.state.cuda()
     player.model.eval()
 
+    global_step = 0
+
+    episode_step = 0
     episode_count = len(all_scores)
     max_score = np.max(all_scores) if len(all_scores) > 0 else 0
     while True:
         if player.done:
+            # Only run test episode every ~N updates
+            new_global_step = global_step
+            while (new_global_step - global_step) < args['test_every_n_steps']:
+                # Get number of gradient steps asynchronously
+                new_global_step = 0
+                for i in range(len(all_step_counters)):
+                    new_global_step += all_step_counters[i].value
+                print(new_global_step)
+                time.sleep(2)
+            global_step = new_global_step
+
             episode_count += 1
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
@@ -78,10 +92,12 @@ def test(args, shared_model, optimizer, all_scores):
             else:
                 player.model.load_state_dict(shared_model.state_dict())
 
-        player.action_test()
+        player.action_test(episode_step)
         reward_sum += player.reward
+        episode_step += 1
 
         if player.done:
+            episode_step = 0
             num_tests += 1
             reward_total_sum += reward_sum
             reward_mean = reward_total_sum / num_tests
@@ -92,71 +108,59 @@ def test(args, shared_model, optimizer, all_scores):
                                   time.gmtime(time.time() - start_time)),
                     reward_sum, player.eps_len, reward_mean))
 
-            # Plot scores every 5 episodes
+
+            all_global_steps.append(global_step)
             all_scores.append(reward_sum)
-            if (episode_count%5 == 0):
-                x = np.array(range(len(all_scores)))
-                y = np.array(all_scores)
 
-                # Raw plot
-                plt.clf()
-                plt.plot(x, y)
-                plt.title('Test Episode Returns')
-                plt.xlabel('Test Episode')
-                plt.ylabel('Return')
-                plt.savefig('{0}/test_episode_returns.png'.format(save_dir))
-                plt.savefig('{0}/test_episode_returns.eps'.format(save_dir))
+            x = np.array(all_global_steps) #range(len(all_scores)))
+            y = np.array(all_scores)
 
-                # Smoothed version
-                plt.clf()
-                y_smooth = smooth(y, x)
-                plt.plot(x, y_smooth, 'k', color='#CC4F1B')
-                plt.savefig('{0}/test_episode_returns_smooth.png'.format(save_dir))
-                plt.savefig('{0}/test_episode_returns_smooth.eps'.format(save_dir))
+            # Raw plot
+            plt.clf()
+            plt.plot(x, y)
+            plt.title('Test Episode Returns')
+            plt.xlabel('Test Episode')
+            plt.ylabel('Return')
+            plt.savefig('{0}/test_episode_returns.png'.format(save_dir))
+            plt.savefig('{0}/test_episode_returns.eps'.format(save_dir))
+
+            # Smoothed version
+            plt.clf()
+            y_smooth = smooth(y, x)
+            plt.plot(x, y_smooth, 'k', color='#CC4F1B')
+            plt.savefig('{0}/test_episode_returns_smooth.png'.format(save_dir))
+            plt.savefig('{0}/test_episode_returns_smooth.eps'.format(save_dir))
 
             model_path = save_dir+'/model'
             if args['save_intermediate']:
                 model_path = model_path+'.'+str(episode_count)
             model_path = model_path+".pth"
+
+            # Is this the best model so far?
             if reward_sum >= max_score:
                 max_score = reward_sum
                 best_model.load_state_dict(player.model.state_dict())
-
-                optimizer_state_dict = None
                 if optimizer is not None:
-                    optimizer_state_dict = optimizer.state_dict()
                     best_optimizer_state_dict = optimizer.state_dict()
 
-                torch.save({
-                    'args' : args,
-                    'episode_count' : episode_count,
-                    'state_dict' : player.model.state_dict(),
-                    'best_state_dict' : best_model.state_dict(),
-                    'optimizer' : optimizer_state_dict,
-                    'best_optimizer' : best_optimizer_state_dict,
-                    'all_scores' : all_scores,
-                }, model_path)
+            optimizer_state_dict = None
+            if optimizer is not None:
+                optimizer_state_dict = optimizer.state_dict()
 
-            # Save every 25 episodes or max episode
-            if (episode_count%25 == 0):
-                optimizer_state_dict = None
-                if optimizer is not None:
-                    optimizer_state_dict = optimizer.state_dict()
-
-                torch.save({
-                    'args' : args,
-                    'episode_count' : episode_count,
-                    'state_dict' : player.model.state_dict(),
-                    'best_state_dict' : best_model.state_dict(),
-                    'optimizer' : optimizer_state_dict,
-                    'best_optimizer' : best_optimizer_state_dict,
-                    'all_scores' : all_scores,
-                }, model_path)
+            torch.save({
+                'args' : args,
+                'episode_count' : episode_count,
+                'state_dict' : player.model.state_dict(),
+                'best_state_dict' : best_model.state_dict(),
+                'optimizer' : optimizer_state_dict,
+                'best_optimizer' : best_optimizer_state_dict,
+                'all_scores' : all_scores,
+                'all_global_steps' : all_global_steps,
+            }, model_path)
 
             reward_sum = 0
             player.eps_len = 0
             state, player.info = player.env.reset()
-            time.sleep(60)
             player.state = torch.from_numpy(state).float()
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):

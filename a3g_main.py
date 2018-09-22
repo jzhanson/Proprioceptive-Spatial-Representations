@@ -61,8 +61,12 @@ def main(args):
     else:
         optimizer = None
 
+    # Keep track of all steps taken in each thread
+    all_step_counters = [mp.Value('i', 0) for i in range(args['workers'])]
+
     # Keep track of stats if we want to load from a checkpoint
     all_scores = []
+    all_global_steps = []
     if args['load_file'] != '':
         print('Loading model from: {0}'.format(args['load_file']))
         pthfile = torch.load('{0}'.format(args['load_file']), map_location=lambda storage, loc: storage.cpu())
@@ -75,16 +79,19 @@ def main(args):
             if optimizer is not None:
                 optimizer.load_state_dict(pthfile['optimizer'])
             all_scores = pthfile['all_scores']
+            all_global_steps = pthfile['all_global_steps']
 
     processes = []
 
-    p = mp.Process(target=test, args=(args, shared_model, optimizer, all_scores))
+    p = mp.Process(target=test, args=(args, shared_model, optimizer,
+                                      all_scores, all_global_steps,
+                                      all_step_counters))
     p.start()
     processes.append(p)
     time.sleep(0.1)
     for rank in range(0, args['workers']):
         p = mp.Process(target=train, args=(
-            rank, args, shared_model, optimizer))
+            rank, args, shared_model, optimizer, all_step_counters[rank]))
         p.start()
         processes.append(p)
         time.sleep(0.1)

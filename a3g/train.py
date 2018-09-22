@@ -15,7 +15,7 @@ from a3g.player_util import Agent
 import gym
 
 
-def train(rank, args, shared_model, optimizer):
+def train(rank, args, shared_model, optimizer, thread_step_counter):
     gpu_id = args['gpu_ids'][rank % len(args['gpu_ids'])]
     if args['experiment_id'] == '':
         ptitle('Training Agent: {}'.format(rank))
@@ -119,6 +119,10 @@ def train(rank, args, shared_model, optimizer):
         ensure_shared_grads(player.model, shared_model, gpu=gpu_id >= 0)
         optimizer.step()
         player.clear_actions()
+
+        # Update mutexed number of steps
+        with thread_step_counter.get_lock():
+            thread_step_counter.value += 1
 
         step_count += 1
         if (rank == 0) and (step_count%500) == 0:
