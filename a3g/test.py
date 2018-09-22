@@ -133,7 +133,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
 
             model_path = save_dir+'/model'
             if args['save_intermediate']:
-                model_path = model_path+'.'+str(episode_count)
+                model_path = model_path+'.'+str(global_step) #episode_count)
             model_path = model_path+".pth"
 
             # Is this the best model so far?
