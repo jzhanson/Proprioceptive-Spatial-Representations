@@ -46,12 +46,19 @@ if __name__=='__main__':
                 'type' : str,
                 'metavar' : 'DIR',
                 'help' : 'Directory with JSONS run evaluate on'
+            },
+            'output_directory' : {
+                'name' : '--output-directory',
+                'type' : str,
+                'metavar' : 'OD',
+                'help' : 'Directory to group outputs in'
             }
         },
         additional_default_args={
             'num_episodes' : 100,
             'render_video' : False,
-            'directory' : ''
+            'directory' : '',
+            'output_directory' : ''
         }
     )
 

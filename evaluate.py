@@ -28,7 +28,7 @@ def evaluate(args):
     pthfile = torch.load(args['load_file'], map_location=lambda storage, loc: storage.cpu())
 
     # Create the output directory
-    output_dir = os.path.join(os.path.dirname(args['load_file']), 'evaluation-'+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f"))
+    output_dir = os.path.join(os.path.dirname(args['load_file']), args['output_directory'], args['load_file']+'evaluation-'+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f"))
     try:
         os.makedirs(output_dir)
     except OSError:
@@ -96,7 +96,7 @@ def evaluate(args):
                 break
     all_episode_returns = np.array(all_episode_returns)
     all_episode_successes = np.array(all_episode_returns > 300., dtype=np.float32)
-    
+
     evaluation_statistics = {
         'Mean Return': np.mean(all_episode_returns),
         'Std Return': np.std(all_episode_returns),
@@ -135,10 +135,16 @@ if __name__=='__main__':
                 'name' : '--render-video',
                 'metavar' : 'RV',
                 'help' : 'whether to render evaluation episodes'
+            },
+            'output_directory' : {
+                'name' : '--output-directory',
+                'metavar' : 'OD',
+                'help' : 'Directory to write output to'
             }
         },
         additional_default_args={
             'num_episodes' : 100,
-            'render_video' : False
+            'render_video' : False,
+            'output_directory' : ''
         }
     ))
