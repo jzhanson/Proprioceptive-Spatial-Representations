@@ -2,6 +2,7 @@ import os
 from evaluate import evaluate
 import copy
 import numpy as np
+import torch
 from args import parse_args
 
 def plot_all_statistics(all_model_statistics, save_dir, model_step):
@@ -60,7 +61,7 @@ def directory_evaluate(args):
             np.mean(all_episode_successes), np.sum(all_episode_successes), all_evaluation_statistics[k]['Number Total'],
             np.std(all_episode_successes), np.min(all_episode_successes), np.max(all_episode_successes)))
 
-        
+
     # Save all evaluation statistics
     output_path = os.path.join(os.path.dirname(args['load_file']),
                                args['output_directory'],
