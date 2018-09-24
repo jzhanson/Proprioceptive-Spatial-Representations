@@ -65,7 +65,7 @@ def directory_evaluate(args):
     # Save all evaluation statistics
     output_path = os.path.join(os.path.dirname(args['load_file']),
                                args['output_directory'],
-                              'JSONWalker-'+args['json_directory']+'-evaluation-statistics-evalep{}.pth'.format(args['num_episodes']))
+                              'JSONWalker-'+(args['json_directory'].replace('/','-'))+'-evaluation-statistics-evalep{}.pth'.format(args['num_episodes']))
     torch.save({
         'all_evaluation_statistics' : all_evaluation_statistics,
     }, output_path)
@@ -136,6 +136,7 @@ if __name__=='__main__':
             'render_video' : False,
             'json_directory' : '',
             'output_directory' : '',
+            'load_directory' : '',
             'models_start' : -1,
             'models_end' : -1,
             'models_step' : -1,
@@ -153,7 +154,7 @@ if __name__=='__main__':
             current_args['load_file'] = os.path.join(args['load_directory'], 'model.' + str(i) + '.pth')
             # Note: Make the input output_directory be the dataset name
             current_args['output_directory'] = os.path.join(args['output_directory'], str(i))
-            current_model_statistics = directory_evaluate(args)
+            current_model_statistics = directory_evaluate(current_args)
             all_model_statistics.append(current_model_statistics)
 
         plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
@@ -161,16 +162,19 @@ if __name__=='__main__':
     elif args['evaluate_all']:
         models_list = [f for f in os.listdir(args['load_directory']) if '.pth' in f]
         for model in models_list:
+            print(model)
             current_args = copy.deepcopy(args)
             current_args['load_file'] = os.path.join(args['load_directory'], model)
             # Note: Make the input output_directory be the dataset name
             current_args['output_directory'] = os.path.join(args['output_directory'], model)
-            current_model_statistics = directory_evaluate(args)
-            all_model_statistics += current_model_statistics
+            current_model_statistics = directory_evaluate(current_args)
+            all_model_statistics.append(current_model_statistics)
 
         # Note: evaluate_all still requires models_step
         plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
 
     else:
+        current_args = copy.deepcopy(args)
+        current_args['output_directory'] = os.path.join(args['output_directory'], os.path.split(args['load_file'])[1])
         directory_evaluate(args)
 

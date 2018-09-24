@@ -28,7 +28,7 @@ def evaluate(args):
     pthfile = torch.load(args['load_file'], map_location=lambda storage, loc: storage.cpu())
 
     # Create the output directory
-    output_dir = os.path.join(os.path.dirname(args['load_file']), args['output_directory'], args['env']+'evaluation-'+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f"))
+    output_dir = os.path.join(os.path.dirname(args['load_file']), args['output_directory'], os.path.split(args['env'])[1]+'evaluation-'+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f"))
     try:
         os.makedirs(output_dir)
     except OSError:
