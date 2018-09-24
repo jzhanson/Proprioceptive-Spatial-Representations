@@ -60,6 +60,15 @@ def directory_evaluate(args):
             np.mean(all_episode_successes), np.sum(all_episode_successes), all_evaluation_statistics[k]['Number Total'],
             np.std(all_episode_successes), np.min(all_episode_successes), np.max(all_episode_successes)))
 
+        
+    # Save all evaluation statistics
+    output_path = os.path.join(os.path.dirname(args['load_file']),
+                               args['output_directory'],
+                              'JSONWalker-'+args['json_directory']+'-evaluation-statistics-evalep{}.pth'.format(args['num_episodes']))
+    torch.save({
+        'all_evaluation_statistics' : all_evaluation_statistics,
+    }, output_path)
+
     return all_evaluation_statistics
 
 

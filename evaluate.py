@@ -114,6 +114,12 @@ def evaluate(args):
         'all_episode_successes': all_episode_successes,
     }
 
+    # Save raw data to a file
+    torch.save({
+        'all_episode_returns' : all_episode_returns,
+        'all_episode_successes' : all_episode_successes,
+    }, os.path.join(output_dir, 'evaluation_statistics.pth'))
+
     print('Average Episodic Return: \n\tmean: {0}\n\tstd: {1}\n\tmin: {2}\n\tmax: {3}'.format(
         np.mean(all_episode_returns), np.std(all_episode_returns),
         np.min(all_episode_returns), np.max(all_episode_returns)))
