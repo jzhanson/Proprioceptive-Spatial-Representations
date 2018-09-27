@@ -126,6 +126,9 @@ def evaluate(args):
     print('Average Episodic Success: \n\tmean: {0} ({1}/{2})\n\tstd: {3}\n\tmin: {4}\n\tmax: {5}'.format(
         np.mean(all_episode_successes), np.sum(all_episode_successes), args['num_episodes'],
         np.std(all_episode_successes), np.min(all_episode_successes), np.max(all_episode_successes)))
+
+    # Shut down logging system and close open file handles
+    logging.shutdown()
     return evaluation_statistics
 
 if __name__=='__main__':
