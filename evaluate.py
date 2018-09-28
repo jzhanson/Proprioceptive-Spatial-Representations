@@ -82,9 +82,11 @@ def evaluate(args):
                 player.state = player.state.cuda()
         player.eps_len = 0
         reward_sum = 0
+        episode_step = 0
         while True:
-            player.action_test()
+            player.action_test(episode_step)
             reward_sum += player.reward
+            episode_step += 1
 
             if player.done:
                 all_episode_returns.append(reward_sum)
