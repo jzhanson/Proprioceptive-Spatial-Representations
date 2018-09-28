@@ -157,8 +157,10 @@ if __name__=='__main__':
             current_model_statistics = directory_evaluate(current_args)
             all_model_statistics.append(current_model_statistics)
 
-        plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
+        #plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
 
+
+    # TODO(josh): no guarantee that the checkpoints will be read low -> high, so appending doesn't make sense
     elif args['evaluate_all']:
         models_list = [f for f in os.listdir(args['load_directory']) if '.pth' in f]
         for model in models_list:
@@ -171,7 +173,7 @@ if __name__=='__main__':
             all_model_statistics.append(current_model_statistics)
 
         # Note: evaluate_all still requires models_step
-        plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
+        #plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
 
     else:
         current_args = copy.deepcopy(args)
