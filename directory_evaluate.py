@@ -148,6 +148,7 @@ if __name__=='__main__':
 
     # We want the directory hierarchy to be: model -> dataset -> checkpoint
     if args['models_start'] != -1:
+        assert False
         for i in range(args['models_start'], args['models_end'] + args['models_step'], args['models_step']):
             current_args = copy.deepcopy(args)
             # Provide --load-directory instead of --load-file if going to iterate through files
@@ -162,6 +163,7 @@ if __name__=='__main__':
 
     # TODO(josh): no guarantee that the checkpoints will be read low -> high, so appending doesn't make sense
     elif args['evaluate_all']:
+        assert False
         models_list = [f for f in os.listdir(args['load_directory']) if '.pth' in f]
         for model in models_list:
             print(model)
@@ -177,6 +179,6 @@ if __name__=='__main__':
 
     else:
         current_args = copy.deepcopy(args)
-        current_args['output_directory'] = os.path.join(args['output_directory'], os.path.split(args['load_file'])[1])
+        #current_args['output_directory'] = os.path.join(args['output_directory'], os.path.split(args['load_file'])[1])
         directory_evaluate(args)
 
