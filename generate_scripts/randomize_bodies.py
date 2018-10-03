@@ -64,10 +64,19 @@ class RandomizeBodies:
 
             if metafile is not None:
                 metafile.write(gen_args['filename'] + '\n')
-                metafile.write('num_segments : ' + str(gen_args['num_segments']) + '\n')
-                for k in gen_args.keys():
-                    if k != 'num_segments':
-                        metafile.write(k + ' : ' + str(gen_args[k]) + '\n')
+                if self.body_type == 'BipedalWalker':
+                    metafile.write('num_segments : ' + str(gen_args['num_segments']) + '\n')
+
+                    for k in gen_args.keys():
+                        if k != 'num_segments':
+                            metafile.write(k + ' : ' + str(gen_args[k]) + '\n')
+                elif self.body_type == 'RaptorWalker':
+                    metafile.write('neck_segments : ' + str(gen_args['neck_segments']) + '\n')
+                    metafile.write('tail_segments : ' + str(gen_args['tail_segments']) + '\n')
+
+                    for k in gen_args.keys():
+                        if k != 'neck_segments' or k != 'tail_segments':
+                            metafile.write(k + ' : ' + str(gen_args[k]) + '\n')
                 metafile.write('\n')
 
 if __name__ == '__main__':

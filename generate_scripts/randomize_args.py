@@ -132,15 +132,29 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
     elif body_type == 'CentipedeWalker':
         pass
     elif body_type == 'RaptorWalker':
-        parser.add_argument('--rigid-spine', dest='rigid_spine', action='store_true')
-        parser.add_argument('--no-rigid-spine', dest='rigid_spine', action='store_false')
-        parser.set_defaults(rigid_spine=False)
-        parser.add_argument('--spine-motors', dest='spine_motors', action='store_true')
+        parser.add_argument('--rigid-neck', dest='rigid_neck', action='store_true')
+        parser.add_argument('--no-rigid-neck', dest='rigid_neck', action='store_false')
+        parser.set_defaults(rigid_neck=False)
+        parser.add_argument('--rigid-tail', dest='rigid_tail', action='store_true')
+        parser.add_argument('--no-rigid-tail', dest='rigid_tail', action='store_false')
+        parser.set_defaults(rigid_tail=False)
+        parser.add_argument('--rigid-legs', dest='rigid_legs', action='store_true')
+        parser.add_argument('--no-rigid-legs', dest='rigid_legs', action='store_false')
+        parser.set_defaults(rigid_legs=False)
         parser.add_argument('--no-spine-motors', dest='spine_motors', action='store_false')
         parser.set_defaults(spine_motors=True)
         parser.add_argument('--rigid-foot', dest='rigid_foot', action='store_true')
         parser.add_argument('--no-rigid-foot', dest='rigid_foot', action='store_false')
         parser.set_defaults(rigid_foot=False)
+        parser.add_argument('--fixed-foot', dest='fixed_foot', action='store_true')
+        parser.add_argument('--no-fixed-foot', dest='fixed_foot', action='store_false')
+        parser.set_defaults(fixed_foot=False)
+        parser.add_argument('--bipedal-legs', dest='bipedal_legs', action='store_true')
+        parser.add_argument('--no-bipedal-legs', dest='bipedal_legs', action='store_false')
+        parser.set_defaults(bipedal_legs=False)
+        parser.add_argument('--build-head', dest='build_head', action='store_true')
+        parser.add_argument('--no-build-head', dest='build_head', action='store_false')
+        parser.set_defaults(build_head=True)
         parser.add_argument(
             '--outfile-prefix',
             type=str,
@@ -358,10 +372,15 @@ def parse_default_args(body_type, additional_default_args={}):
             'outfile_prefix' : 'GeneratedRaptorWalker',
             'num_bodies' : 1,
             'distribution' : 'uniform',
-            'rigid_spine' : False,
+            'rigid_neck' : False,
+            'rigid_tail' : False,
+            'rigid_legs' : False,
             'spine_motors' : True,
             'rigid_foot' : False,
-            'report-segments': -1,
+            'fixed_foot' : False,
+            'bipedal_legs' : False,
+            'build_head' : True,
+            'report_segments': -1,
             'hull_density' : 5.0,
             'hull_friction' : 0.1,
             'head_density' : 5.0,
