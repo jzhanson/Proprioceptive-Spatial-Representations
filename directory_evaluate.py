@@ -5,40 +5,6 @@ import numpy as np
 import torch
 from args import parse_args
 
-def plot_all_statistics(all_model_statistics, save_dir, model_step):
-    # TODO: model checkpoints don't start at 0
-    x = [(i + 1) * model_step for i in range(len(all_model_statistics))]
-    y = []
-
-    # all_model_statistics is list of dicts of (env, dict of (statistic, value))
-    for i in range(len(all_statistics)):
-        current_model_statistics = all_model_statistics[i]
-        # TODO: add more detailed plotting?
-        current_return_means = []
-        current_successes = []
-        for env_name in current_model_statistics:
-            current_return_means.append(np.mean(current_model_statistics[env_name]['all_episode_returns']))
-            current_successes_mean.append(np.mean(current_model_statistics[env_name]['all_episode_successes']))
-
-        y.append(np.mean(current_return_means))
-
-    # Raw plot
-    plt.clf()
-    plt.plot(x, y)
-    plt.title('Directory Evaluation Returns')
-    plt.xlabel('Model checkpoint')
-    plt.ylabel('Average reward per episode')
-    plt.savefig('{0}/test_episode_returns.png'.format(save_dir))
-    plt.savefig('{0}/test_episode_returns.eps'.format(save_dir))
-
-    # Smoothed version
-    plt.clf()
-    y_smooth = smooth(y, x)
-    plt.plot(x, y_smooth, 'k', color='#CC4F1B')
-    plt.savefig('{0}/test_episode_returns_smooth.png'.format(save_dir))
-    plt.savefig('{0}/test_episode_returns_smooth.eps'.format(save_dir))
-
-
 def directory_evaluate(args):
     all_evaluation_statistics = {}
 
@@ -158,7 +124,6 @@ if __name__=='__main__':
             current_model_statistics = directory_evaluate(current_args)
             all_model_statistics.append(current_model_statistics)
 
-        #plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
 
 
     # TODO(josh): no guarantee that the checkpoints will be read low -> high, so appending doesn't make sense
@@ -173,9 +138,6 @@ if __name__=='__main__':
             current_args['output_directory'] = os.path.join(args['output_directory'], model)
             current_model_statistics = directory_evaluate(current_args)
             all_model_statistics.append(current_model_statistics)
-
-        # Note: evaluate_all still requires models_step
-        #plot_all_statistics(all_model_statistics, args['output_directory'], args['models_step'])
 
     else:
         current_args = copy.deepcopy(args)

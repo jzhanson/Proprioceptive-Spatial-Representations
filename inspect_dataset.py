@@ -98,8 +98,8 @@ def inspect_dataset(args):
             if body_type == 'RaptorWalker':
                 print('reporting bodies : ' + str(reporting_bodies))
                 print('reporting joints : ' + str(reporting_joints))
-                print('num_neck_segments : ' + str(neck_segments))
-                print('num_tail_segments : ' + str(tail_segments))
+                print('neck segments : ' + str(neck_segments))
+                print('tail segments : ' + str(tail_segments))
                 print('has head : ' + str(has_head))
             print('\n')
 
