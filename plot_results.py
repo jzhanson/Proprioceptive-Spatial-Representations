@@ -8,45 +8,69 @@ from common.stat_utils import smooth
 from args import parse_args
 
 # TODO(josh): build ability to make graphs for each JSON
-def plot_statistics(all_model_statistics, graphs_directory):
+def plot_statistics(all_model_statistics, graphs_directory, json_mean_or_median, episode_mean_or_median, json_name=None):
     # Assumes model filenames are of the form model.x.pth
     checkpoints = []
     all_returns = []
     all_successes = []
-    # TODO(josh): extend to get median statistics
     for checkpoint_name in all_model_statistics.keys():
-        num_jsons = len(all_model_statistics[checkpoint_name].keys())
-        if num_jsons == 0:
-            print(checkpoint_name)
+        # Skip if no evaluation data for that json (only for single JSON plot)
+        if json_name is not None and json_name not in all_model_statistics[checkpoint_name].keys():
+            print("Trying to plot json " + json_name + " but no data for checkpoint " + checkpoint_name)
             continue
-        # Currently, a checkpoint is the mean of means (over JSONs, over episodes)
+
+        num_jsons = len(all_model_statistics[checkpoint_name].keys())
+
+        if num_jsons == 0:
+            print("No JSONs but directory exists for " + checkpoint_name)
+            continue
+
         checkpoints.append(int(checkpoint_name.split('.')[1]))
-        returns_total_means = 0
-        successes_total_means = 0
-        for json_name in all_model_statistics[checkpoint_name].keys():
-            returns_total_means += np.mean(all_model_statistics[checkpoint_name][json_name]['all_episode_returns'])
-            successes_total_means += np.mean(all_model_statistics[checkpoint_name][json_name]['all_episode_successes'])
-        all_returns.append(returns_total_means / num_jsons)
-        all_successes.append(successes_total_means / num_jsons)
+
+        jsons_returns = []
+        jsons_successes = []
+
+        if json_name is not None:
+            jsons_to_plot = [json_name]
+        else:
+            jsons_to_plot = all_model_statistics[checkpoint_name].keys()
+
+        for json in jsons_to_plot:
+            if episode_mean_or_median == 'mean':
+                jsons_returns.append(np.mean(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
+                jsons_successes.append(np.mean(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
+            elif episode_mean_or_median == 'median':
+                jsons_returns.append(np.median(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
+                jsons_successes.append(np.median(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
+
+        if json_mean_or_median == 'mean':
+            all_returns.append(np.mean(np.array(jsons_returns)))
+            all_successes.append(np.mean(np.array(jsons_successes)))
+        elif json_mean_or_median == 'median':
+            all_returns.append(np.median(np.array(jsons_returns)))
+            all_successes.append(np.median(np.array(jsons_successes)))
     sorted_checkpoints, sorted_all_returns = zip(*sorted(zip(checkpoints, all_returns)))
+
 
     # Raw plot
     plt.clf()
-    plt.plot(sorted_checkpoints, sorted_all_returns)
+    plt.plot(sorted_checkpoints, sorted_all_returns, '.-')
     plt.title('Directory Evaluation Returns')
     plt.xlabel('Model checkpoint')
     plt.ylabel('Average reward per episode')
     # TODO(josh): more descriptive saved graph names
-    plt.savefig(os.path.join(graphs_directory, 'evaluate_returns.png'))
-    plt.savefig(os.path.join(graphs_directory, 'evaluate_returns.eps'))
+    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + '_evaluate_returns.png'))
+    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + 'evaluate_returns.eps'))
 
     # Smoothed version
     plt.clf()
     all_returns_smooth = smooth(np.array(sorted_all_returns), np.array(sorted_checkpoints))
-    plt.plot(sorted_checkpoints, all_returns_smooth, 'k', color='#CC4F1B')
-    plt.savefig(os.path.join(graphs_directory, 'evaluate_returns_smooth.png'))
-    plt.savefig(os.path.join(graphs_directory, 'evaluate_returns_smooth.eps'))
-
+    plt.plot(sorted_checkpoints, all_returns_smooth, '.-', color='#CC4F1B')
+    plt.title('Directory Evaluation Returns')
+    plt.xlabel('Model checkpoint')
+    plt.ylabel('Average reward per episode')
+    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + '_evaluate_returns_smooth.png'))
+    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + 'evaluate_returns_smooth.eps'))
 
 if __name__=='__main__':
     args = parse_args(
@@ -86,18 +110,34 @@ if __name__=='__main__':
         current_model_statistics = {}
         current_evaluation_directory = os.path.join(args['model_directory'], args['evaluation_prefix'] + model)
 
-        for json_subdir in [f for f in os.listdir(current_evaluation_directory) if os.path.isdir(os.path.join(current_evaluation_directory, f))]:
-            current_evaluation_statistics_path = os.path.join(current_evaluation_directory, json_subdir, 'evaluation_statistics.pth')
+        if os.path.isdir(current_evaluation_directory):
+            for json_subdir in [f for f in os.listdir(current_evaluation_directory) if os.path.isdir(os.path.join(current_evaluation_directory, f))]:
+                current_evaluation_statistics_path = os.path.join(current_evaluation_directory, json_subdir, 'evaluation_statistics.pth')
 
-            # Makes the assumption that the json directory is [json filename]+junk
-            json_name = json_subdir.split('.json')[0]
-            if os.path.isfile(current_evaluation_statistics_path):
-                json_evaluation_statistics = torch.load(current_evaluation_statistics_path)
-                current_model_statistics[json_name] = json_evaluation_statistics
+                # Makes the assumption that the json directory is [json filename]+junk
+                json_name = json_subdir.split('.json')[0]
+                if os.path.isfile(current_evaluation_statistics_path):
+                    json_evaluation_statistics = torch.load(current_evaluation_statistics_path)
+                    current_model_statistics[json_name] = json_evaluation_statistics
 
-        all_model_statistics[model] = current_model_statistics
+            all_model_statistics[model] = current_model_statistics
+        else:
+            print("No evaluation yet for model: " + model)
 
-    plot_statistics(all_model_statistics, args['graphs_directory'])
+    plot_statistics(all_model_statistics, args['graphs_directory'], "mean", "mean")
+    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "median")
+    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "mean")
 
-
+    # Plot results for each JSONs
+    done_jsons = []
+    for model in all_model_statistics.keys():
+        for json in all_model_statistics[model].keys():
+            if json not in done_jsons:
+                json_graphs_directory = os.path.join(args['graphs_directory'], json)
+                if not os.path.exists(json_graphs_directory):
+                    os.mkdir(json_graphs_directory)
+                # Note that the mean/median doesn't matter for JSONs since there's only one
+                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "mean", json_name = json)
+                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "median", json_name = json)
+                done_jsons.append(json)
 
