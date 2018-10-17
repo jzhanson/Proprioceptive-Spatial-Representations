@@ -198,6 +198,9 @@ if __name__=='__main__':
         }
     )
 
+    if not os.path.isdir(args['graphs_directory']):
+        os.makedirs(args['graphs_directory'])
+
     # Directories go model -> checkpoints -> JSON -> evaluation_statistics.pth
     models_list = [f for f in os.listdir(args['model_directory']) if not os.path.isdir(os.path.join(args['model_directory'], f)) and '.pth' in f]
 
