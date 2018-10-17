@@ -52,21 +52,43 @@ def plot_statistics(all_model_statistics, graphs_directory,
             elif episode_mean_or_median == 'median':
                 jsons_returns.append(np.median(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
                 jsons_successes.append(np.median(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
+            elif episode_mean_or_median == 'min':
+                jsons_returns.append(np.min(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
+                jsons_successes.append(np.min(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
+            elif episode_mean_or_median == 'max':
+                jsons_returns.append(np.max(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
+                jsons_successes.append(np.max(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
 
-        if skipped_checkpoints == 'mean' or skipped_checkpoints == 'median':
+
+
+        if skipped_checkpoints in ['mean', 'median', 'min', 'max']:
             if json_mean_or_median == 'mean':
                 skip_all_returns.append(np.mean(np.array(jsons_returns)))
                 skip_all_successes.append(np.mean(np.array(jsons_successes)))
             elif json_mean_or_median == 'median':
                 skip_all_returns.append(np.median(np.array(jsons_returns)))
                 skip_all_successes.append(np.median(np.array(jsons_successes)))
-            if skip_count == plotting_skip:
+            elif json_mean_or_median == 'min':
+                skip_all_returns.append(np.min(np.array(jsons_returns)))
+                skip_all_successes.append(np.min(np.array(jsons_successes)))
+            elif json_mean_or_median == 'max':
+                skip_all_returns.append(np.max(np.array(jsons_returns)))
+                skip_all_successes.append(np.max(np.array(jsons_successes)))
+
+            if skip_count == plotting_skip - 1:
                 if skipped_checkpoints == 'mean':
-                    all_returns.append(np.mean(np.array(skip_total_returns)))
-                    all_successes.append(np.mean(np.array(skip_total_successes)))
+                    all_returns.append(np.mean(np.array(skip_all_returns)))
+                    all_successes.append(np.mean(np.array(skip_all_successes)))
                 elif skipped_checkpoints == 'median':
-                    all_returns.append(np.median(np.array(skip_total_returns)))
-                    all_successes.append(np.median(np.array(skip_total_successes)))
+                    all_returns.append(np.median(np.array(skip_all_returns)))
+                    all_successes.append(np.median(np.array(skip_all_successes)))
+                elif skipped_checkpoints == 'min':
+                    all_returns.append(np.min(np.array(skip_all_returns)))
+                    all_successes.append(np.min(np.array(skip_all_successes)))
+                elif skipped_checkpoints == 'max':
+                    all_returns.append(np.max(np.array(skip_all_returns)))
+                    all_successes.append(np.max(np.array(skip_all_successes)))
+
                 checkpoints.append(int(checkpoint_name.split('.')[1]))
                 skip_all_returns = []
                 skip_all_successes = []
@@ -81,8 +103,17 @@ def plot_statistics(all_model_statistics, graphs_directory,
         elif json_mean_or_median == 'median':
             all_returns.append(np.median(np.array(jsons_returns)))
             all_successes.append(np.median(np.array(jsons_successes)))
+        elif json_mean_or_median == 'min':
+            all_returns.append(np.min(np.array(jsons_returns)))
+            all_successes.append(np.min(np.array(jsons_successes)))
+        elif json_mean_or_median == 'max':
+            all_returns.append(np.max(np.array(jsons_returns)))
+            all_successes.append(np.max(np.array(jsons_successes)))
+
 
         checkpoints.append(int(checkpoint_name.split('.')[1]))
+
+    # TODO(josh): currently not graphing all_successes
     sorted_checkpoints, sorted_all_returns = zip(*sorted(zip(checkpoints, all_returns)))
 
     # Raw plot
@@ -91,9 +122,18 @@ def plot_statistics(all_model_statistics, graphs_directory,
     plt.title('Directory Evaluation Returns')
     plt.xlabel('Model checkpoint')
     plt.ylabel('Average reward per episode')
-    # TODO(josh): more descriptive saved graph names
-    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + '_evaluate_returns.png'))
-    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + 'evaluate_returns.eps'))
+    if plotting_skip > 0:
+        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
+            skipped_checkpoints + '_' + json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns.png'))
+        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
+            skipped_checkpoints + '_' + json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns.eps'))
+    else:
+        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns.png'))
+        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns.eps'))
 
     # Smoothed version
     plt.clf()
@@ -102,8 +142,18 @@ def plot_statistics(all_model_statistics, graphs_directory,
     plt.title('Directory Evaluation Returns')
     plt.xlabel('Model checkpoint')
     plt.ylabel('Average reward per episode')
-    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + '_evaluate_returns_smooth.png'))
-    plt.savefig(os.path.join(graphs_directory, json_mean_or_median + episode_mean_or_median + 'evaluate_returns_smooth.eps'))
+    if plotting_skip > 0:
+        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
+            skipped_checkpoints + '_' + json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns_smooth.png'))
+        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
+            skipped_checkpoints + '_' + json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns_smooth.eps'))
+    else:
+        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns_smooth.png'))
+        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
+            episode_mean_or_median + '_evaluate_returns_smooth.eps'))
 
 if __name__=='__main__':
     args = parse_args(
