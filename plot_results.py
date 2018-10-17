@@ -9,12 +9,16 @@ import re
 from common.stat_utils import smooth
 from args import parse_args
 
-# TODO(josh): build ability to make graphs for each JSON
-def plot_statistics(all_model_statistics, graphs_directory, json_mean_or_median, episode_mean_or_median, json_name=None):
+def plot_statistics(all_model_statistics, graphs_directory,
+        json_mean_or_median, episode_mean_or_median, json_name=None,
+        plotting_skip=0, skipped_checkpoints='skip'):
     # Assumes model filenames are of the form model.x.pth
     checkpoints = []
     all_returns = []
     all_successes = []
+    skip_count = 0
+    skip_all_returns = []
+    skip_all_successes = []
     for checkpoint_name in all_model_statistics.keys():
         # Skip if no evaluation data for that json (only for single JSON plot)
         if json_name is not None and json_name not in all_model_statistics[checkpoint_name].keys():
@@ -27,7 +31,11 @@ def plot_statistics(all_model_statistics, graphs_directory, json_mean_or_median,
             print("No JSONs but directory exists for " + checkpoint_name)
             continue
 
-        checkpoints.append(int(checkpoint_name.split('.')[1]))
+        if skip_count < plotting_skip and skipped_checkpoints == 'skip':
+            skip_count += 1
+            continue
+        elif skip_count == plotting_skip and skipped_checkpoints == 'skip':
+            skip_count = 0
 
         jsons_returns = []
         jsons_successes = []
@@ -45,14 +53,37 @@ def plot_statistics(all_model_statistics, graphs_directory, json_mean_or_median,
                 jsons_returns.append(np.median(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
                 jsons_successes.append(np.median(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
 
+        if skipped_checkpoints == 'mean' or skipped_checkpoints == 'median':
+            if json_mean_or_median == 'mean':
+                skip_all_returns.append(np.mean(np.array(jsons_returns)))
+                skip_all_successes.append(np.mean(np.array(jsons_successes)))
+            elif json_mean_or_median == 'median':
+                skip_all_returns.append(np.median(np.array(jsons_returns)))
+                skip_all_successes.append(np.median(np.array(jsons_successes)))
+            if skip_count == plotting_skip:
+                if skipped_checkpoints == 'mean':
+                    all_returns.append(np.mean(np.array(skip_total_returns)))
+                    all_successes.append(np.mean(np.array(skip_total_successes)))
+                elif skipped_checkpoints == 'median':
+                    all_returns.append(np.median(np.array(skip_total_returns)))
+                    all_successes.append(np.median(np.array(skip_total_successes)))
+                checkpoints.append(int(checkpoint_name.split('.')[1]))
+                skip_all_returns = []
+                skip_all_successes = []
+
+            skip_count = (skip_count + 1) % plotting_skip
+            continue
+
+
         if json_mean_or_median == 'mean':
             all_returns.append(np.mean(np.array(jsons_returns)))
             all_successes.append(np.mean(np.array(jsons_successes)))
         elif json_mean_or_median == 'median':
             all_returns.append(np.median(np.array(jsons_returns)))
             all_successes.append(np.median(np.array(jsons_successes)))
-    sorted_checkpoints, sorted_all_returns = zip(*sorted(zip(checkpoints, all_returns)))
 
+        checkpoints.append(int(checkpoint_name.split('.')[1]))
+    sorted_checkpoints, sorted_all_returns = zip(*sorted(zip(checkpoints, all_returns)))
 
     # Raw plot
     plt.clf()
@@ -94,12 +125,26 @@ if __name__=='__main__':
                 'type' : str,
                 'metavar' : 'GD',
                 'help' : 'The directory in which to save the graphs'
+            },
+            'plotting_skip' : {
+                'name' : '--plotting-skip',
+                'type' : int,
+                'metavar' : 'PI',
+                'help' : 'How many checkpoints to skip between plotted checkpoints'
+            },
+            'skipped_checkpoints' : {
+                'name' : '--skipped-checkpoints',
+                'type' : str,
+                'metavar' : 'SC',
+                'help' : 'Whether to "skip" or average via "mean" or "median" skipped checkpoints'
             }
         },
         additional_default_args={
             'model_directory' : '',
             'evaluation_prefix' : '',
-            'graphs_directory' : ''
+            'graphs_directory' : '',
+            'plotting_skip' : 0,
+            'skipped_checkpoints' : 'skip'
         }
     )
 
@@ -126,9 +171,16 @@ if __name__=='__main__':
         else:
             print("No evaluation yet for model: " + model)
 
-    plot_statistics(all_model_statistics, args['graphs_directory'], "mean", "mean")
-    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "median")
-    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "mean")
+    plot_statistics(all_model_statistics, args['graphs_directory'], "mean", "mean",
+        plotting_skip = args['plotting_skip'],
+        skipped_checkpoints = args['skipped_checkpoints'])
+    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "median",
+        plotting_skip = args['plotting_skip'],
+        skipped_checkpoints = args['skipped_checkpoints'])
+    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "mean",
+        plotting_skip = args['plotting_skip'],
+        skipped_checkpoints = args['skipped_checkpoints'])
+
 
     # Plot results for each JSONs
     done_jsons = []
@@ -139,7 +191,15 @@ if __name__=='__main__':
                 if not os.path.exists(json_graphs_directory):
                     os.mkdir(json_graphs_directory)
                 # Note that the mean/median doesn't matter for JSONs since there's only one
-                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "mean", json_name = json)
-                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "median", json_name = json)
+                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "mean",
+                    json_name = json,
+                    plotting_skip = args['plotting_skip'],
+                    skipped_checkpoints = args['skipped_checkpoints'])
+
+                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "median",
+                    json_name = json,
+                    plotting_skip = args['plotting_skip'],
+                    skipped_checkpoints = args['skipped_checkpoints'])
+
                 done_jsons.append(json)
 
