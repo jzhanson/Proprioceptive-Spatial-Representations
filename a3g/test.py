@@ -6,6 +6,8 @@ import importlib
 import torch
 from torch.autograd import Variable
 
+from tensorboardX import SummaryWriter
+
 from common.environment import create_env
 from common.utils import setup_logger
 from common.stat_utils import smooth
@@ -72,6 +74,10 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
     episode_step = 0
     episode_count = len(all_scores)
     max_score = np.max(all_scores) if len(all_scores) > 0 else 0
+
+    # Set up tensorboardx
+    writer = SummaryWriter()
+
     while True:
         if player.done:
             # Only run test episode every ~N updates
@@ -158,6 +164,11 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
                 'all_global_steps' : all_global_steps,
             }, model_path)
 
+            writer.add_scalar('max_score', max_score, global_step)
+            writer.add_scalar('reward_sum', reward_sum, global_step)
+            writer.add_scalar('reward_mean', reward_mean, global_step)
+            writer.add_scalar('player_eps_len', player.eps_len, global_step)
+
             reward_sum = 0
             player.eps_len = 0
             state, player.info = player.env.reset()
@@ -165,3 +176,4 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
                     player.state = player.state.cuda()
+
