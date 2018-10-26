@@ -176,6 +176,13 @@ if __name__=='__main__':
                 'metavar' : 'GD',
                 'help' : 'The directory in which to save the graphs'
             },
+            # separate_directory is when we have directory -> ckpt eval dirs (no ckpts) -> JSON dirs
+            'separate_directory' : {
+                'name' : '--separate-directory',
+                'type' : str,
+                'metavar' : 'SD',
+                'help' : 'If evaluations are in a separate directory, in separate directories'
+            },
             'plotting_skip' : {
                 'name' : '--plotting-skip',
                 'type' : int,
@@ -193,6 +200,7 @@ if __name__=='__main__':
             'model_directory' : '',
             'evaluation_prefix' : '',
             'graphs_directory' : '',
+            'separate_directory' : '',
             'plotting_skip' : 0,
             'skipped_checkpoints' : 'skip'
         }
@@ -201,15 +209,23 @@ if __name__=='__main__':
     if not os.path.isdir(args['graphs_directory']):
         os.makedirs(args['graphs_directory'])
 
-    # Directories go model -> checkpoints -> JSON -> evaluation_statistics.pth
-    models_list = [f for f in os.listdir(args['model_directory']) if not os.path.isdir(os.path.join(args['model_directory'], f)) and '.pth' in f]
+    if args['separate_directory'] != '':
+        # directory -> checkpoints -> JSONS
+        # In this case, model_directory is just the
+        models_list = [f for f in os.listdir(args['separate_directory']) if '.pth' in f]
+    else:
+        # Directories go model -> checkpoints -> JSON -> evaluation_statistics.pth
+        models_list = [f for f in os.listdir(args['model_directory']) if not os.path.isdir(os.path.join(args['model_directory'], f)) and '.pth' in f]
 
     # model_statistics is (checkpoint, (json, (all_episode_returns | all_episode_successes, np array))
     all_model_statistics = {}
     for model in models_list:
         current_model_statistics = {}
-        current_evaluation_directory = os.path.join(args['model_directory'], args['evaluation_prefix'] + model)
 
+        if args['separate_directory'] != '':
+            current_evaluation_directory = os.path.join(args['separate_directory'], model)
+        else:
+            current_evaluation_directory = os.path.join(args['model_directory'], args['evaluation_prefix'] + model)
         if os.path.isdir(current_evaluation_directory):
             for json_subdir in [f for f in os.listdir(current_evaluation_directory) if os.path.isdir(os.path.join(current_evaluation_directory, f))]:
                 current_evaluation_statistics_path = os.path.join(current_evaluation_directory, json_subdir, 'evaluation_statistics.pth')
