@@ -125,8 +125,8 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
             plt.clf()
             plt.plot(x, y)
             plt.title('Test Episode Returns')
-            plt.xlabel('Test Episode')
-            plt.ylabel('Return')
+            plt.xlabel('Global gradient step')
+            plt.ylabel('Test Episode Return')
             plt.savefig('{0}/test_episode_returns.png'.format(save_dir))
             plt.savefig('{0}/test_episode_returns.eps'.format(save_dir))
 
@@ -134,6 +134,9 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
             plt.clf()
             y_smooth = smooth(y, x)
             plt.plot(x, y_smooth, 'k', color='#CC4F1B')
+            plt.title('Test Episode Returns')
+            plt.xlabel('Global gradient step')
+            plt.ylabel('Test Episode Return')
             plt.savefig('{0}/test_episode_returns_smooth.png'.format(save_dir))
             plt.savefig('{0}/test_episode_returns_smooth.eps'.format(save_dir))
 
