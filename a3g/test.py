@@ -69,6 +69,10 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
             player.state = player.state.cuda()
     player.model.eval()
 
+    start_global_step = 0
+    # If resuming previous step, load previous global step
+    if len(all_global_steps) > 0:
+        start_global_step = all_global_steps[-1]
     global_step = 0
 
     episode_step = 0
@@ -115,7 +119,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
                     reward_sum, player.eps_len, reward_mean))
 
 
-            all_global_steps.append(global_step)
+            all_global_steps.append(start_global_step + global_step)
             all_scores.append(reward_sum)
 
             x = np.array(all_global_steps) #range(len(all_scores)))
