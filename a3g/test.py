@@ -91,7 +91,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
                 new_global_step = 0
                 for i in range(len(all_step_counters)):
                     new_global_step += all_step_counters[i].value
-                print(new_global_step)
+                #print(new_global_step)
                 time.sleep(2)
             global_step = new_global_step
 
@@ -102,7 +102,8 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
             else:
                 player.model.load_state_dict(shared_model.state_dict())
 
-        player.action_test(episode_step)
+        # player.action_test(episode_step)
+        player.action_test()
         reward_sum += player.reward
         episode_step += 1
 
@@ -146,7 +147,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
 
             model_path = save_dir+'/model'
             if args['save_intermediate']:
-                model_path = model_path+'.'+str(global_step) #episode_count)
+                model_path = model_path+'.'+str(start_global_step + global_step) #episode_count)
             model_path = model_path+".pth"
 
             # Is this the best model so far?
@@ -171,10 +172,10 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
                 'all_global_steps' : all_global_steps,
             }, model_path)
 
-            writer.add_scalar('max_score', max_score, global_step)
-            writer.add_scalar('reward_sum', reward_sum, global_step)
-            writer.add_scalar('reward_mean', reward_mean, global_step)
-            writer.add_scalar('player_eps_len', player.eps_len, global_step)
+            writer.add_scalar('max_score', max_score, start_global_step + global_step)
+            writer.add_scalar('reward_sum', reward_sum, start_global_step + global_step)
+            writer.add_scalar('reward_mean', reward_mean, start_global_step + global_step)
+            writer.add_scalar('player_eps_len', player.eps_len, start_global_step + global_step)
 
             reward_sum = 0
             player.eps_len = 0
