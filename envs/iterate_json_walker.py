@@ -18,7 +18,7 @@ from envs.json_walker import JSONWalker
 class IterateJSONWalker(JSONWalker):
     hardcore = False
 
-    def __init__(self, jsondir):
+    def __init__(self, jsondir, truncate_state=False, max_state_dim=None, max_action_dim=None):
 
         # Store the file list here
         self.jsondir = jsondir
@@ -28,7 +28,8 @@ class IterateJSONWalker(JSONWalker):
         self.file_iterator = -1
 
         # Load the first json randomly (place-holder)
-        super(IterateJSONWalker, self).__init__(self._next_file())
+        super(IterateJSONWalker, self).__init__(self._next_file(),
+                truncate_state, max_state_dim, max_action_dim)
 
         self.reset()
 

@@ -18,12 +18,12 @@ from envs.json_walker import JSONWalker
 class RandomJSONWalker(JSONWalker):
     hardcore = False
 
-    def __init__(self, jsondir):
+    def __init__(self, jsondir, truncate_state=False, max_state_dim=None, max_action_dim=None):
 
         self.jsondir = jsondir
 
         # Load the first json randomly (place-holder)
-        super(RandomJSONWalker, self).__init__(self._sample_file())
+        super(RandomJSONWalker, self).__init__(self._sample_file(), truncate_state, max_state_dim, max_action_dim)
 
         self.reset()
 

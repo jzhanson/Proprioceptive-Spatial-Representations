@@ -149,11 +149,11 @@ class JSONWalker(gym.Env):
             high = np.array( [np.inf]*(5*len(self.bodies_to_report_keys)+2*len(self.joints_to_report_keys)+10) )
 
         if self.max_action_dim is not None:
-            self.action_space = spaces.Box( np.array([-1.0] * self.max_action_dim), np.array([+1.0] * self.max_action_dim) )
+            self.action_space = spaces.Box( np.array([-1.0] * self.max_action_dim), np.array([+1.0] * self.max_action_dim), dtype=np.float32 )
         else:
             self.action_space = spaces.Box(
-                np.array([-1.0]*num_enabled_joints), np.array([+1.0]*num_enabled_joints))
-        self.observation_space = spaces.Box(-high, high)
+                np.array([-1.0]*num_enabled_joints), np.array([+1.0]*num_enabled_joints), dtype=np.float32 )
+        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)

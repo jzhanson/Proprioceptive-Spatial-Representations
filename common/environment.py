@@ -34,13 +34,17 @@ def create_env(env_id, args):
         env = JSONWalkerHardcore(env_id[len('JSONWalkerHardcore-'):],
                 args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('RandomJSONWalker-'):
-        env = RandomJSONWalker(env_id[len('RandomJSONWalker-'):])
+        env = RandomJSONWalker(env_id[len('RandomJSONWalker-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('RandomJSONWalkerHardcore-'):
-        env = RandomJSONWalkerHardcore(env_id[len('RandomJSONWalkerHardcore-'):])
+        env = RandomJSONWalkerHardcore(env_id[len('RandomJSONWalkerHardcore-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('IterateJSONWalker-'):
-        env = IterateJSONWalker(env_id[len('IterateJSONWalker-'):])
+        env = IterateJSONWalker(env_id[len('IterateJSONWalker-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('IterateJSONWalkerHardcore-'):
-        env = IterateJSONWalkerHardcore(env_id[len('IterateJSONWalkerHardcore-'):])
+        env = IterateJSONWalkerHardcore(env_id[len('IterateJSONWalkerHardcore-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id == 'GridBipedalWalker-v0':
         env = GridBipedalWalker()
     elif env_id == 'GridBipedalWalkerHardcore-v0':
