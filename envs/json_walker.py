@@ -79,7 +79,7 @@ class JSONWalker(gym.Env):
 
     hardcore = False
 
-    def __init__(self, jsonfile):
+    def __init__(self, jsonfile, truncate_state=False, max_state_dim=None, max_action_dim=None):
         self.seed()
         self.viewer = None
 
@@ -87,6 +87,10 @@ class JSONWalker(gym.Env):
         self.terrain = None
 
         self.prev_shaping = None
+
+        self.max_state_dim = max_state_dim
+        self.max_action_dim = max_action_dim
+        self.truncate_state = truncate_state
 
         self.fd_polygon = fixtureDef(
                         shape = polygonShape(vertices=
@@ -131,14 +135,25 @@ class JSONWalker(gym.Env):
                 assert(False)
 
         self.enabled_joints_keys = [k for k in self.joint_defs.keys() if self.joint_defs[k]['EnableMotor']]
-        self.joints_to_report_keys = [k for k in self.joint_defs.keys() if self.joint_defs[k]['ReportState']]
-        self.bodies_to_report_keys = [k for k in self.body_defs.keys() if self.body_defs[k]['ReportState']]
+        if self.truncate_state:
+            self.joints_to_report_keys = [k for k in self.joint_defs.keys() if self.joint_defs[k]['ReportState']]
+            self.bodies_to_report_keys = [k for k in self.body_defs.keys() if self.body_defs[k]['ReportState']]
+        else:
+            self.joints_to_report_keys = [k for k in self.joint_defs.keys()]
+            self.bodies_to_report_keys = [k for k in self.body_defs.keys()]
         num_enabled_joints = len(self.enabled_joints_keys)
-        high = np.array( [np.inf]*(5*len(self.bodies_to_report_keys)+2*len(self.joints_to_report_keys)+10) )
 
-        self.action_space = spaces.Box(
-            np.array([-1.0]*num_enabled_joints), np.array([+1.0]*num_enabled_joints), dtype=np.float32)
-        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
+        if self.max_state_dim is not None:
+            high = np.array( [np.inf]*self.max_state_dim )
+        else:
+            high = np.array( [np.inf]*(5*len(self.bodies_to_report_keys)+2*len(self.joints_to_report_keys)+10) )
+
+        if self.max_action_dim is not None:
+            self.action_space = spaces.Box( np.array([-1.0] * self.max_action_dim), np.array([+1.0] * self.max_action_dim) )
+        else:
+            self.action_space = spaces.Box(
+                np.array([-1.0]*num_enabled_joints), np.array([+1.0]*num_enabled_joints))
+        self.observation_space = spaces.Box(-high, high)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -401,7 +416,15 @@ class JSONWalker(gym.Env):
 
         # Joints we want to report state is a superset of joints we want to allow action
         self.joint_action_order = copy.deepcopy(list(self.enabled_joints_keys))
-        self.joint_state_order = copy.deepcopy(self.joint_action_order) + copy.deepcopy([k for k in self.joint_defs.keys() if k not in self.joint_action_order and self.joint_defs[k]['ReportState']])
+        if self.truncate_state:
+            self.joint_state_order = copy.deepcopy(self.joint_action_order) \
+                + copy.deepcopy([k for k in self.joint_defs.keys()
+                    if k not in self.joint_action_order and self.joint_defs[k]['ReportState']])
+        else:
+            self.joint_state_order = copy.deepcopy(self.joint_action_order) \
+                + copy.deepcopy([k for k in self.joint_defs.keys()
+                    if k not in self.joint_action_order])
+
         self.all_joints_order = copy.deepcopy(self.joint_state_order) + copy.deepcopy([k for k in self.joint_defs.keys() if k not in self.joint_state_order])
         for i in range(len(self.all_joints_order)):
             k = self.all_joints_order[i]
@@ -480,8 +503,18 @@ class JSONWalker(gym.Env):
                 self.joints[k].angle,
                 self.joints[k].speed / self.joint_defs[k]['Speed'],
             ]
+
+        # Zero-pad state if max_state_dim is larger than current state
+        if self.max_state_dim is not None:
+            while (len(state) < self.max_state_dim - 10):
+                state.append(0.0)
+
         state += [l.fraction for l in self.lidar]
-        assert len(state)==(5*len(self.body_state_order)+2*len(self.joint_state_order)+10)
+
+        if self.max_state_dim is not None:
+            assert len(state) == self.max_state_dim
+        else:
+            assert len(state)==(5*len(self.body_state_order)+2*len(self.joint_state_order)+10)
 
         return state
 
@@ -526,6 +559,9 @@ class JSONWalker(gym.Env):
         self.prev_shaping = shaping
 
         for i, a in enumerate(action):
+            # Don't discount for padded action space
+            if i >= len(self.joint_action_order):
+                continue
             reward -= 0.00035 * self.joint_defs[self.joint_action_order[i]]['MaxMotorTorque'] * np.clip(np.abs(a), 0, 1)
             # normalized to about -50.0 using heuristic, more optimal agent should spend less
 
@@ -733,9 +769,9 @@ if __name__=="__main__":
     #env = JSONWalker('box2d-json/RaptorWalker.json')
     #env = JSONWalkerHardcore('box2d-json/DogWalker.json')
     #env = JSONWalker('box2d-json/CentipedeWalker.json')
-    env = JSONWalker('box2d-json-gen-bipedal-segments-baseline/train/GeneratedBipedalWalker0.json')
+    #env = JSONWalker('box2d-json-gen-bipedal-segments-baseline/train/GeneratedBipedalWalker0.json')
     #env = JSONWalker('box2d-json-gen/GeneratedCentipedeWalker.json')
-    #env = JSONWalker('box2d-json-gen/GeneratedRaptorWalker.json')
+    env = JSONWalker('box2d-json-gen/GeneratedRaptorWalker.json')
 
     steps = 0
     total_reward = 0

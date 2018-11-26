@@ -28,9 +28,11 @@ def create_env(env_id, args):
     elif env_id == 'GishWalkerHardcore-v0':
         env = GishWalkerHardcore()
     elif env_id.startswith('JSONWalker-'):
-        env = JSONWalker(env_id[len('JSONWalker-'):])
+        env = JSONWalker(env_id[len('JSONWalker-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('JSONWalkerHardcore-'):
-        env = JSONWalkerHardcore(env_id[len('JSONWalkerHardcore-'):])
+        env = JSONWalkerHardcore(env_id[len('JSONWalkerHardcore-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('RandomJSONWalker-'):
         env = RandomJSONWalker(env_id[len('RandomJSONWalker-'):])
     elif env_id.startswith('RandomJSONWalkerHardcore-'):

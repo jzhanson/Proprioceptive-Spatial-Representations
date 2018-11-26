@@ -118,6 +118,21 @@ def parse_cmdline_args(additional_parser_args={}):
         metavar='BD',
         help='Choose discount factor for motion blur')
     parser.add_argument(
+        '--max-state-dim',
+        type=int,
+        metavar='MSD',
+        help='Max state dimension to zero pad up to, for different body types')
+    parser.add_argument(
+        '--max-action-dim',
+        type=int,
+        metavar='MAD',
+        help='Max action dimension to accept (redundant elements will be ignored) for different body types')
+    parser.add_argument(
+        '--truncate-state',
+        type=bool,
+        metavar='TS',
+        help='Whether or not to truncate the state. If True, will only report bodies and joints marked with ReportState'),
+    parser.add_argument(
         '--test-every-n-steps',
         type=int,
         help='Approximately how many update steps before a test episode is run')
@@ -185,6 +200,9 @@ def parse_default_args(additional_default_args={}):
         'grid_use_lidar' : False,
         'blur_frames' : 1,
         'blur_discount' : 1.0,
+        'max_state_dim' : None,
+        'max_action_dim' : None,
+        'truncate_state' : False,
         'test_every_n_steps' : 100,
         'gpu_ids' : [-1],
         'amsgrad' : True,
