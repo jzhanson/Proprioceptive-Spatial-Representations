@@ -17,6 +17,7 @@ class Visualize():
         self.actiongrid_depth = 0
         self.show_stategrid = False
         self.paused = False
+        self.terminate_episode = False
 
     def key_press(self, key, mod):
         # If 'a' pressed, toggle actiongrid: hidden -> both -> depth 0 -> depth 1
@@ -34,6 +35,9 @@ class Visualize():
         # If 'p' pressed, pause env
         elif key == 112:
             self.paused = not self.paused
+        # If 'n' pressed, terminate episode
+        elif key == 110:
+            self.terminate_episode = True
 
     def main(self, args):
         if args['gpu_ids'][-1] != -1:
@@ -94,6 +98,8 @@ class Visualize():
                         self.model.load_state_dict(self.model.state_dict())
                 else:
                     self.model.load_state_dict(self.model.state_dict())
+                if self.terminate_episode:
+                    self.terminate_episode = False
 
             # action_test begin
             with torch.no_grad():
@@ -119,7 +125,7 @@ class Visualize():
                 with torch.cuda.device(gpu_id):
                     state = state.cuda()
             eps_len += 1
-            done = done or eps_len >= args['max_episode_length']
+            done = done or eps_len >= args['max_episode_length'] or self.terminate_episode
 
             # action_test end
             reward_sum += reward

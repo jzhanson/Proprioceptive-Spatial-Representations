@@ -769,12 +769,9 @@ if __name__=="__main__":
     #env = JSONWalker('box2d-json/RaptorWalker.json')
     #env = JSONWalkerHardcore('box2d-json/DogWalker.json')
     #env = JSONWalker('box2d-json/CentipedeWalker.json')
-<<<<<<< Updated upstream
     #env = JSONWalker('box2d-json-gen-bipedal-segments-baseline/train/GeneratedBipedalWalker0.json')
-=======
     #env = JSONWalker('box2d-json-gen/GeneratedBipedalWalker.json')
     #env = JSONWalker('datasets/bipedal-random-offcenter-hull-1-12-25-percent/train/GeneratedBipedalWalker4segments-4.json')
->>>>>>> Stashed changes
     #env = JSONWalker('box2d-json-gen/GeneratedCentipedeWalker.json')
     env = JSONWalker('box2d-json-gen/GeneratedRaptorWalker.json')
 
