@@ -91,6 +91,10 @@ class Visualize():
 
         episode_count = 0
         while True:
+            if self.paused:
+                self.env.render(model=self.model, show_stategrid=self.show_stategrid, show_actiongrid=self.show_actiongrid, actiongrid_depth=self.actiongrid_depth)
+                continue
+
             if done:
                 episode_count += 1
                 if gpu_id >= 0:
