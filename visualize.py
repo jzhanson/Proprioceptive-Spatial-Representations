@@ -14,7 +14,8 @@ from torch.autograd import Variable
 class Visualize():
     def __init__(self):
         self.show_actiongrid = False
-        self.actiongrid_depth = 0
+        self.actiongrid_depth = -1
+        self.actiongrid_clip = True
         self.show_stategrid = False
         self.paused = False
         self.terminate_episode = False
@@ -29,15 +30,32 @@ class Visualize():
                     self.show_actiongrid = False
             else:
                 self.show_actiongrid = True
+            if self.show_actiongrid and self.actiongrid_depth == -1:
+                print('showing actiongrid, both channels')
+            elif self.show_actiongrid and self.actiongrid_depth == 0:
+                print('showing actiongrid, channel 0')
+            elif self.show_actiongrid and self.actiongrid_depth == 1:
+                print('showing actiongrid, channel 1')
+            else:
+                print('hiding actiongrid')
         # If 's' pressed, toggle stategrid
         elif key == 115:
             self.show_stategrid = not self.show_stategrid
+            print('showing stategrid')
         # If 'p' pressed, pause env
         elif key == 112:
             self.paused = not self.paused
         # If 'n' pressed, terminate episode
         elif key == 110:
             self.terminate_episode = True
+            print('terminating episode')
+        # If 'l' pressed, switch actiongrid clipping values to 0 (default) to full
+        elif key == 108:
+            self.actiongrid_clip = not self.actiongrid_clip
+            if self.actiongrid_clip:
+                print('actiongrid clipping on')
+            else:
+                print('actiongrid clipping off')
 
     def main(self, args):
         if args['gpu_ids'][-1] != -1:
@@ -122,7 +140,7 @@ class Visualize():
             action = mu.cpu().numpy()[0]
             state, reward, done, info = self.env.step(action)
 
-            self.env.render(model=self.model, show_stategrid=self.show_stategrid, show_actiongrid=self.show_actiongrid, actiongrid_depth=self.actiongrid_depth)
+            self.env.render(model=self.model, show_stategrid=self.show_stategrid, show_actiongrid=self.show_actiongrid, actiongrid_depth=self.actiongrid_depth, actiongrid_clip=self.actiongrid_clip)
 
             state = torch.from_numpy(state).float()
             if gpu_id >= 0:

@@ -661,7 +661,7 @@ class JSONWalker(gym.Env):
                     filled_in_square._color.vec4 = body_color
                     filled_in_squares.append((lower_left_x, lower_left_y))
 
-    def _draw_actiongrid(self, model, depth=-1):
+    def _draw_actiongrid(self, model, depth=-1, clip_values=True):
         # Dimensions of action grid output by model not always the same as those of the state grid
         self.grid_edge = model.adec_nngrid.current_actiongrid.shape[2]
         self.grid_scale = model.adec_nngrid.grid_scale
@@ -684,7 +684,14 @@ class JSONWalker(gym.Env):
             current_actiongrid_layer = model.adec_nngrid.current_actiongrid[0, depth]
         else:
             current_actiongrid_layer = np.sum(model.adec_nngrid.current_actiongrid, axis=1)[0]
-        max_sum = np.amax(current_actiongrid_layer)
+        if clip_values:
+            min_sum = 0
+            max_sum = np.amax(current_actiongrid_layer)
+            fill_range = max_sum
+        else:
+            min_sum = np.amin(current_actiongrid_layer)
+            max_sum = np.amax(current_actiongrid_layer)
+            fill_range = max_sum - min_sum
 
         for x in range(self.grid_edge):
             for y in range(self.grid_edge):
@@ -695,10 +702,10 @@ class JSONWalker(gym.Env):
                     (lower_left_x, lower_left_y + self.grid_square_edge)]
                 filled_in_square = self.viewer.draw_polygon(vertices)
                 # Set intensity to the relative value of channels
-                square_fill = current_actiongrid_layer[x, y] / max_sum
+                square_fill = (current_actiongrid_layer[x, y] - min_sum) / fill_range
                 filled_in_square._color.vec4 = (square_fill, square_fill, square_fill, 0.5)
 
-    def render(self, mode='human', model=None, show_stategrid=False, show_actiongrid=False, actiongrid_depth=-1):
+    def render(self, mode='human', model=None, show_stategrid=False, show_actiongrid=False, actiongrid_depth=-1, actiongrid_clip=True):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
@@ -749,7 +756,7 @@ class JSONWalker(gym.Env):
         if show_stategrid:
             self._draw_stategrid(model)
         if show_actiongrid:
-            self._draw_actiongrid(model, depth=actiongrid_depth)
+            self._draw_actiongrid(model, depth=actiongrid_depth, clip_values=actiongrid_clip)
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
