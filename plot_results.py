@@ -9,9 +9,16 @@ import re
 from common.stat_utils import smooth
 from args import parse_args
 
+# Note: currently finds mean/median/min/max across episodes, then finds
+# mean/median/min/max across JSONs to plot. Might not be equal to pooling all
+# evaluation episodes together (across JSONs) and finding mean/median/min/max
+# of that.
+#
+# Also, error_bar_stdev is calculated across the calculated mean/median/min/max
+# of JSONs.
 def plot_statistics(all_model_statistics, graphs_directory,
         json_mean_or_median, episode_mean_or_median, json_name=None,
-        plotting_skip=0, skipped_checkpoints='skip'):
+        plotting_skip=0, skipped_checkpoints='skip', error_bar_stdev=0):
     # Assumes model filenames are of the form model.x.pth
     checkpoints = []
     all_returns = []
@@ -60,34 +67,54 @@ def plot_statistics(all_model_statistics, graphs_directory,
                 jsons_successes.append(np.max(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
 
 
+        jsons_returns = np.array(jsons_returns)
+        jsons_successes = np.array(jsons_successes)
 
         if skipped_checkpoints in ['mean', 'median', 'min', 'max']:
             if json_mean_or_median == 'mean':
-                skip_all_returns.append(np.mean(np.array(jsons_returns)))
-                skip_all_successes.append(np.mean(np.array(jsons_successes)))
+                skip_all_returns.append(np.mean(jsons_returns), np.std(jsons_returns))
+                skip_all_successes.append((np.mean(jsons_successes), np.std(jsons_successes)))
             elif json_mean_or_median == 'median':
-                skip_all_returns.append(np.median(np.array(jsons_returns)))
-                skip_all_successes.append(np.median(np.array(jsons_successes)))
+                skip_all_returns.append((np.median(jsons_returns), np.std(jsons_returns)))
+                skip_all_successes.append((np.median(jsons_successes), np.std(jsons_successes)))
             elif json_mean_or_median == 'min':
-                skip_all_returns.append(np.min(np.array(jsons_returns)))
-                skip_all_successes.append(np.min(np.array(jsons_successes)))
+                skip_all_returns.append((np.min(jsons_returns), np.std(jsons_returns)))
+                skip_all_successes.append((np.min(jsons_successes), np.std(jsons_successes)))
             elif json_mean_or_median == 'max':
-                skip_all_returns.append(np.max(np.array(jsons_returns)))
-                skip_all_successes.append(np.max(np.array(jsons_successes)))
+                skip_all_returns.append((np.max(jsons_returns), np.std(jsons_returns)))
+                skip_all_successes.append((np.max(jsons_successes), np.std(jsons_successes)))
 
             if skip_count == plotting_skip - 1:
+                skip_all_returns_means, skip_all_returns_stdevs = zip(*skip_all_returns)
+                skip_all_successes_means, skip_all_successes_stdevs = zip(*skip_all_successes)
+
                 if skipped_checkpoints == 'mean':
-                    all_returns.append(np.mean(np.array(skip_all_returns)))
-                    all_successes.append(np.mean(np.array(skip_all_successes)))
+                    # Treat stdev of mean as mean of stdevs
+                    all_returns.append((np.mean(np.array(skip_all_returns_means)),
+                        np.mean(np.array(skip_all_returns_stdevs))))
+                    all_successes.append((np.mean(np.array(skip_all_successes_means)),
+                        np.mean(np.array(skip_all_successes_stdevs))))
                 elif skipped_checkpoints == 'median':
-                    all_returns.append(np.median(np.array(skip_all_returns)))
+                    # Use stdev of median value
+                    # Sort by mean, then pick out stdev
+                    sorted_skip_all_returns_means, sorted_skip_all_returns_stdevs = zip(
+                        *sorted(skip_all_returns))
+                    all_returns.append((
+                        sorted_skip_all_returns_means[len(sorted_skip_all_returns_means) / 2],
+                        sorted_skip_all_returns_stdevs[len(sorted_skip_all_returns_stdevs) / 2]))
                     all_successes.append(np.median(np.array(skip_all_successes)))
                 elif skipped_checkpoints == 'min':
-                    all_returns.append(np.min(np.array(skip_all_returns)))
-                    all_successes.append(np.min(np.array(skip_all_successes)))
+                    # Use stdev of min value
+                    all_returns.append((np.min(np.array(skip_all_returns_mean)),
+                        skip_all_returns_stdevs[np.argmin(np.array(skip_all_returns_mean))]))
+                    all_successes.append((np.min(np.array(skip_all_successes_mean)),
+                        skip_all_successes_stdevs[np.argmin(np.array(skip_all_successes_mean))]))
                 elif skipped_checkpoints == 'max':
-                    all_returns.append(np.max(np.array(skip_all_returns)))
-                    all_successes.append(np.max(np.array(skip_all_successes)))
+                    # Use stdev of max value
+                    all_returns.append((np.max(np.array(skip_all_returns_mean)),
+                        skip_all_returns_stdevs[np.argmax(np.array(skip_all_returns_mean))]))
+                    all_successes.append((np.max(np.array(skip_all_successes_mean)),
+                        skip_all_successes_stdevs[np.argmax(np.array(skip_all_successes_mean))]))
 
                 checkpoints.append(int(checkpoint_name.split('.')[1]))
                 skip_all_returns = []
@@ -98,27 +125,32 @@ def plot_statistics(all_model_statistics, graphs_directory,
 
 
         if json_mean_or_median == 'mean':
-            all_returns.append(np.mean(np.array(jsons_returns)))
-            all_successes.append(np.mean(np.array(jsons_successes)))
+            all_returns.append((np.mean(jsons_returns), np.std(jsons_returns)))
+            all_successes.append((np.mean(jsons_successes), np.std(jsons_successes)))
         elif json_mean_or_median == 'median':
-            all_returns.append(np.median(np.array(jsons_returns)))
-            all_successes.append(np.median(np.array(jsons_successes)))
+            all_returns.append((np.median(jsons_returns), np.std(jsons_returns)))
+            all_successes.append((np.median(jsons_successes), np.std(jsons_successes)))
         elif json_mean_or_median == 'min':
-            all_returns.append(np.min(np.array(jsons_returns)))
-            all_successes.append(np.min(np.array(jsons_successes)))
+            all_returns.append((np.min(jsons_returns), np.std(jsons_returns)))
+            all_successes.append((np.min(jsons_successes), np.std(jsons_successes)))
         elif json_mean_or_median == 'max':
-            all_returns.append(np.max(np.array(jsons_returns)))
-            all_successes.append(np.max(np.array(jsons_successes)))
+            all_returns.append((np.max(jsons_returns), np.std(jsons_returns)))
+            all_successes.append((np.max(jsons_successes), np.std(jsons_successes)))
 
 
         checkpoints.append(int(checkpoint_name.split('.')[1]))
 
     # TODO(josh): currently not graphing all_successes
     sorted_checkpoints, sorted_all_returns = zip(*sorted(zip(checkpoints, all_returns)))
+    sorted_all_returns_means, sorted_all_returns_stdevs = zip(*sorted_all_returns)
 
     # Raw plot
     plt.clf()
-    plt.plot(sorted_checkpoints, sorted_all_returns, '.-')
+    if error_bar_stdev > 0:
+        plt.errorbar(sorted_checkpoints, sorted_all_returns_means,
+            yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs], '.-')
+    else:
+        plt.plot(sorted_checkpoints, sorted_all_returns_means, '.-')
     plt.title('Directory Evaluation Returns')
     plt.xlabel('Model checkpoint')
     plt.ylabel('Average reward per episode')
@@ -138,7 +170,11 @@ def plot_statistics(all_model_statistics, graphs_directory,
     # Smoothed version
     plt.clf()
     all_returns_smooth = smooth(np.array(sorted_all_returns), np.array(sorted_checkpoints))
-    plt.plot(sorted_checkpoints, all_returns_smooth, '.-', color='#CC4F1B')
+    if error_bar_stdev > 0:
+        plt.errorbar(sorted_checkpoints, all_returns_smooth,
+            yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs], '.-', color='#CC4F1B')
+    else:
+        plt.plot(sorted_checkpoints, all_returns_smooth, '.-', color='#CC4F1B')
     plt.title('Directory Evaluation Returns')
     plt.xlabel('Model checkpoint')
     plt.ylabel('Average reward per episode')
@@ -183,6 +219,18 @@ if __name__=='__main__':
                 'metavar' : 'SD',
                 'help' : 'If evaluations are in a separate directory, in separate directories'
             },
+            'jsons_average' : {
+                'name' : '--jsons-average',
+                'type' : str,
+                'metavar' : 'JA',
+                'help' : '\'mean\', \'median\', \'min\', or \'max\' over JSONs'
+            },
+            'episodes_average' : {
+                'name' : '--episodes-average',
+                'type' : str,
+                'metavar' : 'EA',
+                'help' : '\'mean\', \'median\', \'min\', or \'max\' over episodes for a given JSON'
+            },
             'plotting_skip' : {
                 'name' : '--plotting-skip',
                 'type' : int,
@@ -194,6 +242,12 @@ if __name__=='__main__':
                 'type' : str,
                 'metavar' : 'SC',
                 'help' : 'Whether to "skip" or average via "mean" or "median" skipped checkpoints'
+            },
+            'error_bar_stdev' : {
+                'name' : '--error-bar-stdev',
+                'type' : int,
+                'metavar' : 'EBS',
+                'help' : 'How many standard deviations to include in the error bars'
             }
         },
         additional_default_args={
@@ -201,8 +255,11 @@ if __name__=='__main__':
             'evaluation_prefix' : '',
             'graphs_directory' : '',
             'separate_directory' : '',
+            'jsons_average' : 'mean',
+            'episodes_average' : 'mean',
             'plotting_skip' : 0,
-            'skipped_checkpoints' : 'skip'
+            'skipped_checkpoints' : 'skip',
+            'error_bar_stdev' : 0
         }
     )
 
@@ -240,16 +297,11 @@ if __name__=='__main__':
         else:
             print("No evaluation yet for model: " + model)
 
-    plot_statistics(all_model_statistics, args['graphs_directory'], "mean", "mean",
+    plot_statistics(all_model_statistics, args['graphs_directory'],
+        args['json_average'], args['episodes_average'],
         plotting_skip = args['plotting_skip'],
-        skipped_checkpoints = args['skipped_checkpoints'])
-    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "median",
-        plotting_skip = args['plotting_skip'],
-        skipped_checkpoints = args['skipped_checkpoints'])
-    plot_statistics(all_model_statistics, args['graphs_directory'], "median", "mean",
-        plotting_skip = args['plotting_skip'],
-        skipped_checkpoints = args['skipped_checkpoints'])
-
+        skipped_checkpoints = args['skipped_checkpoints'],
+        error_bar_stdev = args['error_bar_stdev'])
 
     # Plot results for each JSONs
     done_jsons = []
@@ -260,15 +312,12 @@ if __name__=='__main__':
                 if not os.path.exists(json_graphs_directory):
                     os.mkdir(json_graphs_directory)
                 # Note that the mean/median doesn't matter for JSONs since there's only one
-                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "mean",
+                plot_statistics(all_model_statistics, json_graphs_directory,
+                    args['json_average'], args['episodes_average'],
                     json_name = json,
                     plotting_skip = args['plotting_skip'],
-                    skipped_checkpoints = args['skipped_checkpoints'])
-
-                plot_statistics(all_model_statistics, json_graphs_directory, "mean", "median",
-                    json_name = json,
-                    plotting_skip = args['plotting_skip'],
-                    skipped_checkpoints = args['skipped_checkpoints'])
+                    skipped_checkpoints = args['skipped_checkpoints'],
+                    error_bar_stdev = args['error_bar_stdev'])
 
                 done_jsons.append(json)
 
