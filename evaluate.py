@@ -149,10 +149,10 @@ def evaluate(args):
     logging.shutdown()
 
     end_time = time.time()
-    print('single evaluate total time for %d episodes: %d' % (total_episodes,
+    print('single evaluate total time for %d episodes: %d' % (args['num_episodes'],
         end_time - start_time))
     print('single evaluate overall seconds per episode: %f' %
-        ((end_time - start_time) / total_episodes))
+        ((end_time - start_time) / args['num_episodes']))
     return evaluation_statistics
 
 if __name__=='__main__':
