@@ -4,8 +4,10 @@ import copy
 import numpy as np
 import torch
 from args import parse_args
+import time
 
 def directory_evaluate(args):
+    start_time = time.time()
     all_evaluation_statistics = {}
 
     files_list = [f for f in os.listdir(args['json_directory']) if '.json' in f]
@@ -32,10 +34,19 @@ def directory_evaluate(args):
     output_path = os.path.join(os.path.dirname(args['load_file']),
                                args['output_directory'],
                               'JSONWalker-'+(args['json_directory'].replace('/','-'))+'-evaluation-statistics-evalep{}.pth'.format(args['num_episodes']))
+    start_saving = time.time()
     torch.save({
         'all_evaluation_statistics' : all_evaluation_statistics,
     }, output_path)
+    end_saving = time.time()
+    print('time spent saving all_evaluation_statistics: %d' % (end_saving - start_saving))
 
+    end_time = time.time()
+    total_episodes = len(files_list) * args['num_episodes']
+    print('directory evaluate total time for %d episodes: %d' % (total_episodes,
+        end_time - start_time))
+    print('directory evaluate overall seconds per episode: %f' %
+        ((end_time - start_time) / total_episodes))
     return all_evaluation_statistics
 
 
