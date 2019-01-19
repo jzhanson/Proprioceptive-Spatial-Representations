@@ -11,6 +11,9 @@ from gym.utils import colorize, seeding
 import torch
 from torch.autograd import Variable
 
+# For rainbow actiongrid
+import colorsys
+
 # This is simple 4-joints walker robot environment.
 #
 # There are two versions:
@@ -661,7 +664,9 @@ class JSONWalker(gym.Env):
                     filled_in_square._color.vec4 = body_color
                     filled_in_squares.append((lower_left_x, lower_left_y))
 
-    def _draw_actiongrid(self, model, depth=-1, clip_values=True):
+    # Actiongrid modes are 'gray' for grayscale, 'heat' for reddish gradient,
+    # and 'rainbow' for all colors
+    def _draw_actiongrid(self, model, depth=-1, clip_values=True, mode='gray'):
         # Dimensions of action grid output by model not always the same as those of the state grid
         self.grid_edge = model.adec_nngrid.current_actiongrid.shape[2]
         self.grid_scale = model.adec_nngrid.grid_scale
@@ -702,10 +707,35 @@ class JSONWalker(gym.Env):
                     (lower_left_x, lower_left_y + self.grid_square_edge)]
                 filled_in_square = self.viewer.draw_polygon(vertices)
                 # Set intensity to the relative value of channels
-                square_fill = (current_actiongrid_layer[x, y] - min_sum) / fill_range
-                filled_in_square._color.vec4 = (square_fill, square_fill, square_fill, 0.5)
+                square_proportion = (current_actiongrid_layer[x, y] - min_sum) / fill_range
+                square_red = 0.0
+                square_green = 0.0
+                square_blue = 0.0
+                if mode == 'gray':
+                    square_red = square_proportion
+                    square_green = square_proportion
+                    square_blue = square_proportion
+                elif mode == 'heat':
+                    # First increase red, then green, then blue
+                    if square_proportion < 0.333:
+                        square_red = square_proportion / 0.333
+                    elif square_proportion < 0.667:
+                        square_red = 1.0
+                        square_green = (square_proportion - 0.333) / 0.333
+                    else:
+                        square_red = 1.0
+                        square_green = 1.0
+                        square_blue = (square_proportion - 0.667) / 0.333
+                elif mode == 'rainbow':
+                    # Interpolate hue between 0 (red) and 240 (blue)
+                    hue = (1.0 - square_proportion) * 0.667
+                    square_red, square_green, square_blue = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
 
-    def render(self, mode='human', model=None, show_stategrid=False, show_actiongrid=False, actiongrid_depth=-1, actiongrid_clip=True):
+                filled_in_square._color.vec4 = (square_red,
+                    square_green, square_blue, 0.5)
+
+
+    def render(self, mode='human', model=None, show_stategrid=False, actiongrid_mode='hide', actiongrid_depth=-1, actiongrid_clip=True):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
@@ -755,8 +785,9 @@ class JSONWalker(gym.Env):
 
         if show_stategrid:
             self._draw_stategrid(model)
-        if show_actiongrid:
-            self._draw_actiongrid(model, depth=actiongrid_depth, clip_values=actiongrid_clip)
+        if actiongrid_mode != 'hide':
+            self._draw_actiongrid(model, depth=actiongrid_depth,
+                clip_values=actiongrid_clip, mode=actiongrid_mode)
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
