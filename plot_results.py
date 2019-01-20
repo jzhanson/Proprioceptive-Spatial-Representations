@@ -146,50 +146,45 @@ def plot_statistics(all_model_statistics, graphs_directory,
 
     # Raw plot
     plt.clf()
+    plt.plot(sorted_checkpoints, sorted_all_returns_means, '.-')
     if error_bar_stdev > 0:
-        plt.errorbar(sorted_checkpoints, sorted_all_returns_means,
-            yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs], '.-')
-    else:
-        plt.plot(sorted_checkpoints, sorted_all_returns_means, '.-')
+        errors = np.array([error_bar_stdev * sd for sd in sorted_all_returns_stdevs])
+        plt.fill_between(sorted_checkpoints, np.array(sorted_all_returns_means) - errors,
+            np.array(sorted_all_returns_means) + errors, color='#55A8E2')
+        #plt.errorbar(sorted_checkpoints, sorted_all_returns_means,
+        #    yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs], fmt='.-')
     plt.title('Directory Evaluation Returns')
     plt.xlabel('Model checkpoint')
     plt.ylabel('Average reward per episode')
     if plotting_skip > 0:
-        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
+        save_path = os.path.join(graphs_directory, str(plotting_skip) +
             skipped_checkpoints + '_' + json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns.png'))
-        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
-            skipped_checkpoints + '_' + json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns.eps'))
+            episode_mean_or_median + str(error_bar_stdev) + '_evaluate_returns')
     else:
-        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns.png'))
-        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns.eps'))
+        save_path = os.path.join(graphs_directory, json_mean_or_median +
+            episode_mean_or_median + str(error_bar_stdev) + '_evaluate_returns')
+    plt.savefig(save_path + '.png')
+    plt.savefig(save_path + '.eps')
 
     # Smoothed version
     plt.clf()
-    all_returns_smooth = smooth(np.array(sorted_all_returns), np.array(sorted_checkpoints))
+    all_returns_smooth = smooth(np.array(sorted_all_returns_means),
+        np.array(sorted_checkpoints))
+
+    plt.plot(sorted_checkpoints, all_returns_smooth, '.-', color='#CC4F1B')
     if error_bar_stdev > 0:
-        plt.errorbar(sorted_checkpoints, all_returns_smooth,
-            yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs], '.-', color='#CC4F1B')
-    else:
-        plt.plot(sorted_checkpoints, all_returns_smooth, '.-', color='#CC4F1B')
+        errors = np.array([error_bar_stdev * sd for sd in sorted_all_returns_stdevs])
+        plt.fill_between(sorted_checkpoints, np.array(all_returns_smooth) - errors,
+            np.array(all_returns_smooth) + errors, color='#EA8A61')
+
+        #plt.errorbar(sorted_checkpoints, all_returns_smooth,
+        #    yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs],
+        #    fmt='.-', color='#CC4F1B')
     plt.title('Directory Evaluation Returns')
     plt.xlabel('Model checkpoint')
     plt.ylabel('Average reward per episode')
-    if plotting_skip > 0:
-        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
-            skipped_checkpoints + '_' + json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns_smooth.png'))
-        plt.savefig(os.path.join(graphs_directory, str(plotting_skip) +
-            skipped_checkpoints + '_' + json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns_smooth.eps'))
-    else:
-        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns_smooth.png'))
-        plt.savefig(os.path.join(graphs_directory, json_mean_or_median +
-            episode_mean_or_median + '_evaluate_returns_smooth.eps'))
+    plt.savefig(save_path + '_smooth.png')
+    plt.savefig(save_path + '_smooth.eps')
 
 if __name__=='__main__':
     args = parse_args(
@@ -298,7 +293,7 @@ if __name__=='__main__':
             print("No evaluation yet for model: " + model)
 
     plot_statistics(all_model_statistics, args['graphs_directory'],
-        args['json_average'], args['episodes_average'],
+        args['jsons_average'], args['episodes_average'],
         plotting_skip = args['plotting_skip'],
         skipped_checkpoints = args['skipped_checkpoints'],
         error_bar_stdev = args['error_bar_stdev'])
@@ -313,7 +308,7 @@ if __name__=='__main__':
                     os.mkdir(json_graphs_directory)
                 # Note that the mean/median doesn't matter for JSONs since there's only one
                 plot_statistics(all_model_statistics, json_graphs_directory,
-                    args['json_average'], args['episodes_average'],
+                    args['jsons_average'], args['episodes_average'],
                     json_name = json,
                     plotting_skip = args['plotting_skip'],
                     skipped_checkpoints = args['skipped_checkpoints'],
