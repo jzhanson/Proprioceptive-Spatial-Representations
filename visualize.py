@@ -50,8 +50,8 @@ class Visualize():
         elif key == 110:
             self.terminate_episode = True
             print('terminating episode')
-        # If 'l' pressed, switch actiongrid clipping values to 0 (default) to full
-        elif key == 108:
+        # If 'c' pressed, switch actiongrid clipping values to 0 (default) to full
+        elif key == 99:
             self.actiongrid_clip = not self.actiongrid_clip
             if self.actiongrid_clip:
                 print('actiongrid clipping on')

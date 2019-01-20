@@ -690,7 +690,7 @@ class JSONWalker(gym.Env):
         else:
             current_actiongrid_layer = np.sum(model.adec_nngrid.current_actiongrid, axis=1)[0]
         if clip_values:
-            min_sum = 0
+            min_sum = 0.0
             max_sum = np.amax(current_actiongrid_layer)
             fill_range = max_sum
         else:
@@ -707,7 +707,10 @@ class JSONWalker(gym.Env):
                     (lower_left_x, lower_left_y + self.grid_square_edge)]
                 filled_in_square = self.viewer.draw_polygon(vertices)
                 # Set intensity to the relative value of channels
-                square_proportion = (current_actiongrid_layer[x, y] - min_sum) / fill_range
+                current_value = current_actiongrid_layer[x, y]
+                if clip_values and current_value < 0.0:
+                    current_value = 0.0
+                square_proportion = (current_value - min_sum) / fill_range
                 square_red = 0.0
                 square_green = 0.0
                 square_blue = 0.0
