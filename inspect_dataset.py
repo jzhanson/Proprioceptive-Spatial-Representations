@@ -97,9 +97,9 @@ def inspect_dataset(args):
 
             if args['display_bodies']:
                 # Note that args don't really matter
-                visualize = Visualize()
                 args['env'] = 'JSONWalker-' + filepath
-                visualize.main(args)
+                visualize = Visualize(args)
+                visualize.main()
 
 if __name__=='__main__':
     args = parse_args(
