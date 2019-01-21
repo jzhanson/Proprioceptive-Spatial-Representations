@@ -19,7 +19,9 @@ class Visualize():
         self.actiongrid_clip = True
         self.show_stategrid = False
         self.paused = False
+        self.advance_step = False
         self.terminate_episode = False
+        self.quit = False
 
     def key_press(self, key, mod):
         # If 'a' pressed, toggle actiongrid: hidden -> both -> depth 0 -> depth 1
@@ -46,6 +48,12 @@ class Visualize():
         # If 'p' pressed, pause env
         elif key == 112:
             self.paused = not self.paused
+        # If spacebar pressed and env paused, advance one step. If env not paused, pause
+        elif key == 32:
+            if not self.paused:
+                self.paused = True
+            elif self.paused:
+                self.advance_step = True
         # If 'n' pressed, terminate episode
         elif key == 110:
             self.terminate_episode = True
@@ -69,13 +77,15 @@ class Visualize():
             elif self.actiongrid_mode == 'rainbow':
                 self.actiongrid_mode = 'gray'
                 print('actiongrid changed to grayscale mode')
+        # If 'q' pressed, quit (close env and terminate main function)
+        elif key == 113:
+            print('quitting')
+            self.quit = True
 
 
     def main(self, args):
         if args['gpu_ids'][-1] != -1:
             torch.cuda.manual_seed(args['seed'])
-
-        print(args)
 
         gpu_id = args['gpu_ids'][-1]
 
@@ -123,13 +133,20 @@ class Visualize():
 
         episode_count = 0
         while True:
+            if self.quit:
+                self.env.close()
+                break
+
             if self.paused:
-                self.env.render(model=self.model,
-                    show_stategrid=self.show_stategrid,
-                    actiongrid_mode=self.actiongrid_mode if self.show_actiongrid else 'hide',
-                    actiongrid_depth=self.actiongrid_depth,
-                    actiongrid_clip=self.actiongrid_clip)
-                continue
+                if self.advance_step:
+                    self.advance_step = False
+                else:
+                    self.env.render(model=self.model,
+                        show_stategrid=self.show_stategrid,
+                        actiongrid_mode=self.actiongrid_mode if self.show_actiongrid else 'hide',
+                        actiongrid_depth=self.actiongrid_depth,
+                        actiongrid_clip=self.actiongrid_clip)
+                    continue
 
             if done:
                 episode_count += 1
@@ -196,4 +213,8 @@ class Visualize():
 
 if __name__ == "__main__":
     visualize = Visualize()
-    visualize.main(parse_args())
+
+    args = parse_args()
+    print(args)
+
+    visualize.main(args)

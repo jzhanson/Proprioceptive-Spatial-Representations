@@ -9,17 +9,9 @@ import time
 import gym
 from common.environment import create_env
 
-paused = False
-
-# TODO(josh): integrate visualize.py?
-def key_press(key, mod):
-    global paused
-    # If spacebar or p pressed, pause
-    if key == 112 or key == 32:
-        paused = not paused
+from visualize import Visualize
 
 def inspect_dataset(args):
-    global paused
     for subdir in ['train', 'test', 'valid']:
         files_list = [f for f in os.listdir(args['directory'] + '/' + subdir) if '.json' in f]
         for f in files_list:
@@ -105,19 +97,9 @@ def inspect_dataset(args):
 
             if args['display_bodies']:
                 # Note that args don't really matter
-                env = create_env('JSONWalker-' + filepath, args)
-                env.render()
-                env.unwrapped.viewer.window.on_key_press = key_press
-                start = time.time()
-                while True:
-                    env.render()
-                    time.sleep(0.1)
-
-                    if not paused and time.time() - start > 1:
-                        break
-                    elif paused:
-                        start = time.time()
-                env.close()
+                visualize = Visualize()
+                args['env'] = 'JSONWalker-' + filepath
+                visualize.main(args)
 
 if __name__=='__main__':
     args = parse_args(
