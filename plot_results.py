@@ -99,9 +99,9 @@ def plot_statistics(all_model_statistics, graphs_directory,
             jsons_to_plot = all_model_statistics[checkpoint_name].keys()
 
         for json in jsons_to_plot:
-            if jsons_name is not None:
-                single_json_returns_stdev = np.stdev(all_model_statistics[checkpoint_name][json]['all_episode_returns'])
-                single_json_successes_stdev = np.stdev(all_model_statistics[checkpoint_name][json]['all_episode_successes'])
+            if json_name is not None:
+                single_json_returns_stdev = np.std(all_model_statistics[checkpoint_name][json]['all_episode_returns'])
+                single_json_successes_stdev = np.std(all_model_statistics[checkpoint_name][json]['all_episode_successes'])
 
             if episode_mean_or_median == 'mean':
                 jsons_returns.append(np.mean(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
@@ -228,16 +228,27 @@ def plot_statistics(all_model_statistics, graphs_directory,
     sorted_successes_checkpoints = np.array(sorted_successes_checkpoints)
     sorted_all_successes_means = np.array(sorted_all_successes_means)
 
+    out_string = ''
+
+    if json_name is not None:
+        out_string += 'Single JSON statistics: {0} \n'.format(json_name)
+    else:
+        out_string += 'Average over JSONs in directory: {0} \n'.format(jsons_to_plot)
     highest_return_index = np.argmax(sorted_all_returns_means)
     highest_return = sorted_all_returns_means[highest_return_index]
     highest_return_checkpoint = sorted_returns_checkpoints[highest_return_index]
-    print('Highest average return : checkpoint {0}, return {1}'
+    out_string += ('Highest average return : checkpoint {0}, return {1} \n'
             .format(highest_return_checkpoint, highest_return))
     highest_success_index = np.argmax(sorted_all_successes_means)
     highest_success = sorted_all_successes_means[highest_success_index]
     highest_success_checkpoint = sorted_successes_checkpoints[highest_success_index]
-    print('Highest success rate : checkpoint {0}, successes {1}'
+    out_string += ('Highest success rate : checkpoint {0}, successes {1} \n'
             .format(highest_success_checkpoint, highest_success))
+
+    print(out_string)
+
+    with open(save_path + '_stats.txt', 'w') as outfile:
+        outfile.write(out_string)
 
 if __name__=='__main__':
     args = parse_args(
