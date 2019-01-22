@@ -90,6 +90,8 @@ def plot_statistics(all_model_statistics, graphs_directory,
 
         jsons_returns = []
         jsons_successes = []
+        single_json_returns_stdev = 0.
+        single_json_successes_stdev = 0.
 
         if json_name is not None:
             jsons_to_plot = [json_name]
@@ -97,6 +99,10 @@ def plot_statistics(all_model_statistics, graphs_directory,
             jsons_to_plot = all_model_statistics[checkpoint_name].keys()
 
         for json in jsons_to_plot:
+            if jsons_name is not None:
+                single_json_returns_stdev = np.stdev(all_model_statistics[checkpoint_name][json]['all_episode_returns'])
+                single_json_successes_stdev = np.stdev(all_model_statistics[checkpoint_name][json]['all_episode_successes'])
+
             if episode_mean_or_median == 'mean':
                 jsons_returns.append(np.mean(all_model_statistics[checkpoint_name][json]['all_episode_returns']))
                 jsons_successes.append(np.mean(all_model_statistics[checkpoint_name][json]['all_episode_successes']))
@@ -114,19 +120,25 @@ def plot_statistics(all_model_statistics, graphs_directory,
         jsons_returns = np.array(jsons_returns)
         jsons_successes = np.array(jsons_successes)
 
+        # If only plotting one JSON, use stdev over episodes. Otherwise, use
+        # stdev over JSONs
+        jsons_returns_stdev = single_json_returns_stdev if json_name is not None else np.std(jsons_returns)
+        jsons_successes_stdev = single_json_successes_stdev if json_name is not None else np.std(jsons_successes)
+
         if skipped_checkpoints in ['mean', 'median', 'min', 'max']:
+
             if json_mean_or_median == 'mean':
-                skip_all_returns.append(np.mean(jsons_returns), np.std(jsons_returns))
-                skip_all_successes.append((np.mean(jsons_successes), np.std(jsons_successes)))
+                skip_all_returns.append(np.mean(jsons_returns), jsons_returns_stdev)
+                skip_all_successes.append((np.mean(jsons_successes), jsons_successes_stdev))
             elif json_mean_or_median == 'median':
-                skip_all_returns.append((np.median(jsons_returns), np.std(jsons_returns)))
-                skip_all_successes.append((np.median(jsons_successes), np.std(jsons_successes)))
+                skip_all_returns.append((np.median(jsons_returns), jsons_returns_stdev))
+                skip_all_successes.append((np.median(jsons_successes), jsons_successes_stdev))
             elif json_mean_or_median == 'min':
-                skip_all_returns.append((np.min(jsons_returns), np.std(jsons_returns)))
-                skip_all_successes.append((np.min(jsons_successes), np.std(jsons_successes)))
+                skip_all_returns.append((np.min(jsons_returns), jsons_returns_stdev))
+                skip_all_successes.append((np.min(jsons_successes), jsons_successes_stdev))
             elif json_mean_or_median == 'max':
-                skip_all_returns.append((np.max(jsons_returns), np.std(jsons_returns)))
-                skip_all_successes.append((np.max(jsons_successes), np.std(jsons_successes)))
+                skip_all_returns.append((np.max(jsons_returns), jsons_returns_stdev))
+                skip_all_successes.append((np.max(jsons_successes), jsons_successes_stdev))
 
             if skip_count == plotting_skip - 1:
                 skip_all_returns_means, skip_all_returns_stdevs = zip(*skip_all_returns)
@@ -169,17 +181,17 @@ def plot_statistics(all_model_statistics, graphs_directory,
 
 
         if json_mean_or_median == 'mean':
-            all_returns.append((np.mean(jsons_returns), np.std(jsons_returns)))
-            all_successes.append((np.mean(jsons_successes), np.std(jsons_successes)))
+            all_returns.append((np.mean(jsons_returns), jsons_returns_stdev))
+            all_successes.append((np.mean(jsons_successes), jsons_successes_stdev))
         elif json_mean_or_median == 'median':
-            all_returns.append((np.median(jsons_returns), np.std(jsons_returns)))
-            all_successes.append((np.median(jsons_successes), np.std(jsons_successes)))
+            all_returns.append((np.median(jsons_returns), jsons_returns_stdev))
+            all_successes.append((np.median(jsons_successes), jsons_successes_stdev))
         elif json_mean_or_median == 'min':
-            all_returns.append((np.min(jsons_returns), np.std(jsons_returns)))
-            all_successes.append((np.min(jsons_successes), np.std(jsons_successes)))
+            all_returns.append((np.min(jsons_returns), jsons_returns_stdev))
+            all_successes.append((np.min(jsons_successes), jsons_successes_stdev))
         elif json_mean_or_median == 'max':
-            all_returns.append((np.max(jsons_returns), np.std(jsons_returns)))
-            all_successes.append((np.max(jsons_successes), np.std(jsons_successes)))
+            all_returns.append((np.max(jsons_returns), jsons_returns_stdev))
+            all_successes.append((np.max(jsons_successes), jsons_successes_stdev))
 
 
         checkpoints.append(int(checkpoint_name.split('.')[1]))
@@ -212,17 +224,17 @@ def plot_statistics(all_model_statistics, graphs_directory,
 
     # Print some statistics
     sorted_returns_checkpoints = np.array(sorted_returns_checkpoints)
-    sorted_all_returns = np.array(sorted_all_returns)
+    sorted_all_returns_means = np.array(sorted_all_returns_means)
     sorted_successes_checkpoints = np.array(sorted_successes_checkpoints)
-    sorted_all_successes = np.array(sorted_all_successes)
+    sorted_all_successes_means = np.array(sorted_all_successes_means)
 
-    highest_return_index = np.argmax(sorted_all_returns)
-    highest_return = sorted_all_returns[highest_return_index]
+    highest_return_index = np.argmax(sorted_all_returns_means)
+    highest_return = sorted_all_returns_means[highest_return_index]
     highest_return_checkpoint = sorted_returns_checkpoints[highest_return_index]
     print('Highest average return : checkpoint {0}, return {1}'
             .format(highest_return_checkpoint, highest_return))
-    highest_success_index = np.argmax(sorted_all_successes)
-    highest_success = sorted_all_successes[highest_success_index]
+    highest_success_index = np.argmax(sorted_all_successes_means)
+    highest_success = sorted_all_successes_means[highest_success_index]
     highest_success_checkpoint = sorted_successes_checkpoints[highest_success_index]
     print('Highest success rate : checkpoint {0}, successes {1}'
             .format(highest_success_checkpoint, highest_success))
