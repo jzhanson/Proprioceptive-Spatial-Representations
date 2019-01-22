@@ -9,6 +9,50 @@ import re
 from common.stat_utils import smooth
 from args import parse_args
 
+def graph(sorted_checkpoints, sorted_means, sorted_stdevs, error_bar_stdev,
+    returns_or_successes, save_path):
+    # Raw plot
+    plt.clf()
+    plt.plot(sorted_checkpoints, sorted_means, '.-')
+    if error_bar_stdev > 0:
+        errors = np.array([error_bar_stdev * sd for sd in sorted_stdevs])
+        plt.fill_between(sorted_checkpoints, np.array(sorted_means) - errors,
+            np.array(sorted_means) + errors, color='#55A8E2')
+        #plt.errorbar(sorted_checkpoints, sorted_all_returns_means,
+        #    yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs], fmt='.-')
+    plt.title('Directory Evaluation ' + returns_or_successes.title())
+    plt.xlabel('Model checkpoint')
+    if returns_or_successes == 'returns':
+        plt.ylabel('Average reward per episode')
+    elif returns_or_successes == 'successes':
+        plt.ylabel('Proportion of successful episodes')
+
+    plt.savefig(save_path + '.png')
+    plt.savefig(save_path + '.eps')
+
+    # Smoothed version
+    plt.clf()
+    means_smooth = smooth(np.array(sorted_means), np.array(sorted_checkpoints))
+
+    plt.plot(sorted_checkpoints, means_smooth, '.-', color='#CC4F1B')
+    if error_bar_stdev > 0:
+        errors = np.array([error_bar_stdev * sd for sd in sorted_stdevs])
+        plt.fill_between(sorted_checkpoints, np.array(means_smooth) - errors,
+            np.array(means_smooth) + errors, color='#EA8A61')
+
+        #plt.errorbar(sorted_checkpoints, all_returns_smooth,
+        #    yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs],
+        #    fmt='.-', color='#CC4F1B')
+    plt.title('Directory Evaluation Returns')
+    plt.xlabel('Model checkpoint')
+    if returns_or_successes == 'returns':
+        plt.ylabel('Average reward per episode')
+    elif returns_or_successes == 'successes':
+        plt.ylabel('Proportion of successful episodes')
+    plt.savefig(save_path + '_smooth.png')
+    plt.savefig(save_path + '_smooth.eps')
+
+
 # Note: currently finds mean/median/min/max across episodes, then finds
 # mean/median/min/max across JSONs to plot. Might not be equal to pooling all
 # evaluation episodes together (across JSONs) and finding mean/median/min/max
@@ -140,51 +184,48 @@ def plot_statistics(all_model_statistics, graphs_directory,
 
         checkpoints.append(int(checkpoint_name.split('.')[1]))
 
-    # TODO(josh): currently not graphing all_successes
-    sorted_checkpoints, sorted_all_returns = zip(*sorted(zip(checkpoints, all_returns)))
-    sorted_all_returns_means, sorted_all_returns_stdevs = zip(*sorted_all_returns)
+    # sorted_returns_checkpoints, sorted_successes_checkpoints should be the same
+    sorted_returns_checkpoints, sorted_all_returns =    \
+        zip(*sorted(zip(checkpoints, all_returns)))
+    sorted_all_returns_means, sorted_all_returns_stdevs =   \
+        zip(*sorted_all_returns)
 
-    # Raw plot
-    plt.clf()
-    plt.plot(sorted_checkpoints, sorted_all_returns_means, '.-')
-    if error_bar_stdev > 0:
-        errors = np.array([error_bar_stdev * sd for sd in sorted_all_returns_stdevs])
-        plt.fill_between(sorted_checkpoints, np.array(sorted_all_returns_means) - errors,
-            np.array(sorted_all_returns_means) + errors, color='#55A8E2')
-        #plt.errorbar(sorted_checkpoints, sorted_all_returns_means,
-        #    yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs], fmt='.-')
-    plt.title('Directory Evaluation Returns')
-    plt.xlabel('Model checkpoint')
-    plt.ylabel('Average reward per episode')
+    sorted_successes_checkpoints, sorted_all_successes =    \
+        zip(*sorted(zip(checkpoints, all_successes)))
+    sorted_all_successes_means, sorted_all_successes_stdevs =   \
+        zip(*sorted_all_successes)
+
     if plotting_skip > 0:
         save_path = os.path.join(graphs_directory, str(plotting_skip) +
             skipped_checkpoints + '_' + json_mean_or_median +
-            episode_mean_or_median + str(error_bar_stdev) + '_evaluate_returns')
+            episode_mean_or_median + str(error_bar_stdev) + '_evaluate')
     else:
         save_path = os.path.join(graphs_directory, json_mean_or_median +
-            episode_mean_or_median + str(error_bar_stdev) + '_evaluate_returns')
-    plt.savefig(save_path + '.png')
-    plt.savefig(save_path + '.eps')
+            episode_mean_or_median + str(error_bar_stdev) + '_evaluate')
 
-    # Smoothed version
-    plt.clf()
-    all_returns_smooth = smooth(np.array(sorted_all_returns_means),
-        np.array(sorted_checkpoints))
+    graph(sorted_returns_checkpoints, sorted_all_returns_means,
+        sorted_all_returns_stdevs, error_bar_stdev, 'returns',
+        save_path + '_returns')
+    graph(sorted_successes_checkpoints, sorted_all_successes_means,
+        sorted_all_successes_stdevs, error_bar_stdev, 'successes',
+        save_path + '_successes')
 
-    plt.plot(sorted_checkpoints, all_returns_smooth, '.-', color='#CC4F1B')
-    if error_bar_stdev > 0:
-        errors = np.array([error_bar_stdev * sd for sd in sorted_all_returns_stdevs])
-        plt.fill_between(sorted_checkpoints, np.array(all_returns_smooth) - errors,
-            np.array(all_returns_smooth) + errors, color='#EA8A61')
+    # Print some statistics
+    sorted_returns_checkpoints = np.array(sorted_returns_checkpoints)
+    sorted_all_returns = np.array(sorted_all_returns)
+    sorted_successes_checkpoints = np.array(sorted_successes_checkpoints)
+    sorted_all_successes = np.array(sorted_all_successes)
 
-        #plt.errorbar(sorted_checkpoints, all_returns_smooth,
-        #    yerr=[error_bar_stdev * sd for sd in sorted_all_returns_stdevs],
-        #    fmt='.-', color='#CC4F1B')
-    plt.title('Directory Evaluation Returns')
-    plt.xlabel('Model checkpoint')
-    plt.ylabel('Average reward per episode')
-    plt.savefig(save_path + '_smooth.png')
-    plt.savefig(save_path + '_smooth.eps')
+    highest_return_index = np.argmax(sorted_all_returns)
+    highest_return = sorted_all_returns[highest_return_index]
+    highest_return_checkpoint = sorted_returns_checkpoints[highest_return_index]
+    print('Highest average return : checkpoint {0}, return {1}'
+            .format(highest_return_checkpoint, highest_return))
+    highest_success_index = np.argmax(sorted_all_successes)
+    highest_success = sorted_all_successes[highest_success_index]
+    highest_success_checkpoint = sorted_successes_checkpoints[highest_success_index]
+    print('Highest success rate : checkpoint {0}, successes {1}'
+            .format(highest_success_checkpoint, highest_success))
 
 if __name__=='__main__':
     args = parse_args(
