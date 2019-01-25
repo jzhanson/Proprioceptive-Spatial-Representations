@@ -50,9 +50,9 @@ def parse_args():
     parser.set_defaults(report_extra_segments=True)
     parser.add_argument(
         '--hull-segment',
-        type=int,
-        default=-1,
-        help='Which segment should be designated as the "hull" and attach the legs to (-1 to choose centermost segment)')
+        type=float,
+        default=-1.0,
+        help='Which segment (zero-indexed) should be designated as the "hull" and attach the legs to (-1.0 to choose centermost segment), use .5 increments to place legs on joints rather than bodies')
     parser.add_argument(
         '--hull-width',
         type=float,
@@ -62,7 +62,7 @@ def parse_args():
         '--hull-height',
         type=float,
         default=16.0,
-        help='The height of the center hull segment (default 28.0)')
+        help='The height of the center hull segment (default 16.0)')
     parser.add_argument(
         '--leg-width',
         type=float,
@@ -110,16 +110,19 @@ class GenerateBipedal:
         self.hull_segment_width = self.args['hull_width'] / self.args['num_segments']
         self.odd_body_segments = self.args['num_segments'] % 2 == 1
 
-        if self.args['hull_segment'] != -1 and self.args['hull_segment'] < self.args['num_segments']:
-            self.hull_segment = self.args['hull_segment']
+        if self.args['hull_segment'] != -1.0 and self.args['hull_segment'] < self.args['num_segments']:
+            # Rounds -0.5 to 0
+            self.hull_segment = int(self.args['hull_segment'])
+            self.legs_attach = self.args['hull_segment']
         elif self.odd_body_segments:
             self.hull_segment = self.args['num_segments'] // 2
+            # Attach legs to center of middle body segment
+            self.legs_attach = self.args['num_segments'] / 2. - 0.5
         else:
             # If even number of body pieces, 'Hull' will be left-of-center piece
             self.hull_segment = self.args['num_segments'] // 2  - 1
-
-        # If an even number of hull segments and hull is center segment, center legs in the middle joint
-        self.centered_hull_and_even_segments = self.args['num_segments'] % 2 == 0 and self.hull_segment == self.args['num_segments'] // 2 - 1
+            # Attach legs to center joint of middle segment
+            self.legs_attach = self.args['num_segments'] / 2. - 0.5
 
     # Returns 'left' if i is the segment/number left of hull and 'right' if i is directly right of hull and 'hull' if the segment in question is the hull and '' otherwise
     def is_adj_to_hull(self, i):
@@ -141,7 +144,6 @@ class GenerateBipedal:
 
     def build_fixtures(self):
         for i in range(self.args['num_segments']):
-            # TODO(josh): separate this logic out into a helper function, is_adj_to_hull or something
             if i == self.hull_segment:
                 f = 'Hull' + 'Fixture'
             else:
@@ -245,10 +247,7 @@ class GenerateBipedal:
                 current_x += self.hull_segment_width
 
         for sign in [-1, +1]:
-            if self.centered_hull_and_even_segments:
-                current_x = self.start_x
-            else:
-                current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width + self.hull_segment_width * self.hull_segment
+            current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width + self.hull_segment_width * self.legs_attach
             current_y = self.start_y - 0.5 * self.args['leg_height']
             for prefix in ['Leg', 'Lower']:
                 k = prefix + str(sign)
@@ -305,7 +304,9 @@ class GenerateBipedal:
             self.output[k]['DataType'] = 'JointMotor'
             self.output[k]['BodyA'] = 'Hull'
             self.output[k]['BodyB'] = 'Leg' + str(sign)
-            self.output[k]['LocalAnchorA'] = [0.5 * self.hull_segment_width if self.centered_hull_and_even_segments else 0, -0.5 * self.args['hull_height']]
+            self.output[k]['LocalAnchorA'] = [(self.legs_attach
+                - self.hull_segment) * self.hull_segment_width,
+                -0.5 * self.args['hull_height']]
             self.output[k]['LocalAnchorB'] = [0, 0.5 * self.args['leg_height']]
             self.output[k]['EnableMotor'] = True
             self.output[k]['EnableLimit'] = True
