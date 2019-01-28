@@ -12,12 +12,14 @@ from common.environment import create_env
 from visualize import Visualize
 
 def inspect_dataset(args):
-    for subdir in ['train', 'test', 'valid']:
-        files_list = [f for f in os.listdir(args['directory'] + '/' + subdir) if '.json' in f]
-        for f in files_list:
-            filepath = args['directory'] + '/' + subdir + '/' + f
-            # Can add other useful attributes here to print
-            with open(args['directory'] + '/info.meta') as metafile:
+    for root, directories, filenames in os.walk(args['directory']):
+        for filename in filenames:
+            if '.json' not in filename:
+                continue
+            filepath = os.path.join(root, filename)
+            # TODO(josh): read metafile and use info for something
+            '''
+            with open(args['metafile_directory'] + '/info.meta') as metafile:
                 info = metafile.read()
                 if 'BipedalWalker' in info:
                     body_type = 'BipedalWalker'
@@ -25,6 +27,10 @@ def inspect_dataset(args):
                     body_type = 'RaptorWalker'
                 elif 'CentipedeWalker' in info:
                     body_type = 'CentipedeWalker'
+            '''
+            # TODO(josh): make inspect_dataset support multiple body types in
+            # the same dataset
+            body_type = args['body_type']
 
             with open(filepath) as json_file:
                 jsondata = json.load(json_file)
@@ -114,11 +120,18 @@ if __name__=='__main__':
                 'type' : str,
                 'metavar' : 'DIR',
                 'help' : 'Directory with dataset to inspect'
-                }
+                },
+            'body_type' : {
+                'name' : '--body-type',
+                'type' : str,
+                'metavar' : 'BT',
+                'help' : 'Body type of JSONs (BipedalWalker, RaptorWalker, etc'
+                },
             },
         additional_default_args={
             'display_bodies' : True,
-            'directory' : ''
+            'directory' : '',
+            'body_type' : 'BipedalWalker'
             }
         )
 
