@@ -17,3 +17,5 @@ saved/*
 box2d-json-gen/*
 *.swp
 *.swo
+
+outputs/*
