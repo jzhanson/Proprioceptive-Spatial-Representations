@@ -1,5 +1,6 @@
 from __future__ import division
 import gym
+import math
 import numpy as np
 from gym import spaces
 
@@ -15,13 +16,34 @@ class NNGrid(torch.nn.Module):
         self.grid_edge  = args['grid_edge']
         self.grid_scale = args['grid_scale']
         self.use_lidar  = args['grid_use_lidar']
+        self.project_to_grid = args['project_to_grid']
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
             shape=(21, self.grid_edge, self.grid_edge))
 
-    def _coord_to_grid(self, coord, zero):
-        return round((coord - zero) / self.grid_scale * self.grid_edge)
+    def _coords_to_grid(self, coord_x, coord_y, zero_x, zero_y):
+        grid_space_x = (coord_x - zero_x) / self.grid_scale * self.grid_edge
+        grid_space_y = (coord_y - zero_y) / self.grid_scale * self.grid_edge
+        if self.project_to_grid:
+            # Project into the grid by finding equation of line from zeroes to
+            # the point and picking the intersection between the edges that lies
+            # within bounds
+
+            # y = self.grid_edge, 1 / m * y = x
+            grid_top_x = grid_space_x / grid_space_y * self.grid_edge
+            # x = self.grid_edge, y = m * x
+            grid_right_y = grid_space_y / grid_space_x * self.grid_edge
+            if grid_top_x < self.grid_edge:
+                return (math.floor(grid_top_x), self.grid_edge - 1)
+            elif grid_right_y < self.grid_edge:
+                return (self.grid_edge - 1, math.floor(grid_right_y))
+            else:
+                return (self.grid_edge - 1, self.grid_edge - 1)
+        else:
+            return (min(math.floor(grid_space_x), self.grid_edge - 1),
+                min(math.floor(grid_space_y), self.grid_edge - 1))
+
 
     # TODO: pytorch'ify these functions so that input features are already Variables
     # this will allow future hybrid models to be fully-differentiable
@@ -53,7 +75,7 @@ class NNGrid(torch.nn.Module):
             d = b[7]
 
             # Round to nearest integer coordinates here
-            grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
+            grid_x, grid_y = self._coords_to_grid(pos_x, pos_y, zero_x, zero_y)
             if d == 0:
                 grid_state[0:5, grid_x, grid_y] = f
                 grid_state[18, grid_x, grid_y] = 1
@@ -77,8 +99,8 @@ class NNGrid(torch.nn.Module):
             d = j[6]
 
             # For each anchor position, write joint features
-            A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
-            B_grid_x, B_grid_y = self._coord_to_grid(B_pos_x, zero_x), self._coord_to_grid(B_pos_y, zero_y)
+            A_grid_x, A_grid_y = self._coords_to_grid(A_pos_x, A_pos_y, zero_x, zero_y)
+            B_grid_x, B_grid_y = self._coords_to_grid(B_pos_x, B_pos_y, zero_x, zero_y)
 
             if d == 0:
                 grid_state[10:12, A_grid_x, A_grid_y] = f
@@ -95,7 +117,7 @@ class NNGrid(torch.nn.Module):
         #   - Write 1 at position of p2
         if self.use_lidar:
             for l in info['lidar']:
-                p2_x, p2_y = self._coord_to_grid(l.p2[0], zero_x), self._coord_to_grid(l.p2[1], zero_y)
+                p2_x, p2_y = self._coords_to_grid(l.p2[0], l.p2[1], zero_x, zero_y)
 
                 if (p2_x >= 0) and (p2_x < grid_state.size(1)) and (p2_y >= 0) and (p2_y < grid_size.size(2)):
                     grid_state[20,p2_x,p2_y] = 1.

@@ -13,6 +13,7 @@ class NNGrid(torch.nn.Module):
     def __init__(self, action_space, args):
         super(NNGrid, self).__init__()
         self.grid_cells_per_unit = args['grid_cells_per_unit']
+        self.project_to_grid = args['project_to_grid']
 
         # Keep track of min/max points we've seen
         self.min_x, self.max_x = 0, 0
@@ -20,13 +21,34 @@ class NNGrid(torch.nn.Module):
 
         self.action_space = action_space
 
-    def _coord_to_grid_x(self, x_coord, x_zero):
-        return round((x_coord - x_zero) * self.grid_cells_per_unit)
+    # TODO(josh): integrate_coords_to_grid and get rid of grid_cells_per_unit
+    def _coords_to_grid(self, coord_x, coord_y, zero_x, zero_y):
+        grid_space_x = (coord_x - zero_x) / self.grid_scale * self.grid_edge
+        grid_space_y = (coord_y - zero_y) / self.grid_scale * self.grid_edge
+        if self.project_to_grid:
+            # Project into the grid by finding equation of line from zeroes to
+            # the point and picking the intersection between the edges that lies
+            # within bounds
 
-    def _coord_to_grid_y(self, y_coord, y_zero):
-        return round((y_coord - y_zero) * self.grid_cells_per_unit)
+            # y = self.grid_edge, 1 / m * y = x
+            grid_top_x = grid_space_x / grid_space_y * self.grid_edge
+            # x = self.grid_edge, y = m * x
+            grid_right_y = grid_space_y / grid_space_x * self.grid_edge
+            if grid_top_x < self.grid_edge:
+                return (math.floor(grid_top_x), self.grid_edge - 1)
+            elif grid_right_y < self.grid_edge:
+                return (self.grid_edge - 1, math.floor(grid_right_y))
+            else:
+                return (self.grid_edge - 1, self.grid_edge - 1)
+        else:
+            return (min(math.floor(grid_space_x), self.grid_edge - 1),
+                min(math.floor(grid_space_y), self.grid_edge - 1))
+
+    def _coord_to_grid(self, coord, zero):
+        return round((coord - zero) * self.grid_cells_per_unit)
 
     def _update_bounds(self, info):
+        # TODO(josh): make the bounds scale down, to some preset minimum
         unit_zero_x, unit_zero_y = info['hull_x'], info['hull_y']
         for b in info['bodies']:
             pos_x, pos_y = b[0] - unit_zero_x, b[1] - unit_zero_y
@@ -88,6 +110,6 @@ class NNGrid(torch.nn.Module):
 
             # Take action at grid position of AnchorA
             # Alternatively, we can average the two anchor positions instead of just using anchorA
-            grid_x, grid_y = self._coord_to_grid_x(A_pos_x, zero_x), self._coord_to_grid_y(A_pos_y, zero_y)
+            grid_x, grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
             decoded_action[0, j_index] = action[0, d, grid_x, grid_y]
         return decoded_action

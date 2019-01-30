@@ -1,5 +1,6 @@
 from __future__ import division
 import gym
+import math
 import numpy as np
 from gym import spaces
 
@@ -14,13 +15,33 @@ class NNGrid(torch.nn.Module):
         super(NNGrid, self).__init__()
         self.grid_edge  = args['grid_edge']
         self.grid_scale = args['grid_scale']
+        self.project_to_grid = args['project_to_grid']
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
             shape=(40, self.grid_edge, self.grid_edge))
 
-    def _coord_to_grid(self, coord, zero):
-        return round((coord - zero) / self.grid_scale * self.grid_edge)
+    def _coords_to_grid(self, coord_x, coord_y, zero_x, zero_y):
+        grid_space_x = (coord_x - zero_x) / self.grid_scale * self.grid_edge
+        grid_space_y = (coord_y - zero_y) / self.grid_scale * self.grid_edge
+        if self.project_to_grid:
+            # Project into the grid by finding equation of line from zeroes to
+            # the point and picking the intersection between the edges that lies
+            # within bounds
+
+            # y = self.grid_edge, 1 / m * y = x
+            grid_top_x = grid_space_x / grid_space_y * self.grid_edge
+            # x = self.grid_edge, y = m * x
+            grid_right_y = grid_space_y / grid_space_x * self.grid_edge
+            if grid_top_x < self.grid_edge:
+                return (math.floor(grid_top_x), self.grid_edge - 1)
+            elif grid_right_y < self.grid_edge:
+                return (self.grid_edge - 1, math.floor(grid_right_y))
+            else:
+                return (self.grid_edge - 1, self.grid_edge - 1)
+        else:
+            return (min(math.floor(grid_space_x), self.grid_edge - 1),
+                min(math.floor(grid_space_y), self.grid_edge - 1))
 
     def _dda_draw(self, grid_state, start, end, start_vals, end_vals, channels):
         if start == end:
@@ -63,12 +84,13 @@ class NNGrid(torch.nn.Module):
         zero_x, zero_y = info['hull_x'] - self.grid_scale * 0.5, info['hull_y'] - self.grid_scale * 0.5
         for b in info['bodies']:
             pos_x, pos_y = b[0], b[1]
-            grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
+            grid_x, grid_y = self._coords_to_grid(pos_x, pos_y, zero_x, zero_y)
 
             for b_neighbor_index in b[8]:
                 b_neighbor = info['bodies'][b_neighbor_index]
                 neighbor_pos_x, neighbor_pos_y = b_neighbor[0], b_neighbor[1]
-                neighbor_grid_x, neighbor_grid_y = self._coord_to_grid(neighbor_pos_x, zero_x), self._coord_to_grid(neighbor_pos_y, zero_y)
+                neighbor_grid_x, neighbor_grid_y = self._coords_to_grid(
+                    neighbor_pos_x, neighbor_pos_y, zero_x, zero_y)
 
                 # Write to front/back line channels
                 start_ind = 20 + int(b[7]) * 5
@@ -83,16 +105,18 @@ class NNGrid(torch.nn.Module):
 
         for j in info['joints']:
             A_pos_x, A_pos_y = j[0], j[1]
-            A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
+            A_grid_x, A_grid_y = self._coords_to_grid(A_pos_x, A_pos_y, zero_x, zero_y)
             B_pos_x, B_pos_y = j[2], j[3]
-            B_grid_x, B_grid_y = self._coord_to_grid(B_pos_x, zero_x), self._coord_to_grid(B_pos_y, zero_y)
+            B_grid_x, B_grid_y = self._coords_to_grid(B_pos_x, B_pos_y, zero_x, zero_y)
 
             for j_neighbor_index in j[8]:
                 j_neighbor = info['joints'][j_neighbor_index]
                 A_neighbor_pos_x, A_neighbor_pos_y = j_neighbor[0], j_neighbor[1]
-                A_neighbor_grid_x, A_neighbor_grid_y = self._coord_to_grid(A_neighbor_pos_x, zero_x), self._coord_to_grid(A_neighbor_pos_y, zero_y)
+                A_neighbor_grid_x, A_neighbor_grid_y = self._coords_to_grid(
+                    A_neighbor_pos_x, A_neighbor_pos_y, zero_x, zero_y)
                 B_neighbor_pos_x, B_neighbor_pos_y = j_neighbor[2], j_neighbor[3]
-                B_neighbor_grid_x, B_neighbor_grid_y = self._coord_to_grid(B_neighbor_pos_x, zero_x), self._coord_to_grid(B_neighbor_pos_y, zero_y)
+                B_neighbor_grid_x, B_neighbor_grid_y = self._coords_to_grid(
+                    B_neighbor_pos_x, B_neighbor_pos_y, zero_x, zero_y)
 
                 # Write to line channels
                 start_ind = 20 + 10 + int(j[6]) * 4
@@ -145,7 +169,7 @@ class NNGrid(torch.nn.Module):
             d_var = Variable(torch.tensor(b[7]))
 
             # Round to nearest integer coordinates here
-            grid_x, grid_y = self._coord_to_grid(pos_x, zero_x), self._coord_to_grid(pos_y, zero_y)
+            grid_x, grid_y = self._coords_to_grid(pos_x, pos_y, zero_x, zero_y)
             if d == 0:
                 grid_state[0:5, grid_x, grid_y] = f
                 grid_state[18, grid_x, grid_y] = d_var
@@ -171,8 +195,8 @@ class NNGrid(torch.nn.Module):
             d_var = Variable(torch.tensor(j[6]))
 
             # For each anchor position, write joint features
-            A_grid_x, A_grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
-            B_grid_x, B_grid_y = self._coord_to_grid(B_pos_x, zero_x), self._coord_to_grid(B_pos_y, zero_y)
+            A_grid_x, A_grid_y = self._coords_to_grid(A_pos_x, A_pos_y, zero_x, zero_y)
+            B_grid_x, B_grid_y = self._coords_to_grid(B_pos_x, B_pos_y, zero_x, zero_y)
 
             if d == 0:
                 grid_state[10:12, A_grid_x, A_grid_y] = f

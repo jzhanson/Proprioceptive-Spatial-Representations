@@ -1,5 +1,6 @@
 from __future__ import division
 import gym
+import math
 import numpy as np
 from gym import spaces
 
@@ -15,9 +16,29 @@ class NNGrid(torch.nn.Module):
 
         self.grid_edge  = args['grid_edge']
         self.grid_scale = args['grid_scale']
+        self.project_to_grid = args['project_to_grid']
 
-    def _coord_to_grid(self, coord, zero):
-        return round((coord - zero) / self.grid_scale * self.grid_edge)
+    def _coords_to_grid(self, coord_x, coord_y, zero_x, zero_y):
+        grid_space_x = (coord_x - zero_x) / self.grid_scale * self.grid_edge
+        grid_space_y = (coord_y - zero_y) / self.grid_scale * self.grid_edge
+        if self.project_to_grid:
+            # Project into the grid by finding equation of line from zeroes to
+            # the point and picking the intersection between the edges that lies
+            # within bounds
+
+            # y = self.grid_edge, 1 / m * y = x
+            grid_top_x = grid_space_x / grid_space_y * self.grid_edge
+            # x = self.grid_edge, y = m * x
+            grid_right_y = grid_space_y / grid_space_x * self.grid_edge
+            if grid_top_x < self.grid_edge:
+                return (math.floor(grid_top_x), self.grid_edge - 1)
+            elif grid_right_y < self.grid_edge:
+                return (self.grid_edge - 1, math.floor(grid_right_y))
+            else:
+                return (self.grid_edge - 1, self.grid_edge - 1)
+        else:
+            return (min(math.floor(grid_space_x), self.grid_edge - 1),
+                min(math.floor(grid_space_y), self.grid_edge - 1))
 
     def forward(self, inputs):
         action, info = inputs
@@ -42,6 +63,6 @@ class NNGrid(torch.nn.Module):
 
             # Take action at grid position of AnchorA
             # Alternatively, we can average the two anchor positions instead of just using anchorA
-            grid_x, grid_y = self._coord_to_grid(A_pos_x, zero_x), self._coord_to_grid(A_pos_y, zero_y)
+            grid_x, grid_y = self._coords_to_grid(A_pos_x, A_pos_y, zero_x, zero_y)
             decoded_action[0, j_index] = action[0, d, grid_x, grid_y]
         return decoded_action

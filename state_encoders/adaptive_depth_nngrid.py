@@ -15,6 +15,7 @@ class NNGrid(torch.nn.Module):
         super(NNGrid, self).__init__()
         self.grid_cells_per_unit  = args['grid_cells_per_unit']
         self.use_lidar = args['grid_use_lidar']
+        self.project_to_grid = args['project_to_grid']
 
         # Start off with a >1 size
         halfsize = 3./self.grid_cells_per_unit
@@ -42,6 +43,30 @@ class NNGrid(torch.nn.Module):
             dtype=np.float32)
 
         return grid_unit_width, grid_unit_height, grid_cell_width, grid_cell_height
+
+    # TODO(josh): integrate _coords_to_grid and get rid of grid_cells_per_unit
+    def _coords_to_grid(self, coord_x, coord_y, zero_x, zero_y):
+        grid_space_x = (coord_x - zero_x) / self.grid_scale * self.grid_edge
+        grid_space_y = (coord_y - zero_y) / self.grid_scale * self.grid_edge
+        if self.project_to_grid:
+            # Project into the grid by finding equation of line from zeroes to
+            # the point and picking the intersection between the edges that lies
+            # within bounds
+            m = grid_space_y / grid_space_x
+            # y = self.grid_edge, 1 / m * y = x
+            grid_top_x = grid_space_x / grid_space_y * self.grid_edge
+            # x = self.grid_edge, y = m * x
+            grid_right_y = grid_space_y / grid_space_x * self.grid_edge
+            if grid_top_x < self.grid_edge:
+                return (math.floor(grid_top_x), self.grid_edge - 1)
+            elif grid_right_y < self.grid_edge:
+                return (self.grid_edge - 1, math.floor(grid_right_y))
+            else:
+                return (self.grid_edge - 1, self.grid_edge - 1)
+        else:
+            return (min(math.floor(grid_space_x), self.grid_edge - 1),
+                min(math.floor(grid_space_y), self.grid_edge - 1))
+
 
     def _coord_to_grid_x(self, x_coord, x_zero):
         return round((x_coord - x_zero) * self.grid_cells_per_unit)
