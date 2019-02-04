@@ -171,6 +171,26 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
             default=-1,
             help='Number of segments to report in total (-1 for all segments)')
         parser.add_argument(
+            '--neck-frequency',
+            type=float,
+            default=0.0,
+            help='FrequencyHz of neck weld joint if rigid-neck option used (default 1.0)')
+        parser.add_argument(
+            '--tail-frequency',
+            type=float,
+            default=0.0,
+            help='FrequencyHz of tail weld joint if rigid-tail option used (default 1.0)')
+        parser.add_argument(
+            '--leg-frequency',
+            type=float,
+            default=0.0,
+            help='FrequencyHz of leg weld joint if rigid-leg option used (default 1.0)')
+        parser.add_argument(
+            '--foot-frequency',
+            type=float,
+            default=0.0,
+            help='FrequencyHz of foot weld joint if rigid-foot option used (default 1.0)')
+        parser.add_argument(
             '--head-density',
             type=float,
             nargs='+',
@@ -272,6 +292,9 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
             nargs='+',
             default=4.0,
             help='Ending tail height (default 4.0)')
+        parser.add_argument('--asymmetric-legs', dest='asymmetric_legs', action='store_true')
+        parser.add_argument('--symmetric-legs', dest='asymmetric_legs', action='store_false')
+        parser.set_defaults(asymmetric_legs=False)
         parser.add_argument(
             '--thigh-width',
             type=float,
@@ -385,6 +408,10 @@ def parse_default_args(body_type, additional_default_args={}):
             'bipedal_legs' : False,
             'build_head' : True,
             'report_segments': -1,
+            'leg_frequency' : 0.0,
+            'tail_frequency' : 0.0,
+            'neck_frequency' : 0.0,
+            'foot_frequency' : 0.0,
             'hull_density' : 5.0,
             'hull_friction' : 0.1,
             'head_density' : 5.0,
@@ -406,6 +433,7 @@ def parse_default_args(body_type, additional_default_args={}):
             'neck_height' : 9.0,
             'tail_width' : 22.0,
             'tail_height' : 4.0,
+            'asymmetric_legs' : False,
             'thigh_width' : 10.0,
             'thigh_height' : 34.0,
             'shin_width' : 7.0,

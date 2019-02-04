@@ -83,7 +83,7 @@ class BuildDatasets:
         # TODO(josh): add ways to split datasets on things besides number of body segments
         if dataset == 'train':
             if type(self.dataset_split) is list:
-                for i in range(0, num_training_segment_configs):
+                for i in range(0, num_training_configs):
                     if self.body_type == 'BipedalWalker':
                         args['num_segments'] = self.dataset_split[i]
                         args['outfile_prefix'] = self.args['outfile_prefix']   \
@@ -101,7 +101,7 @@ class BuildDatasets:
 
         elif dataset == 'valid':
             if type(self.dataset_split) is list:
-                for i in range(num_training_segment_configs, num_training_segment_configs+num_validation_segment_configs):
+                for i in range(num_training_configs, num_training_configs+num_validation_configs):
                     if self.body_type == 'BipedalWalker':
                         args['num_segments'] = self.dataset_split[i]
                         args['outfile_prefix'] = self.args['outfile_prefix']   \
@@ -118,7 +118,7 @@ class BuildDatasets:
             randomize.build_bodies(self.metafile)
         elif dataset == 'test':
             if type(self.dataset_split) is list:
-                for i in range(num_training_segment_configs+num_validation_segment_configs, len(self.dataset_split)):
+                for i in range(num_training_configs+num_validation_configs, len(self.dataset_split)):
                     if self.body_type == 'BipedalWalker':
                         args['num_segments'] = self.dataset_split[i]
                         args['outfile_prefix'] = self.args['outfile_prefix']   \

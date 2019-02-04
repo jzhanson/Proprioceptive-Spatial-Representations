@@ -174,41 +174,49 @@ def parse_args():
     parser.add_argument(
         '--thigh-width',
         type=float,
+        nargs='+',
         default=10.0,
         help='Thigh (highest up leg segment) width (default 10.0)')
     parser.add_argument(
         '--thigh-height',
         type=float,
+        nargs='+',
         default=34.0,
         help='Thigh (highest up leg segment) height (default 34.0)')
     parser.add_argument(
         '--shin-width',
         type=float,
+        nargs='+',
         default=7.0,
         help='Shin (second highest leg segment) width (default 7.0)')
     parser.add_argument(
         '--shin-height',
         type=float,
+        nargs='+',
         default=24.0,
         help='Shin (second highest leg segment) height (default 24.0)')
     parser.add_argument(
         '--foot-width',
         type=float,
+        nargs='+',
         default=6.4,
         help='Foot (third highest leg segment) width (default 6.4)')
     parser.add_argument(
         '--foot-height',
         type=float,
+        nargs='+',
         default=20.0,
         help='Foot (third highest leg segment) height (default 20.0)')
     parser.add_argument(
         '--toes-width',
         type=float,
+        nargs='+',
         default=5.6,
         help='Toes (bottom leg segment) width (default 5.6)')
     parser.add_argument(
         '--toes-height',
         type=float,
+        nargs='+',
         default=16.0,
         help='Toes (bottom leg segment) height (default 16.0)')
     return vars(parser.parse_args())
@@ -238,15 +246,32 @@ class GenerateRaptor:
             )
         self.start_x += 0.5 * self.args['hull_width']
         # Ground starts at y=100
-        self.start_y = 100
+        # Calculate start_y as height of longest leg plus half of hull height
         # TODO(josh): calculate total leg height taking into account start angles of legs
-        if self.args['bipedal_legs']:
-            self.start_y += self.args['thigh_height'] + self.args['shin_height']
-        else:
-            for k in ['thigh', 'foot']:
-                self.start_y += self.args[k + '_height']
-            for k in ['shin', 'toes']:
-                self.start_y += self.args[k + '_width']
+        self.start_y = 100 + 0.5 * self.args['hull_height']
+        leg_heights = []
+        for depth in [0, 1]:
+            current_height = 0
+            if self.args['bipedal_legs']:
+                height_legs = ['thigh', 'shin']
+                width_legs = []
+            else:
+                height_legs = ['thigh', 'foot']
+                width_legs = ['shin', 'toes']
+            for k in height_legs:
+                if type(self.args[k + '_height']) is list:
+                    current_height += self.args[k + '_height'][depth]
+                else:
+                    current_height += self.args[k + '_height']
+            for k in width_legs:
+                if type(self.args[k + '_width']) is list:
+                    current_height += self.args[k + '_width'][depth]
+                else:
+                    current_height += self.args[k + '_width']
+
+            leg_heights.append(current_height)
+        self.start_y += max(leg_heights)
+
         rev_neck_bodies = ['Neck' + str(i) for i in range(self.args['neck_segments']-1, -1, -1)]
         rev_tail_bodies = ['Tail' + str(i) for i in range(self.args['tail_segments']-1, -1, -1)]
         interleaved_neck_tail = list(itertools.zip_longest(rev_neck_bodies, rev_tail_bodies))
@@ -269,7 +294,10 @@ class GenerateRaptor:
         if self.args['build_head']:
             self.output['HeadFixture'] = {}
 
-        leg_fixtures = ['ThighFixture', 'ShinFixture', 'FootFixture', 'ToesFixture']
+        leg_fixtures = []
+        for leg in ['Thigh', 'Shin', 'Foot', 'Toes']:
+            for depth in [0, 1]:
+                leg_fixtures.append(leg + str(depth) + 'Fixture')
 
         for f in leg_fixtures:
             self.output[f] = {}
@@ -337,9 +365,22 @@ class GenerateRaptor:
                 self.output[f]['FixtureShape'] = {}
                 self.output[f]['FixtureShape']['Type'] = 'PolygonShape'
 
-                prefix = f.split('Fixture')[0].lower()
+                # This loop is also used for hull and head as well as legs
+                #
+                if not 'Hull' in f and not 'Head' in f:
+                    prefix = f.split('Fixture')[0][:-1].lower()
+                    depth = int(f.split('Fixture')[0][-1])
+                else:
+                    prefix = f.split('Fixture')[0].lower()
 
-                half_width, half_height = 0.5 * self.args[prefix + '_width'], 0.5 * self.args[prefix + '_height']
+                if type(self.args[prefix + '_width']) is list:
+                    half_width = 0.5 * self.args[prefix + '_width'][depth]
+                else:
+                    half_width = 0.5 * self.args[prefix + '_width']
+                if type(self.args[prefix + '_height']) is list:
+                    half_height = 0.5 * self.args[prefix + '_height'][depth]
+                else:
+                    half_height = 0.5 * self.args[prefix + '_height']
 
                 self.output[f]['FixtureShape']['Vertices'] = [
                     [-half_width, -half_height],
@@ -438,41 +479,61 @@ class GenerateRaptor:
                 ))
 
     def build_leg_bodies(self):
-        fixtures_to_build = ['ThighFixture', 'ShinFixture'] if self.args['bipedal_legs'] else ['ThighFixture', 'ShinFixture', 'FootFixture', 'ToesFixture']
-        for f in fixtures_to_build:
-            for sign in [-1, +1]:
-                k = f.split('Fixture')[0] + str(sign)
+        if self.args['bipedal_legs']:
+            prefixes = ['Thigh', 'Shin']
+        else:
+            prefixes = ['Thigh', 'Shin', 'Foot', 'Toes']
+        for prefix in prefixes:
+            for depth in [0, 1]:
+                k = prefix + str(depth)
                 self.output[k] = {}
                 self.output[k]['DataType'] = 'DynamicBody'
-                self.output[k]['FixtureNames'] = [f]
-                self.output[k]['Color1'] = DARK_COLOR if '-1' in k else MID_COLOR
+                self.output[k]['FixtureNames'] = [prefix + str(depth) + 'Fixture']
+                self.output[k]['Color1'] = DARK_COLOR if depth == 0 else MID_COLOR
                 self.output[k]['Color2'] = LINE_COLOR
                 self.output[k]['CanTouchGround'] = True
                 self.output[k]['InitialForceScale'] =  0
                 self.output[k]['ReportState'] = True
-                self.output[k]['Depth'] = 0 if '-1' in k else -1
+                self.output[k]['Depth'] = depth
 
                 # Add position and angle
                 # TODO(josh): make angle of legs an argument?
                 # TODO(josh): make foot and toes not rotated?
-                thigh_x = self.start_x + math.sin(0.3) * 0.5 * self.args['thigh_height']
-                thigh_y = self.start_y - math.cos(0.3) * 0.5 * self.args['thigh_height']
-                shin_x = thigh_x - 0.5 * self.args['shin_height']
-                shin_y = thigh_y - 0.5 * self.args['thigh_height']
-                foot_x = shin_x - 0.5 * self.args['shin_height']
-                foot_y = shin_y - 0.5 * self.args['foot_height']
-                toes_x = foot_x + 0.5 * self.args['toes_height']
-                toes_y = foot_y - 0.5 * self.args['foot_height']
+                if type(self.args['thigh_height']) is list:
+                    current_thigh_height = self.args['thigh_height'][depth]
+                else:
+                    current_thigh_height = self.args['thigh_height']
+                if type(self.args['shin_height']) is list:
+                    current_shin_height = self.args['shin_height'][depth]
+                else:
+                    current_shin_height = self.args['shin_height']
+                if type(self.args['foot_height']) is list:
+                    current_foot_height = self.args['foot_height'][depth]
+                else:
+                    current_foot_height = self.args['foot_height']
+                if type(self.args['toes_height']) is list:
+                    current_toes_height = self.args['toes_height'][depth]
+                else:
+                    current_toes_height = self.args['toes_height']
+
+                thigh_x = self.start_x + math.sin(0.3) * 0.5 * current_thigh_height
+                thigh_y = self.start_y - math.cos(0.3) * 0.5 * current_thigh_height
+                shin_x = thigh_x - 0.5 * current_shin_height
+                shin_y = thigh_y - 0.5 * current_thigh_height
+                foot_x = shin_x - 0.5 * current_shin_height
+                foot_y = shin_y - 0.5 * current_foot_height
+                toes_x = foot_x + 0.5 * current_toes_height
+                toes_y = foot_y - 0.5 * current_foot_height
                 if 'Thigh' in k:
                     if self.args['bipedal_legs']:
-                        self.output[k]['Position'] = [self.start_x, self.start_y - 0.5 * self.args['thigh_height']]
+                        self.output[k]['Position'] = [self.start_x, self.start_y - 0.5 * current_thigh_height]
                         self.output[k]['Angle'] = sign * 0.05
                     else:
                         self.output[k]['Position'] = [thigh_x, thigh_y]
                         self.output[k]['Angle'] = 0.3
                 elif 'Shin' in k:
                     if self.args['bipedal_legs']:
-                        self.output[k]['Position'] = [self.start_x, self.start_y - self.args['thigh_height'] - 0.5 * self.args['shin_height']]
+                        self.output[k]['Position'] = [self.start_x, self.start_y - current_thigh_height - 0.5 * current_shin_height]
                         self.output[k]['Angle'] = sign * 0.05
                     else:
                         # Note: shin is sideways
@@ -495,7 +556,7 @@ class GenerateRaptor:
         for k in fixtures:
             body_name = k.split('Fixture')[0]
 
-            if body_name in ['Thigh', 'Shin', 'Foot', 'Toes']:
+            if body_name[:-1] in ['Thigh', 'Shin', 'Foot', 'Toes']:
                 continue
 
             self.output[body_name] = {}
@@ -657,18 +718,27 @@ class GenerateRaptor:
 
     def build_leg_joints(self):
         joint_counter = self.args['neck_segments'] + self.args['tail_segments'] + 1
-        leg_names = ['Thigh', 'Shin'] if self.args['bipedal_legs'] else ['Thigh', 'Shin', 'Foot', 'Toes']
+        if self.args['bipedal_legs']:
+            leg_names = ['Thigh', 'Shin']
+        else:
+            leg_names = ['Thigh', 'Shin', 'Foot', 'Toes']
 
         joint_types = ['Joint', 'Weld'] if self.args['rigid_legs'] else ['Joint']
 
-        for sign in [-1, +1]:
+        for depth in [0, 1]:
             for joint_type in joint_types:
-                k = joint_type + str(joint_counter) + '.Hull.Thigh' + str(sign)
+                k = joint_type + str(joint_counter) + '.Hull.Thigh' + str(depth)
                 self.output[k] = {}
                 self.output[k]['BodyA'] = 'Hull'
-                self.output[k]['BodyB'] = 'Thigh' + str(sign)
+                self.output[k]['BodyB'] = 'Thigh' + str(depth)
                 self.output[k]['LocalAnchorA'] = [0.0, 0.0]
-                self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args['thigh_height']]
+                if type(self.args['thigh_height']) is list:
+                    self.output[k]['LocalAnchorB'] = [0.0, 0.5
+                        * self.args['thigh_height'][depth]]
+                else:
+                    self.output[k]['LocalAnchorB'] = [0.0, 0.5
+                        * self.args['thigh_height']]
+
                 if joint_type == 'Joint':
                     self.output[k]['LowerAngle'] = -0.8
                     self.output[k]['UpperAngle'] = 1.1
@@ -679,12 +749,25 @@ class GenerateRaptor:
 
             for i in range(len(leg_names)-1):
                 for joint_type in joint_types:
-                    k = joint_type + str(joint_counter) + '.' + leg_names[i] + str(sign) + '.' + leg_names[i+1] + str(sign)
+                    k = joint_type + str(joint_counter) + '.' + leg_names[i] \
+                        + str(depth) + '.' + leg_names[i+1] + str(depth)
                     self.output[k] = {}
-                    self.output[k]['BodyA'] = leg_names[i] + str(sign)
-                    self.output[k]['BodyB'] = leg_names[i+1] + str(sign)
-                    self.output[k]['LocalAnchorA'] = [0.0, -0.5 * self.args[leg_names[i].lower() + '_height']]
-                    self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args[leg_names[i+1].lower() + '_height']]
+                    self.output[k]['BodyA'] = leg_names[i] + str(depth)
+                    self.output[k]['BodyB'] = leg_names[i+1] + str(depth)
+
+                    if type(self.args[leg_names[i].lower() + '_height']) is list:
+                        self.output[k]['LocalAnchorA'] = [0.0, -0.5
+                            * self.args[leg_names[i].lower() + '_height'][depth]]
+                    else:
+                        self.output[k]['LocalAnchorA'] = [0.0, -0.5
+                            * self.args[leg_names[i].lower() + '_height']]
+                    if type(self.args[leg_names[i+1].lower() + '_height']) is list:
+                        self.output[k]['LocalAnchorB'] = [0.0, 0.5
+                            * self.args[leg_names[i+1].lower() + '_height'][depth]]
+                    else:
+                        self.output[k]['LocalAnchorB'] = [0.0, 0.5
+                            * self.args[leg_names[i+1].lower() + '_height']]
+
                     if joint_type == 'Joint':
                         if leg_names[i] == 'Thigh':
                             if self.args['bipedal_legs']:
@@ -706,15 +789,27 @@ class GenerateRaptor:
 
                             # Special case, make foot rigid but not rest of legs
                             if not self.args['rigid_legs'] and self.args['rigid_foot']:
-                                k = 'Weld' + str(joint_counter) + '.' + leg_names[i] + str(sign) + '.' + leg_names[i+1] + str(sign)
+                                k = 'Weld' + str(joint_counter) + '.' + leg_names[i] + str(depth) + '.' + leg_names[i+1] + str(depth)
                                 self.output[k] = {}
-                                self.output[k]['BodyA'] = leg_names[i] + str(sign)
-                                self.output[k]['BodyB'] = leg_names[i+1] + str(sign)
-                                self.output[k]['LocalAnchorA'] = [0.0, -0.5 * self.args[leg_names[i].lower() + '_height']]
-                                self.output[k]['LocalAnchorB'] = [0.0, 0.5 * self.args[leg_names[i+1].lower() + '_height']]
-                                self.output[k]['FrequencyHz'] =  self.args['foot_frequency']
+                                self.output[k]['BodyA'] = leg_names[i] + str(depth)
+                                self.output[k]['BodyB'] = leg_names[i+1] + str(depth)
 
-                        self.output[k]['Depth'] = (sign + 1) // 2
+                        if type(self.args[leg_names[i].lower() + '_height']) is list:
+                            self.output[k]['LocalAnchorA'] = [0.0, -0.5
+                                * self.args[leg_names[i].lower() + '_height'][depth]]
+                        else:
+                            self.output[k]['LocalAnchorA'] = [0.0, -0.5
+                                * self.args[leg_names[i].lower() + '_height']]
+                        if type(self.args[leg_names[i+1].lower() + '_height']) is list:
+                            self.output[k]['LocalAnchorB'] = [0.0, 0.5
+                                * self.args[leg_names[i+1].lower() + '_height'][depth]]
+                        else:
+                            self.output[k]['LocalAnchorB'] = [0.0, 0.5
+                                * self.args[leg_names[i+1].lower() + '_height']]
+
+                        self.output[k]['FrequencyHz'] =  self.args['foot_frequency']
+                        self.output[k]['Depth'] = depth
+
                     elif joint_type == 'Weld':
                         self.output[k]['FrequencyHz'] = self.args['leg_frequency']
 
