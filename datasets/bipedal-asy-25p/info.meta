@@ -1,0 +1,664 @@
+Dataset split: 1
+train
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker0.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker0.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 52.71018387937178
+hull_height : 14.19691262984345
+asymmetric_legs : True
+leg_width : [9.83839609589689, 6.560737860756404]
+leg_height : [38.75276273643229, 38.37440817384757]
+lower_width : [6.5760421363601544, 6.94512579238598]
+lower_height : [32.065958508331406, 25.74636976338827]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker1.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker1.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 63.10536688607826
+hull_height : 16.207488428710167
+asymmetric_legs : True
+leg_width : [8.50987657770569, 6.385226330467148]
+leg_height : [27.87836540152656, 39.86511887238795]
+lower_width : [7.297475331165463, 7.206949609781425]
+lower_height : [40.68784710645122, 29.804161812165678]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker2.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker2.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 69.22697281232891
+hull_height : 12.255915696612874
+asymmetric_legs : True
+leg_width : [8.627751858461608, 9.117217397293677]
+leg_height : [27.544300455187653, 35.37588138299921]
+lower_width : [5.602757775130705, 7.808345885117335]
+lower_height : [37.26624147091155, 26.66502579877318]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker3.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker3.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 69.39888827081502
+hull_height : 12.825220964779323
+asymmetric_legs : True
+leg_width : [9.120675257820047, 7.01269347489946]
+leg_height : [27.2803406392496, 40.15904694183428]
+lower_width : [7.244864192321945, 7.026182512553518]
+lower_height : [42.435833079741656, 25.58039819543039]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker4.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker4.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 55.0164165135883
+hull_height : 14.64666486156913
+asymmetric_legs : True
+leg_width : [9.564561952513674, 6.765240086014713]
+leg_height : [39.91288744659852, 40.67299380501205]
+lower_width : [6.317048042382549, 6.020034301815872]
+lower_height : [28.28422100667894, 36.916816601771565]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker5.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker5.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 77.04466197645134
+hull_height : 14.05787023309419
+asymmetric_legs : True
+leg_width : [6.748859411616649, 7.759421923566151]
+leg_height : [25.803745920719997, 33.95822796751273]
+lower_width : [4.928106495196641, 6.2670492018854755]
+lower_height : [42.067145854541195, 41.83095447761254]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker6.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker6.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 49.24493345745229
+hull_height : 14.005580966805933
+asymmetric_legs : True
+leg_width : [7.857720332186522, 8.190346793226492]
+leg_height : [28.715122218942, 27.20315610022434]
+lower_width : [7.510417546657334, 5.925153706323906]
+lower_height : [25.93691409048389, 30.967969379720078]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker7.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker7.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 77.02551331350246
+hull_height : 13.445376293401129
+asymmetric_legs : True
+leg_width : [7.946107594671714, 8.391843508122694]
+leg_height : [33.937515349644016, 26.365332512103354]
+lower_width : [6.193906001070507, 5.080204947958041]
+lower_height : [29.062856385687716, 39.557554039438244]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker8.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker8.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 51.5134867110466
+hull_height : 15.695818002511198
+asymmetric_legs : True
+leg_width : [9.792298578180283, 7.377013949695762]
+leg_height : [29.261410330260134, 30.292821347013305]
+lower_width : [6.152309956371587, 5.662230494955358]
+lower_height : [25.642868699274906, 36.84050327039903]
+
+datasets/bipedal-asy-25p/train/GeneratedBipedalWalker9.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/train/GeneratedBipedalWalker9.json
+json_file : 
+directory : datasets/bipedal-asy-25p/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 56.64436135151765
+hull_height : 13.501509075582497
+asymmetric_legs : True
+leg_width : [9.562208272364359, 8.072277779364883]
+leg_height : [28.42988335640558, 41.442829180863406]
+lower_width : [5.617809279786613, 7.989997910402775]
+lower_height : [37.9551774996449, 32.605056885042025]
+
+valid
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker0.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker0.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 72.80187032548508
+hull_height : 16.771949595656814
+asymmetric_legs : True
+leg_width : [9.063923270456705, 9.590262367349691]
+leg_height : [30.720411768904277, 27.190989854037774]
+lower_width : [6.824171362639383, 6.33173957670536]
+lower_height : [40.9619345523126, 30.825797229928888]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker1.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker1.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 78.78848601835766
+hull_height : 12.838711349380524
+asymmetric_legs : True
+leg_width : [6.397267391642961, 8.722626228480861]
+leg_height : [28.48111477699994, 33.72292923814535]
+lower_width : [4.977815687394865, 5.119302516723075]
+lower_height : [29.854001760032816, 27.912435512388996]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker2.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker2.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 53.2603678847525
+hull_height : 14.661056591956948
+asymmetric_legs : True
+leg_width : [9.380175750735447, 7.4734303548849965]
+leg_height : [28.66337147997556, 26.512578743942164]
+lower_width : [7.523374616057119, 7.744828168716739]
+lower_height : [26.11341699861389, 37.90953784845185]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker3.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker3.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 58.87634724247245
+hull_height : 18.416479744778393
+asymmetric_legs : True
+leg_width : [6.871883713581588, 8.175693263092942]
+leg_height : [35.980999215411124, 38.69647169143298]
+lower_width : [5.136180210277122, 7.084248231102623]
+lower_height : [30.581739527651834, 29.598200019300588]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker4.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker4.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 56.71564512210662
+hull_height : 18.66741505891162
+asymmetric_legs : True
+leg_width : [6.581861068068278, 9.654782122741437]
+leg_height : [32.62473595894211, 27.947851555427953]
+lower_width : [6.801375348013472, 5.344620490173248]
+lower_height : [42.26456526545965, 29.93343265714192]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker5.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker5.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 74.11165676103822
+hull_height : 15.568242040537402
+asymmetric_legs : True
+leg_width : [9.922689543440677, 8.603364732317432]
+leg_height : [28.866512229213598, 40.57649428249486]
+lower_width : [6.830688375629469, 5.6003159903059805]
+lower_height : [27.446327186496635, 27.590712274269013]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker6.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker6.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 65.65324031890044
+hull_height : 13.637136295109933
+asymmetric_legs : True
+leg_width : [8.999988326889813, 9.574116122517518]
+leg_height : [26.484005066356755, 39.071100661572665]
+lower_width : [7.186367803817328, 7.750756376359124]
+lower_height : [42.27413761485214, 34.94188919519294]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker7.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker7.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 49.079701484152054
+hull_height : 13.945887638112143
+asymmetric_legs : True
+leg_width : [9.104037728497087, 7.490452728948527]
+leg_height : [36.76380280947747, 40.99338906380625]
+lower_width : [7.120185770347925, 7.175629732816242]
+lower_height : [25.881521254365182, 36.44219431145025]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker8.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker8.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 79.8926632172621
+hull_height : 15.35458641639282
+asymmetric_legs : True
+leg_width : [6.975228266822485, 7.912111830362562]
+leg_height : [33.46568885653865, 25.909279288851643]
+lower_width : [7.36063335441479, 5.439423451948596]
+lower_height : [41.10335014396014, 40.03894070923817]
+
+datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker9.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/valid/GeneratedBipedalWalker9.json
+json_file : 
+directory : datasets/bipedal-asy-25p/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 65.88051712774538
+hull_height : 14.006879729675095
+asymmetric_legs : True
+leg_width : [6.552043040625962, 6.98659591903653]
+leg_height : [29.352137387002987, 39.2349476138638]
+lower_width : [6.939575029443818, 6.7378157269745245]
+lower_height : [26.409594827819618, 41.63690251147919]
+
+test
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker0.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker0.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 74.67550569428903
+hull_height : 19.556949464606422
+asymmetric_legs : True
+leg_width : [6.762070231906543, 8.378017522158673]
+leg_height : [36.18787442609435, 41.33665508725064]
+lower_width : [5.683283481077921, 6.27450070586899]
+lower_height : [41.315957858830586, 27.52904812409266]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker1.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker1.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 60.77912289367099
+hull_height : 13.58838428413155
+asymmetric_legs : True
+leg_width : [9.7275145141411, 8.843365163194246]
+leg_height : [30.35812188119546, 35.809819849012115]
+lower_width : [7.952176233516542, 6.234536721568876]
+lower_height : [28.752332126221955, 33.95105326303813]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker2.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker2.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 59.321443874515204
+hull_height : 18.161323819362035
+asymmetric_legs : True
+leg_width : [8.79434326657384, 6.176719399558676]
+leg_height : [38.83785144307632, 31.892308084300424]
+lower_width : [6.315942628884767, 6.469136997097795]
+lower_height : [36.31654466619708, 36.75007588413345]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker3.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker3.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 65.39418629929666
+hull_height : 12.585675861374254
+asymmetric_legs : True
+leg_width : [9.383889757089037, 7.1295914222609795]
+leg_height : [41.462103582307066, 40.7687846539222]
+lower_width : [6.378681156885117, 6.4823545970250835]
+lower_height : [34.46313296977583, 40.18906658903464]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker4.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker4.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 75.1690224767185
+hull_height : 15.760941161925984
+asymmetric_legs : True
+leg_width : [6.410869482670249, 9.2437032564145]
+leg_height : [35.59556563683701, 39.619617813244005]
+lower_width : [6.618510915635358, 6.1706190536554395]
+lower_height : [27.263866961153482, 29.871553024211302]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker5.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker5.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 71.58626065681388
+hull_height : 13.184713757413586
+asymmetric_legs : True
+leg_width : [7.666191891402882, 9.252298578332924]
+leg_height : [38.713485579157116, 27.046629272756938]
+lower_width : [6.444168577308431, 5.196244895634045]
+lower_height : [29.8390646408703, 26.185385852611546]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker6.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker6.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 66.3798171240324
+hull_height : 12.164210200916804
+asymmetric_legs : True
+leg_width : [9.334510558394904, 6.493531920084519]
+leg_height : [38.61290727395506, 41.55231656917269]
+lower_width : [6.228709164965641, 7.814603710001804]
+lower_height : [26.88424455862429, 38.32519029303164]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker7.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker7.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 54.20657379727069
+hull_height : 16.19724559243582
+asymmetric_legs : True
+leg_width : [6.766852206290839, 6.184795713580758]
+leg_height : [37.0726621538628, 37.50787523274709]
+lower_width : [6.726705643692434, 6.459834497106915]
+lower_height : [40.0440278779361, 26.836365313601405]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker8.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker8.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 69.63642472454144
+hull_height : 14.571465618103566
+asymmetric_legs : True
+leg_width : [9.04416237477172, 6.370567258203671]
+leg_height : [31.43900128560852, 27.150542168821737]
+lower_width : [7.175428418631043, 5.607888678229079]
+lower_height : [28.678006582324507, 32.17369416309519]
+
+datasets/bipedal-asy-25p/test/GeneratedBipedalWalker9.json
+num_segments : 1
+filename : datasets/bipedal-asy-25p/test/GeneratedBipedalWalker9.json
+json_file : 
+directory : datasets/bipedal-asy-25p/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : -1.0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 76.16958276437045
+hull_height : 14.783976512791785
+asymmetric_legs : True
+leg_width : [6.426872231261109, 6.291081275210315]
+leg_height : [26.9429709316061, 34.45907620002255]
+lower_width : [7.708321425135206, 6.396596855392277]
+lower_height : [33.69934044497377, 39.89332878845639]
+
