@@ -1,5 +1,6 @@
 import copy
 import sys, os
+import math
 import random
 import numpy as np
 from randomize_bodies import RandomizeBodies
@@ -65,9 +66,18 @@ class BuildDatasets:
 
         self.metafile.write(dataset + '\n')
 
-        num_training_segment_configs = len(self.dataset_split) // 2
-        num_validation_segment_configs = len(self.dataset_split) // 4
-        num_testing_segment_configs = len(self.dataset_split) // 4
+        num_to_split = self.args['num_bodies']
+        if type(self.dataset_split) is list:
+            num_to_split = len(self.dataset_split)
+
+        # If we have an odd number of segments, training configs will be
+        # half rounded down
+        num_training_configs = num_to_split // 2
+        # Validation will be half of what's left rounded up
+        num_validation_configs = math.ceil((num_to_split
+            - num_training_configs) / 2.)
+        num_testing_configs = num_to_split - num_training_configs\
+            - num_validation_configs
 
         # Assume even # of dataset splits
         # TODO(josh): add ways to split datasets on things besides number of body segments
@@ -76,8 +86,8 @@ class BuildDatasets:
                 for i in range(0, num_training_segment_configs):
                     if self.body_type == 'BipedalWalker':
                         args['num_segments'] = self.dataset_split[i]
-                        args['outfile_prefix'] = self.args['outfile_prefix'] +  \
-                            '-batch' + str(i) + '-' + str(args['num_segments']) + 'segments-'
+                        args['outfile_prefix'] = self.args['outfile_prefix']   \
+                            + '-' + str(args['num_segments']) + 'segments-'
                     elif self.body_type == 'RaptorWalker':
                         args['neck_segments'] = self.dataset_split[i][0]
                         args['tail_segments'] = self.dataset_split[i][1]
@@ -86,19 +96,16 @@ class BuildDatasets:
                             str(args['tail_segments']) + 'tail' + 'segments-'
 
                     args['num_bodies'] = self.args['num_bodies']
-                    randomize = RandomizeBodies(self.body_type, args)
-                    randomize.build_bodies(self.metafile)
-            else:
-                randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies(self.metafile)
+            randomize = RandomizeBodies(self.body_type, args)
+            randomize.build_bodies(self.metafile)
 
         elif dataset == 'valid':
             if type(self.dataset_split) is list:
                 for i in range(num_training_segment_configs, num_training_segment_configs+num_validation_segment_configs):
                     if self.body_type == 'BipedalWalker':
                         args['num_segments'] = self.dataset_split[i]
-                        args['outfile_prefix'] = self.args['outfile_prefix'] +  \
-                            '-batch' + str(i) + '-' + str(args['num_segments']) + 'segments-'
+                        args['outfile_prefix'] = self.args['outfile_prefix']   \
+                            + '-' + str(args['num_segments']) + 'segments-'
                     elif self.body_type == 'RaptorWalker':
                         args['neck_segments'] = self.dataset_split[i][0]
                         args['tail_segments'] = self.dataset_split[i][1]
@@ -107,18 +114,15 @@ class BuildDatasets:
                             str(args['tail_segments']) + 'tail' + 'segments-'
 
                     args['num_bodies'] = self.args['num_bodies']
-                    randomize = RandomizeBodies(self.body_type, args)
-                    randomize.build_bodies(self.metafile)
-            else:
-                randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies(self.metafile)
+            randomize = RandomizeBodies(self.body_type, args)
+            randomize.build_bodies(self.metafile)
         elif dataset == 'test':
             if type(self.dataset_split) is list:
                 for i in range(num_training_segment_configs+num_validation_segment_configs, len(self.dataset_split)):
                     if self.body_type == 'BipedalWalker':
                         args['num_segments'] = self.dataset_split[i]
-                        args['outfile_prefix'] = self.args['outfile_prefix'] +  \
-                            '-batch' + str(i) + '-' + str(args['num_segments']) + 'segments-'
+                        args['outfile_prefix'] = self.args['outfile_prefix']   \
+                            + '-' + str(args['num_segments']) + 'segments-'
                     elif self.body_type == 'RaptorWalker':
                         args['neck_segments'] = self.dataset_split[i][0]
                         args['tail_segments'] = self.dataset_split[i][1]
@@ -126,12 +130,9 @@ class BuildDatasets:
                             '-batch' + str(i) + '-' + str(args['neck_segments']) + 'neck' +   \
                             str(args['tail_segments']) + 'tail' + 'segments-'
                     args['num_bodies'] = self.args['num_bodies']
-                    randomize = RandomizeBodies(self.body_type, args)
-                    randomize.build_bodies(self.metafile)
 
-            else:
-                randomize = RandomizeBodies(self.body_type, args)
-                randomize.build_bodies(self.metafile)
+            randomize = RandomizeBodies(self.body_type, args)
+            randomize.build_bodies(self.metafile)
 
 if __name__ == '__main__':
     body_type = sys.argv[1] if len(sys.argv) > 1 else 'BipedalWalker'

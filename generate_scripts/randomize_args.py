@@ -105,6 +105,9 @@ def parse_cmdline_args(body_type, additional_parser_args={}):
             nargs='+',
             default=16.0,
             help='The height of the center hull segment (default 28.0)')
+        parser.add_argument('--asymmetric-legs', dest='asymmetric_legs', action='store_true')
+        parser.add_argument('--symmetric-legs', dest='asymmetric_legs', action='store_false')
+        parser.set_defaults(asymmetric_legs=False)
         parser.add_argument(
             '--leg-width',
             type=float,
@@ -358,6 +361,7 @@ def parse_default_args(body_type, additional_default_args={}):
             'leg_friction' : 0.2,
             'hull_width' : 64.0,
             'hull_height' : 16.0,
+            'asymmetric_legs' : False,
             'leg_width' : 8.0,
             'leg_height' : 34.0,
             'lower_width' : 6.4,

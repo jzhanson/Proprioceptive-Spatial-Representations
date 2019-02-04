@@ -52,7 +52,7 @@ def parse_args():
         '--hull-segment',
         type=float,
         default=-1.0,
-        help='Which segment (zero-indexed) should be designated as the "hull" and attach the legs to (-1.0 to choose centermost segment), use .5 increments to place legs on joints rather than bodies')
+        help='Which segment (zero-indexed) should be designated as the "hull" and attach the legs to (-1.0 to choose centermost segment), use .5 increments to place legs on joints rather than bodies starting at -0.5 and ending at (num_segments-1)+0.5')
     parser.add_argument(
         '--hull-width',
         type=float,
@@ -66,21 +66,25 @@ def parse_args():
     parser.add_argument(
         '--leg-width',
         type=float,
+        nargs='+',
         default=8.0,
         help='Leg (highest up leg segment) width (default 8.0)')
     parser.add_argument(
         '--leg-height',
         type=float,
+        nargs='+',
         default=34.0,
         help='Leg (highest up leg segment) height (default 34.0)')
     parser.add_argument(
         '--lower-width',
         type=float,
+        nargs='+',
         default=6.4,
         help='Lower (second leg segment) width (default 6.4)')
     parser.add_argument(
         '--lower-height',
         type=float,
+        nargs='+',
         default=34.0,
         help='Lower (second leg segment) height (default 34.0)')
     return vars(parser.parse_args())
@@ -103,12 +107,21 @@ class GenerateBipedal:
         self.start_x = 50
         self.start_x += 0.5 * self.args['hull_width']
         # Ground starts at y=100
-        self.start_y = 100
-        # Currently, naively calculate total leg height
-        for k in ['leg', 'lower']:
-            self.start_y += self.args[k + '_height']
+        # Calculate start_y as height of longest leg plus half of hull height
+        self.start_y = 100 + 0.5 * self.args['hull_height']
+        leg_heights = []
+        for depth in [0, 1]:
+            current_height = 0
+            for k in ['leg', 'lower']:
+                if type(self.args[k + '_height']) is list:
+                    current_height += self.args[k + '_height'][depth]
+                else:
+                    current_height += self.args[k + '_height']
+            leg_heights.append(current_height)
+        self.start_y += max(leg_heights)
         self.hull_segment_width = self.args['hull_width'] / self.args['num_segments']
         self.odd_body_segments = self.args['num_segments'] % 2 == 1
+
 
         if self.args['hull_segment'] != -1.0 and self.args['hull_segment'] < self.args['num_segments']:
             # Rounds -0.5 to 0
@@ -192,25 +205,33 @@ class GenerateBipedal:
             self.output[f]['MaskBits'] = 1
             self.output[f]['CategoryBits'] = 32
 
-        for prefix in ['Leg', 'Lower']:
-            lower = prefix.lower()
-            f = prefix + 'Fixture'
-            self.output[f] = {}
-            self.output[f]['DataType'] = 'Fixture'
-            self.output[f]['FixtureShape'] = {}
-            self.output[f]['FixtureShape']['Type'] = 'PolygonShape'
-            half_width, half_height = 0.5 * self.args[lower + '_width'], 0.5 * self.args[lower + '_height']
-            self.output[f]['FixtureShape']['Vertices'] = [
-                [-half_width, -half_height],
-                [half_width, -half_height],
-                [half_width, half_height],
-                [-half_width, half_height]
-            ]
-            self.output[f]['Friction'] = self.args['hull_friction'] if prefix == 'Hull' else self.args['leg_friction']
-            self.output[f]['Density'] = self.args['hull_density'] if prefix == 'Hull' else self.args['leg_density']
-            self.output[f]['Restitution'] = 0.0
-            self.output[f]['MaskBits'] = 1
-            self.output[f]['CategoryBits'] = 32
+        for prefix in ['leg', 'lower']:
+            for depth in [0, 1]:
+                f = prefix.title() + str(depth) + 'Fixture'
+                self.output[f] = {}
+                self.output[f]['DataType'] = 'Fixture'
+                self.output[f]['FixtureShape'] = {}
+                self.output[f]['FixtureShape']['Type'] = 'PolygonShape'
+                if type(self.args[prefix + '_width']) is list:
+                    half_width = 0.5 * self.args[prefix + '_width'][depth]
+                else:
+                    half_width = 0.5 * self.args[prefix + '_width']
+                if type(self.args[prefix + '_height']) is list:
+                    half_height = 0.5 * self.args[prefix + '_height'][depth]
+                else:
+                    half_height = 0.5 * self.args[prefix + '_height']
+
+                self.output[f]['FixtureShape']['Vertices'] = [
+                    [-half_width, -half_height],
+                    [half_width, -half_height],
+                    [half_width, half_height],
+                    [-half_width, half_height]
+                ]
+                self.output[f]['Friction'] = self.args['leg_friction']
+                self.output[f]['Density'] = self.args['leg_density']
+                self.output[f]['Restitution'] = 0.0
+                self.output[f]['MaskBits'] = 1
+                self.output[f]['CategoryBits'] = 32
 
     def build_bodies(self):
         if self.args['num_segments'] == 1:
@@ -246,22 +267,25 @@ class GenerateBipedal:
                 self.output[k]['Depth'] = 0
                 current_x += self.hull_segment_width
 
-        for sign in [-1, +1]:
+        for depth in [0, 1]:
             current_x = self.start_x - 0.5 * self.args['hull_width'] + 0.5 * self.hull_segment_width + self.hull_segment_width * self.legs_attach
-            current_y = self.start_y - 0.5 * self.args['leg_height']
-            for prefix in ['Leg', 'Lower']:
-                k = prefix + str(sign)
+            current_y = self.start_y
+            for prefix in ['leg', 'lower']:
+                if type(self.args[prefix + '_height']) is list:
+                    current_y = current_y - 0.5 * self.args[prefix + '_height'][depth]
+                else:
+                    current_y = current_y - 0.5 * self.args[prefix + '_height']
+                k = prefix.title() + str(depth)
                 self.output[k] = {}
                 self.output[k]['DataType'] = 'DynamicBody'
                 self.output[k]['Position'] = [current_x, current_y]
-                self.output[k]['Angle'] = sign * 0.05
-                self.output[k]['FixtureNames'] = [prefix + 'Fixture']
-                self.output[k]['Color1'] = LIGHT_COLOR if sign == 1 else DARK_COLOR
+                self.output[k]['Angle'] = depth * 0.05
+                self.output[k]['FixtureNames'] = [prefix.title() + str(depth) + 'Fixture']
+                self.output[k]['Color1'] = LIGHT_COLOR if depth == 1 else DARK_COLOR
                 self.output[k]['Color2'] = LINE_COLOR
                 self.output[k]['CanTouchGround'] = True
                 self.output[k]['ReportState'] = True
-                self.output[k]['Depth'] = (sign + 1)//2
-                current_y = current_y - 0.5 * self.args['lower_height']
+                self.output[k]['Depth'] = depth
 
     def build_joints(self):
         # current_x is unused, used to be used for calculating 'Anchor' for weld joints
@@ -298,16 +322,25 @@ class GenerateBipedal:
             current_x += self.hull_segment_width
 
 
-        for sign in [-1, +1]:
-            k = 'HullLeg' + str(sign) + 'Joint'
+        for depth in [0, +1]:
+            if type(self.args['leg_height']) is list:
+                leg_anchor = 0.5 * self.args['leg_height'][depth]
+            else:
+                leg_anchor = 0.5 * self.args['leg_height']
+            if type(self.args['lower_height']) is list:
+                lower_anchor = 0.5 * self.args['lower_height'][depth]
+            else:
+                lower_anchor = 0.5 * self.args['lower_height']
+
+            k = 'HullLeg' + str(depth) + 'Joint'
             self.output[k] = {}
             self.output[k]['DataType'] = 'JointMotor'
             self.output[k]['BodyA'] = 'Hull'
-            self.output[k]['BodyB'] = 'Leg' + str(sign)
+            self.output[k]['BodyB'] = 'Leg' + str(depth)
             self.output[k]['LocalAnchorA'] = [(self.legs_attach
                 - self.hull_segment) * self.hull_segment_width,
                 -0.5 * self.args['hull_height']]
-            self.output[k]['LocalAnchorB'] = [0, 0.5 * self.args['leg_height']]
+            self.output[k]['LocalAnchorB'] = [0, leg_anchor]
             self.output[k]['EnableMotor'] = True
             self.output[k]['EnableLimit'] = True
             self.output[k]['MaxMotorTorque'] = 80
@@ -316,15 +349,15 @@ class GenerateBipedal:
             self.output[k]['UpperAngle'] = 1.1
             self.output[k]['Speed'] = 4
             self.output[k]['ReportState'] = True
-            self.output[k]['Depth'] = (sign + 1)//2
+            self.output[k]['Depth'] = depth
 
-            k = 'Leg' + str(sign) + 'Lower' + str(sign) + 'Joint'
+            k = 'Leg' + str(depth) + 'Lower' + str(depth) + 'Joint'
             self.output[k] = {}
             self.output[k]['DataType'] = 'JointMotor'
-            self.output[k]['BodyA'] = 'Leg' + str(sign)
-            self.output[k]['BodyB'] = 'Lower' + str(sign)
-            self.output[k]['LocalAnchorA'] = [0, -0.5 * self.args['leg_height']]
-            self.output[k]['LocalAnchorB'] = [0, 0.5 * self.args['lower_height']]
+            self.output[k]['BodyA'] = 'Leg' + str(depth)
+            self.output[k]['BodyB'] = 'Lower' + str(depth)
+            self.output[k]['LocalAnchorA'] = [0, -1 * leg_anchor]
+            self.output[k]['LocalAnchorB'] = [0, lower_anchor]
             self.output[k]['EnableMotor'] = True
             self.output[k]['EnableLimit'] = True
             self.output[k]['MaxMotorTorque'] = 80
@@ -333,7 +366,7 @@ class GenerateBipedal:
             self.output[k]['UpperAngle'] = -0.1
             self.output[k]['Speed'] = 6
             self.output[k]['ReportState'] = True
-            self.output[k]['Depth'] = (sign + 1)//2
+            self.output[k]['Depth'] = depth
 
     def write_to_json(self, filename=None):
         if not os.path.exists('box2d-json-gen'):

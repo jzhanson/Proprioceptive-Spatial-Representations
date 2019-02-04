@@ -30,25 +30,44 @@ class RandomizeBodies:
                                 gen_args[k] = random.randint(lo, hi)
                             else:
                                 gen_args[k] = random.uniform(lo, hi)
+
+                            leg_args = ['leg_height', 'leg_width',
+                                'lower_height', 'lower_width', 'foot_height',
+                                'foot_width', 'toes_height', 'toes_width']
+                            if self.args['asymmetric_legs'] and k in leg_args:
+                                if type(lo) is int:
+                                    gen_args[k] = [random.randint(lo, hi),
+                                        random.randint(lo, hi)]
+                                else:
+                                    gen_args[k] = [random.uniform(lo, hi),
+                                        random.uniform(lo, hi)]
                     # No distribution parameters provided or boolean parameter
                     else:
                         gen_args[k] = self.args[k]
 
             if self.body_type == 'BipedalWalker':
+                # BipedalWalker script now allows attachment to both body joints
+                # and body segments by setting hull_segment between -0.5 and
+                # (num_segments-1)+0.5
                 gen_args['hull_width'] = gen_args['hull_width'] * self.args['hull_lengthening_factor'] ** (gen_args['num_segments'] - 1)
                 if self.args['hull_segment'] == 'center':
-                    gen_args['hull_segment'] = -1
+                    gen_args['hull_segment'] = -1.0
                 elif self.args['hull_segment'] == 'leftexcl':
                     # Don't allow the center segment to be chosen (excl vs incl only matters on odd segments bodies)
-                    gen_args['hull_segment'] = random.choice(range(0, gen_args['num_segments'] // 2 ))
+                    gen_args['hull_segment'] = random.choice(range(-0.5,
+                        gen_args['num_segments'] // 2, 0.5))
                 elif self.args['hull_segment'] == 'leftincl':
-                    gen_args['hull_segment'] = random.choice(range(0, gen_args['num_segments'] // 2 + gen_args['num_segments'] % 2))
+                    gen_args['hull_segment'] = random.choice(range(-0.5,
+                        gen_args['num_segments'] // 2 + 0.5, 0.5))
                 elif self.args['hull_segment'] == 'rightexcl':
-                    gen_args['hull_segment'] = random.choice(range(gen_args['num_segments'] // 2 + 1, gen_args['num_segments']))
+                    gen_args['hull_segment'] = random.choice(range(
+                        gen_args['num_segments'] // 2 + 0.5, gen_args['num_segments'], 0.5))
                 elif self.args['hull_segment'] == 'rightincl':
-                    gen_args['hull_segment'] = random.choice(range(gen_args['num_segments'] // 2 + (gen_args['num_segments'] + 1) % 2, gen_args['num_segments']))
+                    gen_args['hull_segment'] = random.choice(range(
+                        gen_args['num_segments'] // 2, gen_args['num_segments'], 0.5))
                 elif self.args['hull_segment'] == 'random':
-                    gen_args['hull_segment'] = random.choice(range(0, gen_args['num_segments']))
+                    gen_args['hull_segment'] = random.choice(range(
+                        -0.5, gen_args['num_segments'], 0.5))
 
                 gen = GenerateBipedal(gen_args)
             elif self.body_type == 'CentipedeWalker':
