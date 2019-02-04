@@ -1,0 +1,1054 @@
+Dataset split: [11, 7, 4, 3, 2, 8, 10, 12, 5, 9, 6]
+train
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-0.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-0.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 48.53760883257311
+hull_height : 18.651512892685883
+leg_width : 9.494806988300844
+leg_height : 35.92013718816114
+lower_width : 6.601602474666771
+lower_height : 26.735888766193586
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-1.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-1.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 58.815710821619504
+hull_height : 14.141660227554063
+leg_width : 9.161105744815378
+leg_height : 26.11680433716412
+lower_width : 5.982871320594965
+lower_height : 41.072226445080794
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-2.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-2.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 49.014299383220646
+hull_height : 12.567614732253935
+leg_width : 7.271681871431033
+leg_height : 25.922498448203577
+lower_width : 6.898137947316836
+lower_height : 34.89511942034727
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-3.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-3.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 64.49712889978294
+hull_height : 12.46440667867568
+leg_width : 7.761449285042775
+leg_height : 30.136524842615074
+lower_width : 6.1387791180756555
+lower_height : 28.06270503826507
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-4.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-4.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 57.10010120716133
+hull_height : 18.39552493226743
+leg_width : 7.25577483632399
+leg_height : 36.9048252619571
+lower_width : 7.206401852156217
+lower_height : 40.194430751204365
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-5.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-5.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 52.333325407221466
+hull_height : 13.529735676375964
+leg_width : 9.675319519707822
+leg_height : 39.74143825040098
+lower_width : 7.989790330935839
+lower_height : 33.78750562412351
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-6.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-6.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 53.38269073280844
+hull_height : 15.40553579188945
+leg_width : 7.326509295798289
+leg_height : 34.0933484769798
+lower_width : 7.654609233741826
+lower_height : 39.66791786313312
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-7.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-7.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 62.462778449098934
+hull_height : 12.14280031661129
+leg_width : 8.677251815575623
+leg_height : 34.89924898075989
+lower_width : 7.447004384535667
+lower_height : 29.209880747890693
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-8.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-8.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 48.49037423139646
+hull_height : 18.246621558175814
+leg_width : 7.515281589419748
+leg_height : 37.77456915594254
+lower_width : 6.526615664917342
+lower_height : 32.7819804921695
+
+datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-9.json
+num_segments : 2
+filename : datasets/bipedal-25p-2-12-segments-offcen/train/GeneratedBipedalWalker-2segments-9.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/train
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 65.7609585240543
+hull_height : 16.258802687844323
+leg_width : 8.858374181591767
+leg_height : 28.128549599397957
+lower_width : 5.540586596203447
+lower_height : 26.676854063296677
+
+valid
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-0.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-0.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 57.89405394703673
+hull_height : 16.585093139952896
+leg_width : 6.6828977594103005
+leg_height : 26.42360647639622
+lower_width : 7.4685971387106465
+lower_height : 26.76894274109247
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-1.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-1.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 7
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 51.1023322429965
+hull_height : 17.24893129557681
+leg_width : 9.089814457247167
+leg_height : 33.604581585182885
+lower_width : 5.017080967877528
+lower_height : 33.24942808652054
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-2.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-2.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 58.34976975846931
+hull_height : 13.56418718258551
+leg_width : 7.870503994407767
+leg_height : 41.82591772914409
+lower_width : 5.156894130648196
+lower_height : 37.07873155429152
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-3.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-3.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 2
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 73.42870617190161
+hull_height : 18.27252890636052
+leg_width : 9.805385406611716
+leg_height : 36.14487080759467
+lower_width : 7.9319977558763535
+lower_height : 38.98341766964881
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-4.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-4.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 49.69652978890786
+hull_height : 16.185522880897356
+leg_width : 7.553189075567028
+leg_height : 27.29818312905586
+lower_width : 7.451028599814372
+lower_height : 32.16938502995007
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-5.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-5.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 4
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 58.094096182495456
+hull_height : 13.799841027775559
+leg_width : 9.272052359296975
+leg_height : 37.620816463070284
+lower_width : 5.206667649132869
+lower_height : 36.69515243534291
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-6.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-6.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 57.15698235120471
+hull_height : 16.204294737378405
+leg_width : 6.578584672500189
+leg_height : 37.36307101373884
+lower_width : 6.411891618891042
+lower_height : 37.67203562181908
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-7.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-7.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 2
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 76.49076538762128
+hull_height : 18.920794954221726
+leg_width : 9.094808232167377
+leg_height : 40.11977253068855
+lower_width : 5.572376006801736
+lower_height : 41.44232429275
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-8.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-8.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 72.72599401200884
+hull_height : 14.236232422883397
+leg_width : 8.851731964939368
+leg_height : 41.28255067170423
+lower_width : 5.375204245399144
+lower_height : 31.10915470629624
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-9.json
+num_segments : 8
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-8segments-9.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 6
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 63.621377330960826
+hull_height : 15.871017151064507
+leg_width : 8.992912416249816
+leg_height : 27.4346930661135
+lower_width : 6.477348995296346
+lower_height : 29.64743090848446
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-0.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-0.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 7
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 75.15325355583457
+hull_height : 15.283126152540945
+leg_width : 7.166882503574925
+leg_height : 26.646999194930558
+lower_width : 5.832651035617057
+lower_height : 29.759190071215922
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-1.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-1.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 8
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 69.06370274255504
+hull_height : 18.03180909059056
+leg_width : 7.031561556516533
+leg_height : 32.84211796639328
+lower_width : 7.450638148695196
+lower_height : 36.94755457042677
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-2.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-2.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 59.05851581754177
+hull_height : 16.858777894320987
+leg_width : 7.725600761591062
+leg_height : 36.698509359276855
+lower_width : 6.553855213399565
+lower_height : 38.67097389706446
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-3.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-3.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 4
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 74.75126371483806
+hull_height : 15.397964025983164
+leg_width : 6.082395883387918
+leg_height : 39.22111713721783
+lower_width : 7.815341259687359
+lower_height : 37.32446766644255
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-4.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-4.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 6
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 69.88996401033512
+hull_height : 19.663748140821923
+leg_width : 8.483564264296392
+leg_height : 41.846223119842804
+lower_width : 4.912512846898232
+lower_height : 26.718479007588527
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-5.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-5.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 3
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 50.95223292465339
+hull_height : 15.517371908898724
+leg_width : 7.249999781981119
+leg_height : 29.595479118688743
+lower_width : 7.557798373232745
+lower_height : 36.89513293864668
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-6.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-6.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 3
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 59.175084793529244
+hull_height : 16.97828853332985
+leg_width : 7.794392401038666
+leg_height : 37.34269059974206
+lower_width : 5.117588544018217
+lower_height : 25.733269318793187
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-7.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-7.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 8
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 50.09055917761839
+hull_height : 12.603335364562184
+leg_width : 8.241230676924518
+leg_height : 38.35415685113098
+lower_width : 7.061328370780076
+lower_height : 40.402720366461644
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-8.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-8.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 75.65542596577896
+hull_height : 18.927344334809103
+leg_width : 7.455937320144333
+leg_height : 28.533363353743518
+lower_width : 5.684677751937334
+lower_height : 41.69658222796116
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-9.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-9.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 73.20034462984502
+hull_height : 19.978139305157157
+leg_width : 8.956024621450371
+leg_height : 32.556422011646625
+lower_width : 7.226955947068468
+lower_height : 27.746091095862244
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-0.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-0.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 53.98316211197263
+hull_height : 19.9180221075919
+leg_width : 6.692982593513035
+leg_height : 28.209983614319693
+lower_width : 4.864748181919677
+lower_height : 37.70643882238164
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-1.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-1.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 7
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 50.31419279020963
+hull_height : 16.06873343061997
+leg_width : 6.316487791118876
+leg_height : 40.9537138618572
+lower_width : 7.49540722039475
+lower_height : 40.93577370092924
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-2.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-2.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 7
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 55.096728419474914
+hull_height : 18.666215005791628
+leg_width : 8.485212593603043
+leg_height : 34.353586820140826
+lower_width : 5.4934915645167495
+lower_height : 39.70452198787537
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-3.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-3.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 6
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 73.74630488563578
+hull_height : 14.326096000659483
+leg_width : 6.558881682148751
+leg_height : 28.558314341255834
+lower_width : 7.9112296293568
+lower_height : 30.172315089847416
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-4.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-4.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 68.70369161216007
+hull_height : 16.575114297690146
+leg_width : 6.5036926718997385
+leg_height : 37.139172614679545
+lower_width : 7.6107505147879495
+lower_height : 34.76075805081342
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-5.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-5.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 65.26348633864717
+hull_height : 15.816785025996808
+leg_width : 9.540160590576951
+leg_height : 37.916659744068866
+lower_width : 7.314373511321413
+lower_height : 27.608228754240827
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-6.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-6.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 4
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 77.17560462559915
+hull_height : 12.385726960762682
+leg_width : 9.546578569030256
+leg_height : 40.0925792371468
+lower_width : 6.912007353523741
+lower_height : 40.03043217277037
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-7.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-7.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 77.4864625557144
+hull_height : 18.572429469075253
+leg_width : 9.163989060718162
+leg_height : 33.720025636188794
+lower_width : 6.9543827755401235
+lower_height : 35.753280526175935
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-8.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-8.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 5
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 77.95687003986717
+hull_height : 13.440943416608171
+leg_width : 9.850128916344344
+leg_height : 40.10994470777809
+lower_width : 7.152230869164828
+lower_height : 28.24348851605865
+
+datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-9.json
+num_segments : 10
+filename : datasets/bipedal-25p-2-12-segments-offcen/valid/GeneratedBipedalWalker-10segments-9.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/valid
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 6
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 58.40069415664742
+hull_height : 17.62342175272172
+leg_width : 7.250900173818656
+leg_height : 30.91750653300354
+lower_width : 5.909840532581777
+lower_height : 29.62464591997682
+
+test
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-0.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-0.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 52.41610172866259
+hull_height : 14.689586186521307
+leg_width : 6.2779080253475446
+leg_height : 26.94274961396154
+lower_width : 6.347901208922629
+lower_height : 34.00725726915415
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-1.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-1.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 62.27165133471682
+hull_height : 14.858538923317465
+leg_width : 6.274095098533556
+leg_height : 40.67644464909702
+lower_width : 5.863493073162948
+lower_height : 42.463921508868616
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-2.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-2.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 73.42672110014425
+hull_height : 12.36063014022367
+leg_width : 6.7380894843970935
+leg_height : 35.485262177052235
+lower_width : 7.4853161125435115
+lower_height : 26.57776092127138
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-3.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-3.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 48.62122033073754
+hull_height : 16.050503551512044
+leg_width : 7.480652707213762
+leg_height : 39.86364486355042
+lower_width : 4.8590355798363305
+lower_height : 28.42317955060013
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-4.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-4.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 64.13494523002133
+hull_height : 19.77103410221762
+leg_width : 9.254196283966198
+leg_height : 35.16321220932946
+lower_width : 6.753826348165802
+lower_height : 27.164800970008205
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-5.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-5.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 4
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 69.32746517933329
+hull_height : 16.691179419144174
+leg_width : 8.526295070975957
+leg_height : 41.38959983010507
+lower_width : 7.070172898459948
+lower_height : 38.894360452532936
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-6.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-6.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 5
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 78.86246827417864
+hull_height : 19.158573759599943
+leg_width : 6.077364511164108
+leg_height : 34.204466874367895
+lower_width : 7.604573923981613
+lower_height : 35.35550107128741
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-7.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-7.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 3
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 50.85177855732188
+hull_height : 17.94955375816752
+leg_width : 9.570828269940714
+leg_height : 41.983655987818494
+lower_width : 7.203582313690822
+lower_height : 32.8035652736434
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-8.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-8.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 0
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 71.54594927699179
+hull_height : 16.668605515999033
+leg_width : 9.183315116139237
+leg_height : 28.07123896534486
+lower_width : 6.577040480955089
+lower_height : 28.499238749669765
+
+datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-9.json
+num_segments : 6
+filename : datasets/bipedal-25p-2-12-segments-offcen/test/GeneratedBipedalWalker-6segments-9.json
+json_file : 
+directory : datasets/bipedal-25p-2-12-segments-offcen/test
+hull_lengthening_factor : 1.0
+rigid_spine : False
+spine_motors : False
+report_extra_segments : False
+hull_segment : 1
+hull_density : 5.0
+hull_friction : 0.1
+leg_density : 1.0
+leg_friction : 0.2
+hull_width : 69.43195892026452
+hull_height : 15.23509921152836
+leg_width : 9.504453716868936
+leg_height : 26.54439102033363
+lower_width : 6.759273439276489
+lower_height : 38.27694951966022
+
