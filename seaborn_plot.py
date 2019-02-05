@@ -121,13 +121,14 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
             data=single_json_df if json_name is not None else df)
 
         plt.xlabel('Model checkpoint')
+        labels_str = '-'.join(df['label'].unique().tolist())
         if plotting_skip > 0:
-            save_path = os.path.join(graphs_directory, str(plotting_skip) +
-                skipped_checkpoints + '_' + average_to_use
-                + str(ci) + '_evaluate_')
+            save_path = os.path.join(graphs_directory, labels_str
+                + str(plotting_skip) + skipped_checkpoints + '_'
+                + average_to_use + str(ci) + '_evaluate_')
         else:
-            save_path = os.path.join(graphs_directory, average_to_use
-                + str(ci) + '_evaluate_')
+            save_path = os.path.join(graphs_directory, labels_str
+                + average_to_use + str(ci) + '_evaluate_')
 
         if return_or_success == 'return':
             plt.title('Directory Evaluation Returns')
