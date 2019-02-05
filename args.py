@@ -132,11 +132,10 @@ def parse_cmdline_args(additional_parser_args={}):
         type=int,
         metavar='MAD',
         help='Max action dimension to accept (redundant elements will be ignored) for different body types')
-    parser.add_argument(
-        '--truncate-state',
-        type=bool,
-        metavar='TS',
-        help='Whether or not to truncate the state. If True, will only report bodies and joints marked with ReportState'),
+    # Whether or not to truncate the state. If True, will only report bodies and joints marked with ReportState
+    parser.add_argument('--truncate-state', dest='truncate_state', action='store_true')
+    parser.add_argument('--no-truncate-state', dest='truncate_state', action='store_false')
+    parser.set_defaults(truncate_state=True)
     parser.add_argument(
         '--test-every-n-steps',
         type=int,
