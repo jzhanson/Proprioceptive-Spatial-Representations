@@ -27,6 +27,13 @@ def parse_args():
         default='',
         metavar='GD',
         help='The directory in which to save the graphs')
+    parser.add_argument(
+        '--x-axis-factors',
+        type=str,
+        nargs='+',
+        default=None,
+        metavar='XAF',
+        help='If provided, pairs of label, and factor to multiply x axis for that label. Note that labels should be unique if this option is used. ')
     # TODO(josh): add separate_directory functionality
     parser.add_argument(
         '--separate-directories',
@@ -192,6 +199,15 @@ if __name__=='__main__':
 
     df = pd.DataFrame(columns=['label',
         'checkpoint', 'json', 'return', 'success'], data=data)
+    if args['x_axis_factors'] is not None:
+        for i in range(0, len(args['x_axis_factors']), 2):
+            label = args['x_axis_factors'][i]
+            factor = int(args['x_axis_factors'][i + 1])
+            is_label = df['label'] == label
+            # Multiplies entries in rows with is_label in column 'checkpoint'
+            # by factor
+            df.loc[is_label, 'checkpoint'] *= factor
+
     plot_statistics(df, args['graphs_directory'], args['average_to_use'],
         plotting_skip = args['plotting_skip'],
         skipped_checkpoints = args['skipped_checkpoints'],
