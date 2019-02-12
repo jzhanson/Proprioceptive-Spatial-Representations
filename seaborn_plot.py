@@ -66,6 +66,18 @@ def parse_args():
         default=95,
         metavar='CI',
         help='Size of confidence interval to show in error band (0 for no error band, 95 for 2 stdevs, \'sd\' for one standard deviation')
+    parser.add_argument(
+        '--figure-width',
+        type=float,
+        default=6.4,
+        metavar='FW',
+        help='Width of generated figure')
+    parser.add_argument(
+        '--figure-height',
+        type=float,
+        default=4.8,
+        metavar='FW',
+        help='Height of generated figure')
 
     return vars(parser.parse_args())
 
@@ -121,9 +133,11 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
         # Filter out all data that doesn't have the json_name
         single_json_df = df[df['json'] == json_name]
 
+    fig_dims = (args['figure_width'], args['figure_height'])
     for return_or_success in ['return', 'success']: # This could be an argument
         plt.clf()
-        ax = sns.lineplot(x='checkpoint', y=return_or_success,
+        fig, ax = pyplot.subplots(figsize=fig_dims)
+        sns.lineplot(ax=ax, x='checkpoint', y=return_or_success,
             hue='label', estimator=estimator, ci=ci,
             data=single_json_df if json_name is not None else df)
 
