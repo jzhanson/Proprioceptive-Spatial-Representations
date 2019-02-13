@@ -114,54 +114,75 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
         elif average_to_use[-3:] == 'max':
             pass
 
-
-    # TODO(josh): Smoothing is only defined in 1 dimension---do we smooth over
-    # episodes, JSONs, or checkpoints?
-    #all_returns_smooth = smooth(np.array(sorted_all_returns_means),
-    #    np.array(sorted_checkpoints))
-    '''
-    data_smooth = []
-    for label in df['label'].unique:
-        label_df = df[df['label'] == label]
-        for json in label_df['json'].unique:
-            json_df = df[df['json'] == json]
-    '''
-
-
     # TODO(josh): automatically make json_name graphs instead of as an argument?
     if json_name is not None:
         # Filter out all data that doesn't have the json_name
-        single_json_df = df[df['json'] == json_name]
+        df = df[df['json'] == json_name]
+
+    # Since smoothing is only defined over one dimension, we should find the
+    # mean/median/min/max of return and success at each checkpoint for each
+    # label over all jsons, and append that to a new data frame
+    #all_returns_smooth = smooth(np.array(sorted_all_returns_means),
+    #    np.array(sorted_checkpoints))
+    data_smooth = []
+    for label in df['label'].unique():
+        label_df = df[df['label'] == label]
+        label_df = label_df.loc[:, label_df.columns != 'label']
+        current_data = []
+        for checkpoint in label_df['checkpoint'].unique():
+            checkpoint_df = label_df[label_df['checkpoint'] == checkpoint]
+            checkpoint_df = checkpoint_df.loc[:, checkpoint_df.columns
+                != 'checkpoint']
+            no_json_df = checkpoint_df.loc[:, checkpoint_df.columns != 'json']
+            avg_rt, avg_sc = no_json_df.agg(estimator)
+            current_data.append((checkpoint, avg_rt, avg_sc))
+        # Sort and do smoothing
+        sorted_checkpoints, sorted_avg_rt, sorted_avg_sc = zip(*sorted(current_data))
+        sorted_avg_rt_smooth = smooth(np.array(sorted_avg_rt),
+            np.array(sorted_checkpoints))
+        sorted_avg_sc_smooth = smooth(np.array(sorted_avg_sc),
+            np.array(sorted_checkpoints))
+
+        for i in range(len(sorted_checkpoints)):
+            data_smooth.append([label, sorted_checkpoints[i],
+                sorted_avg_rt_smooth[i],
+                sorted_avg_sc_smooth[i]])
+    df_smooth = pd.DataFrame(columns=['label',
+        'checkpoint', 'return', 'success'], data=data_smooth)
 
     fig_dims = (args['figure_width'], args['figure_height'])
-    for return_or_success in ['return', 'success']: # This could be an argument
-        plt.clf()
-        fig, ax = pyplot.subplots(figsize=fig_dims)
-        sns.lineplot(ax=ax, x='checkpoint', y=return_or_success,
-            hue='label', estimator=estimator, ci=ci,
-            data=single_json_df if json_name is not None else df)
+    for return_or_success in ['return', 'success']:
+        for smoothing in [True, False]:
+            plt.clf()
+            fig, ax = plt.subplots(figsize=fig_dims)
+            sns.lineplot(ax=ax, x='checkpoint', y=return_or_success,
+                hue='label', estimator=estimator, ci=ci,
+                data=df_smooth if smoothing else df)
+            plt.xlabel('Model checkpoint')  # Gradient steps
+            labels_str = '-'.join(df['label'].unique().tolist())
+            if plotting_skip > 0:
+                save_path = os.path.join(graphs_directory, labels_str
+                    + str(plotting_skip) + skipped_checkpoints + '_'
+                    + average_to_use + str(ci) + '_evaluate_')
+            else:
+                save_path = os.path.join(graphs_directory, labels_str
+                    + average_to_use + str(ci) + '_evaluate_')
 
-        plt.xlabel('Model checkpoint')
-        labels_str = '-'.join(df['label'].unique().tolist())
-        if plotting_skip > 0:
-            save_path = os.path.join(graphs_directory, labels_str
-                + str(plotting_skip) + skipped_checkpoints + '_'
-                + average_to_use + str(ci) + '_evaluate_')
-        else:
-            save_path = os.path.join(graphs_directory, labels_str
-                + average_to_use + str(ci) + '_evaluate_')
+            if return_or_success == 'return':
+                plt.title('Directory Evaluation Returns')
+                plt.ylabel('Average reward per episode')
+                save_path += 'returns'
+            elif return_or_success == 'success':
+                plt.title('Directory Evaluation Successes')
+                plt.ylabel('Average success per episode')
+                save_path += 'successes'
 
-        if return_or_success == 'return':
-            plt.title('Directory Evaluation Returns')
-            plt.ylabel('Average reward per episode')
-            save_path += 'returns'
-        elif return_or_success == 'success':
-            plt.title('Directory Evaluation Successes')
-            plt.ylabel('Average success per episode')
-            save_path += 'successes'
+            if smoothing:
+                save_path += '_smooth'
 
-        plt.savefig(save_path + '.png')
-        plt.savefig(save_path + '.eps')
+            plt.savefig(save_path + '.png')
+            plt.savefig(save_path + '.eps')
+
 
 # In a single graph, will graph tuple of (model-directory, evaluation-prefix)
 # TODO(josh): group evaluations into better, nested directories, Should be
@@ -209,7 +230,8 @@ if __name__=='__main__':
                     else:
                         print("Directory exists but no evaluation_statistics at " + current_evaluation_statistics_path)
             else:
-                print("No evaluation yet for model: " + checkpoint)
+                print("No evaluation yet for model: " + checkpoint + " at "
+                    + current_evaluation_directory)
 
     df = pd.DataFrame(columns=['label',
         'checkpoint', 'json', 'return', 'success'], data=data)
