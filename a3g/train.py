@@ -15,7 +15,8 @@ from a3g.player_util import Agent
 import gym
 
 
-def train(rank, args, shared_model, optimizer, thread_step_counter):
+def train(rank, args, shared_model, optimizer, thread_step_counter,
+        global_thread_counter):
     gpu_id = args['gpu_ids'][rank % len(args['gpu_ids'])]
     if args['experiment_id'] == '':
         ptitle('Training Agent: {}'.format(rank))
@@ -125,6 +126,11 @@ def train(rank, args, shared_model, optimizer, thread_step_counter):
             thread_step_counter.value += 1
 
         step_count += 1
+
+        if args['train_until'] is not None  \
+            and global_step_counter > args['train_until']:
+            break
+        '''
         if (rank == 0) and (step_count%500) == 0:
             print('Model weight/gradient L-inf norm:')
             def _linf_norm(x):
@@ -134,3 +140,4 @@ def train(rank, args, shared_model, optimizer, thread_step_counter):
                 if param.grad is not None:
                     pgradnorm = _linf_norm(param.grad)
                     print('\t'+pname+' '+_linf_norm(param)+'/'+pgradnorm)
+        '''

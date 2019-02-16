@@ -25,7 +25,8 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
-def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_counters):
+def test(args, shared_model, optimizer, all_scores, all_global_steps,
+        all_step_counters, global_step_counter):
     # Shortcut to save directory
     save_dir = args['save_directory']+'/'
     run_name = os.path.basename(args['save_directory'].strip('/'))
@@ -69,10 +70,9 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
             player.state = player.state.cuda()
     player.model.eval()
 
-    start_global_step = 0
-    # If resuming previous step, load previous global step
-    if len(all_global_steps) > 0:
-        start_global_step = all_global_steps[-1]
+    # Runs from resumed value (start_global_step is constant)
+    start_global_step = global_step_counter
+    # Runs from 0, regardless of resumed value
     global_step = 0
 
     episode_step = 0
@@ -94,6 +94,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
                 #print(new_global_step)
                 time.sleep(2)
             global_step = new_global_step
+            global_step_counter = start_global_step + global_step
 
             episode_count += 1
             if gpu_id >= 0:
@@ -120,7 +121,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
                     reward_sum, player.eps_len, reward_mean))
 
 
-            all_global_steps.append(start_global_step + global_step)
+            all_global_steps.append(global_step_counter)
             all_scores.append(reward_sum)
 
             x = np.array(all_global_steps) #range(len(all_scores)))
@@ -147,7 +148,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
 
             model_path = save_dir+'/model'
             if args['save_intermediate']:
-                model_path = model_path+'.'+str(start_global_step + global_step) #episode_count)
+                model_path = model_path+'.'+str(global_step_counter) #episode_count)
             model_path = model_path+".pth"
 
             # Is this the best model so far?
@@ -172,10 +173,10 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
                 'all_global_steps' : all_global_steps,
             }, model_path)
 
-            writer.add_scalar('max_score', max_score, start_global_step + global_step)
-            writer.add_scalar('reward_sum', reward_sum, start_global_step + global_step)
-            writer.add_scalar('reward_mean', reward_mean, start_global_step + global_step)
-            writer.add_scalar('player_eps_len', player.eps_len, start_global_step + global_step)
+            writer.add_scalar('max_score', max_score, global_step_counter)
+            writer.add_scalar('reward_sum', reward_sum, global_step_counter)
+            writer.add_scalar('reward_mean', reward_mean, global_step_counter)
+            writer.add_scalar('player_eps_len', player.eps_len, global_step_counter)
 
             reward_sum = 0
             player.eps_len = 0
@@ -184,4 +185,9 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps, all_step_c
             if gpu_id >= 0:
                 with torch.cuda.device(gpu_id):
                     player.state = player.state.cuda()
+
+            # Terminate testing after at least train_until steps
+            if args['train_until'] is not None \
+                and global_step_counter > args['train_until']:
+                break
 

@@ -153,6 +153,10 @@ def parse_cmdline_args(additional_parser_args={}):
         '--experiment-id',
         metavar='EID',
         help='Experiment ID for process-naming purposes (default: "")')
+    parser.add_argument(
+        '--train-until',
+        metavar='TU',
+        help='If provided, train until given number of gradient updates (default: None)')
     for k in additional_parser_args.keys():
         if 'type' in additional_parser_args[k]:
             parser.add_argument(
@@ -212,6 +216,7 @@ def parse_default_args(additional_default_args={}):
         'gpu_ids' : [-1],
         'amsgrad' : True,
         'experiment_id' : '',
+        'train_until' : None
     }
     for k in additional_default_args.keys():
         if k not in default_args:

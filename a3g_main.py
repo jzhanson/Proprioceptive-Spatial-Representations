@@ -63,6 +63,8 @@ def main(args):
 
     # Keep track of all steps taken in each thread
     all_step_counters = [mp.Value('i', 0) for i in range(args['workers'])]
+    global_step_counter = mp.Value('i', 0)
+
 
     # Keep track of stats if we want to load from a checkpoint
     all_scores = []
@@ -81,17 +83,24 @@ def main(args):
             all_scores = pthfile['all_scores']
             all_global_steps = pthfile['all_global_steps']
 
+    # Only test process will write to this to avoid each thread waiting every
+    # gradient step to update. Threads will read from global_step_counter to
+    # know when to terminate if args['test_until'] is used
+    if len(all_global_steps) > 0:
+        global_step_counter = all_global_steps[-1]
+
     processes = []
 
     p = mp.Process(target=test, args=(args, shared_model, optimizer,
                                       all_scores, all_global_steps,
-                                      all_step_counters))
+                                      all_step_counters, global_step_counter))
     p.start()
     processes.append(p)
     time.sleep(0.1)
     for rank in range(0, args['workers']):
         p = mp.Process(target=train, args=(
-            rank, args, shared_model, optimizer, all_step_counters[rank]))
+            rank, args, shared_model, optimizer, all_step_counters[rank],
+            global_step_counter))
         p.start()
         processes.append(p)
         time.sleep(0.1)
