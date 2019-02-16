@@ -71,7 +71,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps,
     player.model.eval()
 
     # Runs from resumed value (start_global_step is constant)
-    start_global_step = global_step_counter
+    start_global_step = global_step_counter.value
     # Runs from 0, regardless of resumed value
     global_step = 0
 
