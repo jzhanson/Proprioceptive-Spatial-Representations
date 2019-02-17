@@ -15,7 +15,7 @@ class RandomizeBodies:
         if not os.path.exists(self.args['directory']):
             os.mkdir(self.args['directory'])
 
-    def build_bodies(self, metafile=None):
+    def build_bodies(self, write_to_file=True, metafile=None):
         for i in range(self.args['num_bodies']):
             gen_args = {}
             gen_args['filename'] = self.args['directory'] + '/' + self.args['outfile_prefix'] + str(i) + '.json'
@@ -78,9 +78,10 @@ class RandomizeBodies:
             #elif self.body_type == 'DogWalker':
             #    gen = GenerateDog(gen_args)
 
-            gen.build()
+            self.output = gen.build()
 
-            gen.write_to_json()
+            if write_to_file:
+                gen.write_to_json()
 
             if metafile is not None:
                 metafile.write(gen_args['filename'] + '\n')
@@ -98,6 +99,7 @@ class RandomizeBodies:
                         if k != 'neck_segments' or k != 'tail_segments':
                             metafile.write(k + ' : ' + str(gen_args[k]) + '\n')
                 metafile.write('\n')
+            return self.output
 
 if __name__ == '__main__':
     # TODO(josh): figure out a way to avoid double-parsing arguments (but we need to know which body type it is before we parse arguments because some attributes have different defaults)
@@ -107,6 +109,6 @@ if __name__ == '__main__':
 
     randomize = RandomizeBodies(body_type, args)
 
-    randomize.build_bodies()
+    randomize.build_bodies(write_to_file=True)
 
 

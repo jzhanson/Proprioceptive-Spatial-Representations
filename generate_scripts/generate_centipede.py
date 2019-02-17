@@ -65,6 +65,7 @@ class GenerateCentipede:
     def build(self):
         self.build_fixtures()
         self.add_segments()
+        return self.output
 
     def build_fixtures(self):
         self.output['HullFixture'] = {}

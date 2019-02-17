@@ -155,6 +155,8 @@ class GenerateBipedal:
 
         self.build_joints()
 
+        return self.output
+
     def build_fixtures(self):
         for i in range(self.args['num_segments']):
             if i == self.hull_segment:

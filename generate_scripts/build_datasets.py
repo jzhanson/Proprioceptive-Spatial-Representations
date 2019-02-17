@@ -97,7 +97,7 @@ class BuildDatasets:
 
                     args['num_bodies'] = self.args['num_bodies']
             randomize = RandomizeBodies(self.body_type, args)
-            randomize.build_bodies(self.metafile)
+            randomize.build_bodies(write_to_file=True, metafile=self.metafile)
 
         elif dataset == 'valid':
             if type(self.dataset_split) is list:
@@ -115,7 +115,7 @@ class BuildDatasets:
 
                     args['num_bodies'] = self.args['num_bodies']
             randomize = RandomizeBodies(self.body_type, args)
-            randomize.build_bodies(self.metafile)
+            randomize.build_bodies(write_to_file=True, metafile=self.metafile)
         elif dataset == 'test':
             if type(self.dataset_split) is list:
                 for i in range(num_training_configs+num_validation_configs, len(self.dataset_split)):
@@ -132,7 +132,7 @@ class BuildDatasets:
                     args['num_bodies'] = self.args['num_bodies']
 
             randomize = RandomizeBodies(self.body_type, args)
-            randomize.build_bodies(self.metafile)
+            randomize.build_bodies(write_to_file=True, metafile=self.metafile)
 
 if __name__ == '__main__':
     body_type = sys.argv[1] if len(sys.argv) > 1 else 'BipedalWalker'

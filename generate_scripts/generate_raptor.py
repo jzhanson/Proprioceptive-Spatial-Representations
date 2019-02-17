@@ -289,6 +289,8 @@ class GenerateRaptor:
 
         self.build_joints()
 
+        return self.output
+
     def build_fixtures(self):
         self.output['HullFixture'] = {}
         if self.args['build_head']:
