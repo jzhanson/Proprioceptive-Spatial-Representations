@@ -23,7 +23,9 @@ class RandomJSONWalker(JSONWalker):
         self.jsondir = jsondir
 
         # Load the first json randomly (place-holder)
-        super(RandomJSONWalker, self).__init__(self._sample_file(), truncate_state, max_state_dim, max_action_dim)
+        super(RandomJSONWalker, self).__init__(jsonfile=self._sample_file(),
+            truncate_state=truncate_state, max_state_dim=max_state_dim,
+            max_action_dim=max_action_dim)
 
         self.reset()
 
@@ -34,7 +36,8 @@ class RandomJSONWalker(JSONWalker):
 
     def reset(self):
         # Load new json every episode
-        self.load_json(self._sample_file())
+        with open(self._sample_file()) as f:
+            self.load_dict(json.load(f))
         return super(RandomJSONWalker, self).reset()
 
 

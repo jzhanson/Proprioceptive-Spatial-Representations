@@ -82,7 +82,8 @@ class JSONWalker(gym.Env):
 
     hardcore = False
 
-    def __init__(self, jsonfile, truncate_state=False, max_state_dim=None, max_action_dim=None):
+    def __init__(self, jsonfile=None, jsondata=None, truncate_state=False,
+            max_state_dim=None, max_action_dim=None):
         self.seed()
         self.viewer = None
 
@@ -111,14 +112,15 @@ class JSONWalker(gym.Env):
                     categoryBits=0x0001,
                 )
 
-        self.load_json(jsonfile)
+        if jsonfile is not None:
+            with open(jsonfile) as f:
+                self.jsondata = json.load(f)
+        elif jsondata is not None:
+            self.jsondata = jsondata
+        self.load_dict(self.jsondata)
         self.reset()
 
-    def load_json(self, jsonfile):
-        # JSON loading
-        with open(jsonfile) as f:
-            self.jsondata = json.load(f)
-
+    def load_dict(self, jsondata):
         self.fixture_defs = {}
         self.body_defs    = {}
         self.joint_defs   = {}
@@ -814,7 +816,7 @@ if __name__=="__main__":
     #env = JSONWalker('box2d-json-gen/GeneratedBipedalWalker.json')
     #env = JSONWalker('datasets/bipedal-random-offcenter-hull-1-12-25-percent/train/GeneratedBipedalWalker4segments-4.json')
     #env = JSONWalker('box2d-json-gen/GeneratedCentipedeWalker.json')
-    env = JSONWalker('box2d-json-gen/GeneratedRaptorWalker.json')
+    env = JSONWalker(jsonfile='box2d-json-gen/GeneratedRaptorWalker.json')
 
     steps = 0
     total_reward = 0
