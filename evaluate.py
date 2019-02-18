@@ -92,7 +92,7 @@ def evaluate(args):
         reward_sum = 0
         episode_step = 0
         while True:
-            player.action_test(episode_step)
+            player.action_test()
             reward_sum += player.reward
             episode_step += 1
 
