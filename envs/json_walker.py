@@ -114,13 +114,13 @@ class JSONWalker(gym.Env):
 
         if jsonfile is not None:
             with open(jsonfile) as f:
-                self.jsondata = json.load(f)
+                self.load_dict(json.load(f))
         elif jsondata is not None:
-            self.jsondata = jsondata
-        self.load_dict(self.jsondata)
+            self.load_dict(jsondata)
         self.reset()
 
     def load_dict(self, jsondata):
+        self.jsondata = jsondata
         self.fixture_defs = {}
         self.body_defs    = {}
         self.joint_defs   = {}

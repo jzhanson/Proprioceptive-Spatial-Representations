@@ -10,6 +10,7 @@ from envs.gish_walker import GishWalker, GishWalkerHardcore
 
 from envs.json_walker import JSONWalker, JSONWalkerHardcore
 from envs.random_json_walker import RandomJSONWalker, RandomJSONWalkerHardcore
+from envs.true_random_json_walker import TrueRandomJSONWalker, TrueRandomJSONWalkerHardcore
 from envs.iterate_json_walker import IterateJSONWalker, IterateJSONWalkerHardcore
 from envs.grid_bipedal_walker import GridBipedalWalker, GridBipedalWalkerHardcore
 from envs.halfgrid_bipedal_walker import HalfGridBipedalWalker, HalfGridBipedalWalkerHardcore
@@ -43,12 +44,23 @@ def create_env(env_id, args):
     elif env_id.startswith('RandomJSONWalkerHardcore-'):
         env = RandomJSONWalkerHardcore(env_id[len('RandomJSONWalkerHardcore-'):],
                 args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
+    elif env_id.startswith('TrueRandomJSONWalker-'):
+        env = TrueRandomJSONWalker(env_id[len('TrueRandomJSONWalker-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
+    elif env_id.startswith('TrueRandomJSONWalkerHardcore-'):
+        env = TrueRandomJSONWalkerHardcore(env_id[len('TrueRandomJSONWalkerHardcore-'):],
+                args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('IterateJSONWalker-'):
         env = IterateJSONWalker(env_id[len('IterateJSONWalker-'):],
                 args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
     elif env_id.startswith('IterateJSONWalkerHardcore-'):
         env = IterateJSONWalkerHardcore(env_id[len('IterateJSONWalkerHardcore-'):],
                 args['truncate_state'], args['max_state_dim'], args['max_action_dim'])
+    elif env_id.startswith('JSONWalkerHardcore-'):
+        env = JSONWalkerHardcore(jsonfile=env_id[len('JSONWalkerHardcore-'):],
+                truncate_state=args['truncate_state'],
+                max_state_dim=args['max_state_dim'],
+                max_action_dim=args['max_action_dim'])
     elif env_id == 'GridBipedalWalker-v0':
         env = GridBipedalWalker()
     elif env_id == 'GridBipedalWalkerHardcore-v0':
