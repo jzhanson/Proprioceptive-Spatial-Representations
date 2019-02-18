@@ -63,7 +63,7 @@ class Agent(object):
         self.rewards.append(reward)
         return self
 
-    def action_test(self, episode_step):
+    def action_test(self):
         with torch.no_grad():
             if self.done:
                 if self.gpu_id >= 0:
