@@ -139,9 +139,9 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
         # Sort and do smoothing
         sorted_checkpoints, sorted_avg_rt, sorted_avg_sc = zip(*sorted(current_data))
         sorted_avg_rt_smooth = smooth(np.array(sorted_avg_rt),
-            np.array(sorted_checkpoints))
+            np.array(range(len(sorted_checkpoints))))
         sorted_avg_sc_smooth = smooth(np.array(sorted_avg_sc),
-            np.array(sorted_checkpoints))
+            np.array(range(len(sorted_checkpoints))))
 
         for i in range(len(sorted_checkpoints)):
             data_smooth.append([label, sorted_checkpoints[i],

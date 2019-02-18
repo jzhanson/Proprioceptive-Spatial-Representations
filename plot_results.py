@@ -32,7 +32,8 @@ def graph(sorted_checkpoints, sorted_means, sorted_stdevs, error_bar_stdev,
 
     # Smoothed version
     plt.clf()
-    means_smooth = smooth(np.array(sorted_means), np.array(sorted_checkpoints))
+    means_smooth = smooth(np.array(sorted_means),
+            np.array(range(len(sorted_checkpoints))))
 
     plt.plot(sorted_checkpoints, means_smooth, '.-', color='#CC4F1B')
     if error_bar_stdev > 0:

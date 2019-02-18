@@ -138,7 +138,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps,
 
             # Smoothed version
             plt.clf()
-            y_smooth = smooth(y, x)
+            y_smooth = smooth(y, np.array(range(len(x))))
             plt.plot(x, y_smooth, 'k', color='#CC4F1B')
             plt.title('Test Episode Returns')
             plt.xlabel('Global gradient step')
