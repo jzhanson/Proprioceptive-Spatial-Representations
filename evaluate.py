@@ -27,10 +27,7 @@ def evaluate(args):
     start_time = time.time()
     torch.set_default_tensor_type('torch.FloatTensor')
 
-    start_loading = time.time()
     pthfile = torch.load(args['load_file'], map_location=lambda storage, loc: storage.cpu())
-    end_loading = time.time()
-    print('loading time: %d' % (end_loading - start_loading))
 
     # Create the output directory
     output_dir = os.path.join(os.path.dirname(args['load_file']), args['output_directory'], os.path.split(args['env'])[1]+'evaluation-'+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f"))
@@ -41,9 +38,12 @@ def evaluate(args):
             raise
     print('saving to: '+output_dir+'/')
 
+    start_log_setup = time.time()
     log = {}
     setup_logger('test.log', r'{0}/test.log'.format(output_dir))
     log['test.log'] = logging.getLogger('test.log')
+    end_log_setup = time.time()
+    print('single evaluate log setup: %d' (end_log_setup - start_log_setup))
 
     gpu_id = args['gpu_ids'][-1]
 
@@ -62,6 +62,7 @@ def evaluate(args):
     if args['render_video']:
         player.env = gym.wrappers.Monitor(player.env, output_dir, force=True)
 
+    start_model = time.time()
     AC = importlib.import_module(args['model_name'])
     player.model = AC.ActorCritic(
         env.observation_space, env.action_space, args['stack_frames'], args)
@@ -77,8 +78,8 @@ def evaluate(args):
         player.model.load_state_dict(pthfile['state_dict'])
     player.model.eval()
 
-    end_setup = time.time()
-    print('evaluate setup time: %d' % (end_setup - start_time))
+    end_model = time.time
+    print('single evaluate model setup time: %d' % (end_model - start_model))
 
     # Keep track of returns
     all_episode_returns = []
@@ -106,12 +107,13 @@ def evaluate(args):
                 break
     end_episodes = time.time()
     print('single evaluate time for %d episodes: %d' %
-        (args['num_episodes'], end_episodes - end_setup))
+        (args['num_episodes'], end_episodes - end_model))
     print('single evaluate seconds per episode: %d' %
-        ((end_episodes - end_setup) / args['num_episodes']))
+        ((end_episodes - end_model) / args['num_episodes']))
     all_episode_returns = np.array(all_episode_returns)
     all_episode_successes = np.array(all_episode_returns > 300., dtype=np.float32)
 
+    start_statistics = time.time()
     evaluation_statistics = {
         'Mean Return': np.mean(all_episode_returns),
         'Std Return': np.std(all_episode_returns),
@@ -130,25 +132,29 @@ def evaluate(args):
     }
 
     # Save raw data to a file
-    start_saving = time.time()
     torch.save({
         'all_episode_returns' : all_episode_returns,
         'all_episode_successes' : all_episode_successes,
     }, os.path.join(output_dir, 'evaluation_statistics.pth'))
-    end_saving = time.time()
-    print('time spent saving single evaluation: %d' % (end_saving - start_saving))
 
-    print('Average Episodic Return: \n\tmean: {0}\n\tstd: {1}\n\tmin: {2}\n\tmax: {3}'.format(
-        np.mean(all_episode_returns), np.std(all_episode_returns),
-        np.min(all_episode_returns), np.max(all_episode_returns)))
-    print('Average Episodic Success: \n\tmean: {0} ({1}/{2})\n\tstd: {3}\n\tmin: {4}\n\tmax: {5}'.format(
-        np.mean(all_episode_successes), np.sum(all_episode_successes), args['num_episodes'],
-        np.std(all_episode_successes), np.min(all_episode_successes), np.max(all_episode_successes)))
+    print('Average Episodic Return: \n\tmean: {0}\n\tstd: {1}\n\tmin: {2}\n\t  \
+            max: {3}'.format(
+                np.mean(all_episode_returns), np.std(all_episode_returns),
+                np.min(all_episode_returns), np.max(all_episode_returns)))
+    print('Average Episodic Success: \n\tmean: {0} ({1}/{2})\n\tstd: {3}\n\t   \
+            min: {4}\n\tmax: {5}'.format(
+                np.mean(all_episode_successes), np.sum(all_episode_successes),
+                args['num_episodes'], np.std(all_episode_successes),
+                np.min(all_episode_successes), np.max(all_episode_successes)))
+    end_statistics = time.time()
+    print('single evaluate statistics time: %d' % (end_statistics - start_statistics))
 
     # Shut down logging system and close open file handles
+    start_log_shutdown = time.time()
     logging.shutdown()
 
     end_time = time.time()
+    print('single evaluate log shutdown: %d' % (end_time - start_log_shutdown))
     print('single evaluate total time for %d episodes: %d' % (args['num_episodes'],
         end_time - start_time))
     print('single evaluate overall seconds per episode: %f' %
