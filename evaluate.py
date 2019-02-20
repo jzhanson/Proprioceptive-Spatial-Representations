@@ -43,7 +43,7 @@ def evaluate(args):
     setup_logger('test.log', r'{0}/test.log'.format(output_dir))
     log['test.log'] = logging.getLogger('test.log')
     end_log_setup = time.time()
-    print('single evaluate log setup: %d' (end_log_setup - start_log_setup))
+    print('single evaluate log setup: %d' % (end_log_setup - start_log_setup))
 
     gpu_id = args['gpu_ids'][-1]
 
@@ -78,7 +78,7 @@ def evaluate(args):
         player.model.load_state_dict(pthfile['state_dict'])
     player.model.eval()
 
-    end_model = time.time
+    end_model = time.time()
     print('single evaluate model setup time: %d' % (end_model - start_model))
 
     # Keep track of returns
