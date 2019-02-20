@@ -135,7 +135,7 @@ def parse_cmdline_args(additional_parser_args={}):
     # Whether or not to truncate the state. If True, will only report bodies and joints marked with ReportState
     parser.add_argument('--truncate-state', dest='truncate_state', action='store_true')
     parser.add_argument('--no-truncate-state', dest='truncate_state', action='store_false')
-    parser.set_defaults(truncate_state=True)
+    parser.set_defaults(truncate_state=False)
     parser.add_argument(
         '--test-every-n-steps',
         type=int,

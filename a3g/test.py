@@ -94,7 +94,8 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps,
                 #print(new_global_step)
                 time.sleep(2)
             global_step = new_global_step
-            global_step_counter = start_global_step + global_step
+            with global_step_counter.get_lock():
+                global_step_counter.value = start_global_step + global_step
 
             episode_count += 1
             if gpu_id >= 0:
@@ -121,7 +122,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps,
                     reward_sum, player.eps_len, reward_mean))
 
 
-            all_global_steps.append(global_step_counter)
+            all_global_steps.append(global_step_counter.value)
             all_scores.append(reward_sum)
 
             x = np.array(all_global_steps) #range(len(all_scores)))
@@ -148,7 +149,7 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps,
 
             model_path = save_dir+'/model'
             if args['save_intermediate']:
-                model_path = model_path+'.'+str(global_step_counter) #episode_count)
+                model_path = model_path+'.'+str(global_step_counter.value) #episode_count)
             model_path = model_path+".pth"
 
             # Is this the best model so far?
@@ -173,10 +174,10 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps,
                 'all_global_steps' : all_global_steps,
             }, model_path)
 
-            writer.add_scalar('max_score', max_score, global_step_counter)
-            writer.add_scalar('reward_sum', reward_sum, global_step_counter)
-            writer.add_scalar('reward_mean', reward_mean, global_step_counter)
-            writer.add_scalar('player_eps_len', player.eps_len, global_step_counter)
+            writer.add_scalar('max_score', max_score, global_step_counter.value)
+            writer.add_scalar('reward_sum', reward_sum, global_step_counter.value)
+            writer.add_scalar('reward_mean', reward_mean, global_step_counter.value)
+            writer.add_scalar('player_eps_len', player.eps_len, global_step_counter.value)
 
             reward_sum = 0
             player.eps_len = 0
@@ -188,6 +189,6 @@ def test(args, shared_model, optimizer, all_scores, all_global_steps,
 
             # Terminate testing after at least train_until steps
             if args['train_until'] is not None \
-                and global_step_counter > args['train_until']:
+                and global_step_counter.value > args['train_until']:
                 break
 

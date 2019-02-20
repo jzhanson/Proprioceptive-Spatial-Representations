@@ -67,6 +67,12 @@ def parse_args():
         metavar='CI',
         help='Size of confidence interval to show in error band (0 for no error band, 95 for 2 stdevs, \'sd\' for one standard deviation')
     parser.add_argument(
+        '--smoothing-std',
+        type=int,
+        default=1,
+        metavar='SS',
+        help='std to pass to smoothing function (default: 1)')
+    parser.add_argument(
         '--figure-width',
         type=float,
         default=6.4,
@@ -85,7 +91,7 @@ def parse_args():
 # json, return, and success
 # TODO(josh): make plotting_skip do something
 def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
-        plotting_skip=0, skipped_checkpoints='skip', ci=95):
+        plotting_skip=0, skipped_checkpoints='skip', ci=95, smoothing_std=1):
     if average_to_use == 'mean':
         estimator = 'mean'
     elif average_to_use == 'median':
@@ -139,9 +145,9 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
         # Sort and do smoothing
         sorted_checkpoints, sorted_avg_rt, sorted_avg_sc = zip(*sorted(current_data))
         sorted_avg_rt_smooth = smooth(np.array(sorted_avg_rt),
-            np.array(range(len(sorted_checkpoints))))
+            np.array(range(len(sorted_checkpoints))), std=smoothing_std)
         sorted_avg_sc_smooth = smooth(np.array(sorted_avg_sc),
-            np.array(range(len(sorted_checkpoints))))
+            np.array(range(len(sorted_checkpoints))), std=smoothing_std)
 
         for i in range(len(sorted_checkpoints)):
             data_smooth.append([label, sorted_checkpoints[i],
@@ -247,7 +253,7 @@ if __name__=='__main__':
     plot_statistics(df, args['graphs_directory'], args['average_to_use'],
         plotting_skip = args['plotting_skip'],
         skipped_checkpoints = args['skipped_checkpoints'],
-        ci = args['ci'])
+        ci = args['ci'], smoothing_std = args['smoothing_std'])
 
     # TODO(josh): make single JSON plots easier with the magic of pandas dataframes
     '''

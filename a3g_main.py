@@ -87,7 +87,9 @@ def main(args):
     # gradient step to update. Threads will read from global_step_counter to
     # know when to terminate if args['test_until'] is used
     if len(all_global_steps) > 0:
-        global_step_counter = all_global_steps[-1]
+        # This increment doesn't have to be atomic
+        with global_step_counter.get_lock():
+            global_step_counter.value = all_global_steps[-1]
 
     processes = []
 
