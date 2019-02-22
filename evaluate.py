@@ -113,7 +113,6 @@ def evaluate(args):
     all_episode_returns = np.array(all_episode_returns)
     all_episode_successes = np.array(all_episode_returns > 300., dtype=np.float32)
 
-    start_statistics = time.time()
     evaluation_statistics = {
         'Mean Return': np.mean(all_episode_returns),
         'Std Return': np.std(all_episode_returns),
@@ -146,8 +145,6 @@ def evaluate(args):
                 np.mean(all_episode_successes), np.sum(all_episode_successes),
                 args['num_episodes'], np.std(all_episode_successes),
                 np.min(all_episode_successes), np.max(all_episode_successes)))
-    end_statistics = time.time()
-    print('single evaluate statistics time: %d' % (end_statistics - start_statistics))
 
     # Shut down logging system and close open file handles
     start_log_shutdown = time.time()

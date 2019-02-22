@@ -21,7 +21,6 @@ def directory_evaluate(args):
         all_episode_returns = all_evaluation_statistics[k]['all_episode_returns']
         all_episode_successes = all_evaluation_statistics[k]['all_episode_successes']
 
-        start_statistics = time.time()
         print('Environment: '+k)
         print('\tAverage Episodic Return: \n\t\tmean: {0}\n\t\tstd: {1}\n\t\t  \
                 min: {2}\n\t\tmax: {3}'.format(
@@ -37,8 +36,6 @@ def directory_evaluate(args):
                     np.std(all_episode_successes),
                     np.min(all_episode_successes),
                     np.max(all_episode_successes)))
-        end_statistics = time.time()
-        print('directory evaluate statistics time: %d' % (end_statistics - start_statistics))
 
     # Save all evaluation statistics
     output_path = os.path.join(os.path.dirname(args['load_file']),
