@@ -53,7 +53,7 @@ class TrueRandomJSONWalkerHardcore(TrueRandomJSONWalker):
     hardcore = True
 
 if __name__=="__main__":
-    env = TrueRandomJSONWalker('datasets/params-bipedal-25p-2-12-segments-offcen.json')
+    env = TrueRandomJSONWalker('datasets/params-bipedal-25p-1-12-segments-offcen.json')
     env.reset()
 
     while True:
