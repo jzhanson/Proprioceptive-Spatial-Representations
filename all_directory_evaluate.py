@@ -41,12 +41,13 @@ def directory_evaluate(args):
 
         evaluation_statistics = evaluate(new_args)
         all_evaluation_statistics[new_args['env']] = evaluation_statistics
-        # Save all evaluation statistics
-        # Note: since saving doesn't take a lot of time, we can afford to save
-        # after every evaluation to be robust against getting killed
-        torch.save({
-            'all_evaluation_statistics' : all_evaluation_statistics,
-        }, all_statistics_output_path)
+
+    # Save all evaluation statistics at the end of all evaluations
+    # Note: saving all statistics after each JSON evaluate is likely to overload
+    # the filesystem's write capacity
+    torch.save({
+        'all_evaluation_statistics' : all_evaluation_statistics,
+    }, all_statistics_output_path)
 
     end_time = time.time()
     total_episodes = len(files_list) * args['num_episodes']
