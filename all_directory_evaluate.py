@@ -33,7 +33,10 @@ def directory_evaluate(args):
         # If no files left, continue
         if len(files_list) == 0:
             return
-        all_evaluation_statistics = torch.load(all_statistics_output_path)
+        # TODO(josh): make this read all subdir JSON evaluation statistics and
+        # repair all_evaluation_statistics or make a separate script to do that
+        if os.path.isfile(all_statistics_output_path):
+            all_evaluation_statistics = torch.load(all_statistics_output_path)
 
     for f in files_list:
         new_args = copy.deepcopy(args)
