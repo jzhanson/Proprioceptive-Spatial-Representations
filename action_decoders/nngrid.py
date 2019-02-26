@@ -56,5 +56,12 @@ class NNGrid(torch.nn.Module):
             # Alternatively, we can average the two anchor positions instead of just using anchorA
             A_pos_x, A_pos_y = j[0], j[1]
             grid_x, grid_y = self._coords_to_grid(A_pos_x, A_pos_y, zero_x, zero_y)
+
+            # Because of convolution padding, filter size, stride, etc, action might
+            # not always be the same dimensions as the provided input, so clamp to
+            # model-outputted action dimensions
+            grid_x = max(0, min(grid_x, action.size(2) - 1))
+            grid_y = max(0, min(grid_y, action.size(3) - 1))
+
             decoded_action[0, j_index] = action[0, 0, grid_x, grid_y]
         return decoded_action

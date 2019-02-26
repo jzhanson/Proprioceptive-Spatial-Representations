@@ -68,8 +68,8 @@ class NNGrid(torch.nn.Module):
             # Because of convolution padding, filter size, stride, etc, action might
             # not always be the same dimensions as the provided input, so clamp to
             # model-outputted action dimensions
-            grid_x = max(0, min(grid_x, action.size(2)))
-            grid_y = max(0, min(grid_y, action.size(3)))
+            grid_x = max(0, min(grid_x, action.size(2) - 1))
+            grid_y = max(0, min(grid_y, action.size(3) - 1))
 
             decoded_action[0, j_index] = action[0, d, grid_x, grid_y]
         return decoded_action
