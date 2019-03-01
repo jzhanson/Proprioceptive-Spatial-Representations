@@ -16,7 +16,7 @@ import gym
 
 
 def train(rank, args, shared_model, optimizer, thread_step_counter,
-        global_thread_counter):
+        global_step_counter):
     gpu_id = args['gpu_ids'][rank % len(args['gpu_ids'])]
     if args['experiment_id'] == '':
         ptitle('Training Agent: {}'.format(rank))
@@ -128,7 +128,7 @@ def train(rank, args, shared_model, optimizer, thread_step_counter,
         step_count += 1
 
         if args['train_until'] is not None  \
-            and global_step_counter > args['train_until']:
+            and global_step_counter.value > args['train_until']:
             break
         '''
         if (rank == 0) and (step_count%500) == 0:

@@ -155,6 +155,7 @@ def parse_cmdline_args(additional_parser_args={}):
         help='Experiment ID for process-naming purposes (default: "")')
     parser.add_argument(
         '--train-until',
+        type=int,
         metavar='TU',
         help='If provided, train until given number of gradient updates (default: None)')
     for k in additional_parser_args.keys():
