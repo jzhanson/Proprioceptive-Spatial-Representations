@@ -1,4 +1,4 @@
-import os
+import os, datetime
 import torch
 import numpy as np
 import matplotlib as mpl
@@ -84,6 +84,12 @@ def parse_args():
         default=4.8,
         metavar='FW',
         help='Height of generated figure')
+    parser.add_argument('--successes-fixed-axis', dest='successes_fixed_axis',
+            action='store_true')
+    parser.add_argument('--successes-variable-axis',
+            dest='successes_fixed_axis', action='store_false')
+    parser.set_defaults(successes_fixed_axis=False)
+
 
     return vars(parser.parse_args())
 
@@ -91,7 +97,8 @@ def parse_args():
 # json, return, and success
 # TODO(josh): make plotting_skip do something
 def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
-        plotting_skip=0, skipped_checkpoints='skip', ci=95, smoothing_std=1):
+        plotting_skip=0, skipped_checkpoints='skip', ci=95, smoothing_std=1,
+        successes_fixed_axis=False):
     if average_to_use == 'mean':
         estimator = 'mean'
     elif average_to_use == 'median':
@@ -164,7 +171,7 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
             sns.lineplot(ax=ax, x='checkpoint', y=return_or_success,
                 hue='label', estimator=estimator, ci=ci,
                 data=df_smooth if smoothing else df)
-            plt.xlabel('Model checkpoint')  # Gradient steps
+            plt.xlabel('Gradient steps')  # Model checkpoints
             labels_str = '-'.join(df['label'].unique().tolist())
             if plotting_skip > 0:
                 save_path = os.path.join(graphs_directory, labels_str
@@ -175,16 +182,20 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
                     + average_to_use + str(ci) + '_evaluate_')
 
             if return_or_success == 'return':
-                plt.title('Directory Evaluation Returns')
-                plt.ylabel('Average reward per episode')
+                #plt.title('Directory Evaluation Returns')
+                plt.ylabel('Reward') # Average reward per episode
                 save_path += 'returns'
             elif return_or_success == 'success':
-                plt.title('Directory Evaluation Successes')
-                plt.ylabel('Average success per episode')
+                #plt.title('Directory Evaluation Successes')
+                if successes_fixed_axis:
+                    ax.set_ylim(0.0, 1.0)
+                plt.ylabel('Success rate') # Average success per episode
                 save_path += 'successes'
 
             if smoothing:
                 save_path += '_smooth'
+
+            save_path += datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f")
 
             plt.savefig(save_path + '.png')
             plt.savefig(save_path + '.eps')
@@ -253,7 +264,8 @@ if __name__=='__main__':
     plot_statistics(df, args['graphs_directory'], args['average_to_use'],
         plotting_skip = args['plotting_skip'],
         skipped_checkpoints = args['skipped_checkpoints'],
-        ci = args['ci'], smoothing_std = args['smoothing_std'])
+        ci = args['ci'], smoothing_std = args['smoothing_std'],
+        successes_fixed_axis = args['successes_fixed_axis'])
 
     # TODO(josh): make single JSON plots easier with the magic of pandas dataframes
     '''
