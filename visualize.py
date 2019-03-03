@@ -21,6 +21,7 @@ class Visualize():
 
         self.show_actiongrid = False
         self.actiongrid_mode = 'gray'
+        self.alpha = 0.5
         self.actiongrid_depth = -1
         self.actiongrid_clip = True
         self.show_stategrid = False
@@ -93,6 +94,13 @@ class Visualize():
             elif self.actiongrid_mode == 'rainbow':
                 self.actiongrid_mode = 'gray'
                 print('actiongrid changed to grayscale mode')
+        # 't' : toggle state grid and action grid alpha from 0.5 -> 0.75 -> 1.0
+        # -> 0.0 -> 0.25 -> 0.5 -> ...
+        elif key == 116:
+            self.alpha += 0.25
+            if self.alpha > 1.0:
+                self.alpha = 0.0
+            print('state/action grid alpha is now ' + str(self.alpha))
         # 'q' : quit (close env and terminate main function)
         elif key == 113:
             print('quitting')
@@ -142,6 +150,8 @@ class Visualize():
                 self.env.action_space.low) / self.manual_increment_step
             print('manual increment step fineness decreased to '
                 + str(self.manual_increment_step))
+        else:
+            print(key)
 
 
     def main(self):
@@ -156,6 +166,8 @@ class Visualize():
         self.model = AC.ActorCritic(
             self.env.observation_space, self.env.action_space,
             self.args['stack_frames'], self.args)
+        print('trainable parameters: ' + str(sum(p.numel() for p in
+            self.model.parameters() if p.requires_grad)))
 
         if self.args['load_file'] != '':
             print('Loading model from: {0}'.format(self.args['load_file']))
@@ -211,7 +223,7 @@ class Visualize():
                         show_stategrid=self.show_stategrid,
                         actiongrid_mode=self.actiongrid_mode if self.show_actiongrid else 'hide',
                         actiongrid_depth=self.actiongrid_depth,
-                        actiongrid_clip=self.actiongrid_clip)
+                        actiongrid_clip=self.actiongrid_clip, alpha=self.alpha)
                     continue
 
             if done:
@@ -247,7 +259,7 @@ class Visualize():
                 show_stategrid=self.show_stategrid,
                 actiongrid_mode=self.actiongrid_mode if self.show_actiongrid else 'hide',
                 actiongrid_depth=self.actiongrid_depth,
-                actiongrid_clip=self.actiongrid_clip)
+                actiongrid_clip=self.actiongrid_clip, alpha=self.alpha)
 
             state = torch.from_numpy(state).float()
             if gpu_id >= 0:

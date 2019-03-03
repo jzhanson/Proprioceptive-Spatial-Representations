@@ -619,7 +619,7 @@ class JSONWalker(gym.Env):
     def get_zeros(self):
         return self.bodies['Hull'].position.x - self.grid_scale / 2, self.bodies['Hull'].position.y - self.grid_scale / 2
 
-    def _draw_stategrid(self, model):
+    def _draw_stategrid(self, model, alpha=0.5):
         self.grid_edge = model.senc_nngrid.grid_edge
         self.grid_scale = model.senc_nngrid.grid_scale
         self.grid_square_edge = self.grid_scale / self.grid_edge
@@ -631,8 +631,8 @@ class JSONWalker(gym.Env):
         zero_x, zero_y = self.get_zeros()
         filled_in_squares = []
 
-        body_color = (1, 1, 1, 0.5)
-        joint_color = (1, 1, 1, 0.5)
+        body_color = (1, 1, 1, alpha)
+        joint_color = (1, 1, 1, alpha)
 
         if fill_empty:
             vertices = [(zero_x, zero_y),
@@ -668,7 +668,7 @@ class JSONWalker(gym.Env):
 
     # Actiongrid modes are 'gray' for grayscale, 'heat' for reddish gradient,
     # and 'rainbow' for all colors
-    def _draw_actiongrid(self, model, depth=-1, clip_values=True, mode='gray'):
+    def _draw_actiongrid(self, model, depth=-1, clip_values=True, alpha=0.5, mode='gray'):
         # Dimensions of action grid output by model not always the same as those of the state grid
         self.grid_edge = model.adec_nngrid.current_actiongrid.shape[2]
         self.grid_scale = model.adec_nngrid.grid_scale
@@ -678,13 +678,6 @@ class JSONWalker(gym.Env):
         show_grid = True
 
         zero_x, zero_y = self.get_zeros()
-
-        if show_grid:
-            for i in range(self.grid_edge + 1):
-                vertical = [(zero_x + self.grid_square_edge * i, zero_y), (zero_x + self.grid_square_edge * i, zero_y + self.grid_scale)]
-                horizontal = [(zero_x, zero_y + self.grid_square_edge * i), (zero_x + self.grid_scale, zero_y + self.grid_square_edge * i)]
-                self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
-                self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
 
         # Depth of -1 means flatten depth layers and display
         if depth >= 0:
@@ -737,10 +730,18 @@ class JSONWalker(gym.Env):
                     square_red, square_green, square_blue = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
 
                 filled_in_square._color.vec4 = (square_red,
-                    square_green, square_blue, 0.5)
+                    square_green, square_blue, alpha)
+
+        if show_grid:
+            for i in range(self.grid_edge + 1):
+                vertical = [(zero_x + self.grid_square_edge * i, zero_y), (zero_x + self.grid_square_edge * i, zero_y + self.grid_scale)]
+                horizontal = [(zero_x, zero_y + self.grid_square_edge * i), (zero_x + self.grid_scale, zero_y + self.grid_square_edge * i)]
+                self.viewer.draw_polyline(vertical, color=(0, 0, 0), linewidth=1)
+                self.viewer.draw_polyline(horizontal, color=(0, 0, 0), linewidth=1)
 
 
-    def render(self, mode='human', model=None, show_stategrid=False, actiongrid_mode='hide', actiongrid_depth=-1, actiongrid_clip=True):
+
+    def render(self, mode='human', model=None, show_stategrid=False, actiongrid_mode='hide', actiongrid_depth=-1, actiongrid_clip=True, alpha=0.5):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
@@ -789,10 +790,10 @@ class JSONWalker(gym.Env):
         self.viewer.draw_polyline(f + [f[0]], color=(0,0,0), linewidth=2 )
 
         if show_stategrid:
-            self._draw_stategrid(model)
+            self._draw_stategrid(model, alpha=alpha)
         if actiongrid_mode != 'hide':
             self._draw_actiongrid(model, depth=actiongrid_depth,
-                clip_values=actiongrid_clip, mode=actiongrid_mode)
+                clip_values=actiongrid_clip, mode=actiongrid_mode, alpha=alpha)
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
