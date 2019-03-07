@@ -9,6 +9,8 @@ sns.set(style="darkgrid")
 import matplotlib.pyplot as plt
 import re
 import argparse
+import inflect  # For converting integers to ordinals (first, second, etc)
+p = inflect.engine()
 
 from common.stat_utils import smooth
 
@@ -27,6 +29,12 @@ def parse_args():
         default='',
         metavar='GD',
         help='The directory in which to save the graphs')
+    parser.add_argument(
+        '--data-directory',
+        type=str,
+        default=None,
+        metavar='DD',
+        help='The directory in which to save the gathered evaluation data (default is None for no saving)')
     parser.add_argument(
         '--x-axis-factors',
         type=str,
@@ -89,7 +97,12 @@ def parse_args():
     parser.add_argument('--successes-variable-axis',
             dest='successes_fixed_axis', action='store_false')
     parser.set_defaults(successes_fixed_axis=False)
-
+    parser.add_argument(
+        '--plot-until',
+        type=int,
+        default=None,
+        metavar='PU',
+        help='Last checkpoint number to plot (do not plot evaluations of later checkpoints)')
 
     return vars(parser.parse_args())
 
@@ -98,7 +111,7 @@ def parse_args():
 # TODO(josh): make plotting_skip do something
 def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
         plotting_skip=0, skipped_checkpoints='skip', ci=95, smoothing_std=1,
-        successes_fixed_axis=False):
+        successes_fixed_axis=False, plot_until=None):
     if average_to_use == 'mean':
         estimator = 'mean'
     elif average_to_use == 'median':
@@ -132,6 +145,15 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
         # Filter out all data that doesn't have the json_name
         df = df[df['json'] == json_name]
 
+    # Remove all data points with checkpoint greater than plot_until
+    if plot_until is not None:
+        df = df[df['checkpoint'] < plot_until]
+
+    # Prepare statistics string
+    out_string = ''
+    if json_name is not None:
+        out_string = 'Single JSON statistics: {0} \n'.format(json_name)
+
     # Since smoothing is only defined over one dimension, we should find the
     # mean/median/min/max of return and success at each checkpoint for each
     # label over all jsons, and append that to a new data frame
@@ -151,28 +173,66 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
             current_data.append((checkpoint, avg_rt, avg_sc))
         # Sort and do smoothing
         sorted_checkpoints, sorted_avg_rt, sorted_avg_sc = zip(*sorted(current_data))
+        sorted_checkpoints = np.array(sorted_checkpoints)
+        sorted_avg_rt = np.array(sorted_avg_rt)
+        sorted_avg_sc = np.array(sorted_avg_sc)
         sorted_avg_rt_smooth = smooth(np.array(sorted_avg_rt),
             np.array(range(len(sorted_checkpoints))), std=smoothing_std)
         sorted_avg_sc_smooth = smooth(np.array(sorted_avg_sc),
             np.array(range(len(sorted_checkpoints))), std=smoothing_std)
 
+        #wanted_index = list(sorted_checkpoints).index(701130)
+        #print('701130 successes: ' + str(sorted_avg_sc[wanted_index]))
+
         for i in range(len(sorted_checkpoints)):
             data_smooth.append([label, sorted_checkpoints[i],
                 sorted_avg_rt_smooth[i],
                 sorted_avg_sc_smooth[i]])
+
+        # Find best_n best scoring checkpoints for this label and print
+        best_n = min(10, len(sorted_avg_rt))
+        highest_rt_indexes = np.argpartition(sorted_avg_rt, -best_n)[-best_n:]
+        highest_rt_indexes = highest_rt_indexes[np.argsort(
+            sorted_avg_rt[highest_rt_indexes])[::-1]]
+        highest_sc_indexes = np.argpartition(sorted_avg_sc, -best_n)[-best_n:]
+        highest_sc_indexes = highest_sc_indexes[np.argsort(
+            sorted_avg_sc[highest_sc_indexes])[::-1]]
+
+        for i in range(best_n):
+            # Sometimes will use this functionality for finding the best
+            # checkpoint among some very incomplete evaluations (i.e. test), so
+            # might not always have best_n checkpoints
+            if i > len(highest_rt_indexes):
+                break
+            out_string += (p.ordinal(i + 1) + ' highest average return for '
+                    + label + ': checkpoint {0}, return {1} \n'
+                    .format(sorted_checkpoints[highest_rt_indexes[i]],
+                        sorted_avg_rt[highest_rt_indexes[i]]))
+        out_string += '\n'
+        for i in range(best_n):
+            if i > len(highest_sc_indexes):
+                break
+            out_string += (p.ordinal(i + 1) + ' highest average successes for '
+                    + label + ': checkpoint {0}, successes {1} \n'
+                    .format(sorted_checkpoints[highest_sc_indexes[i]],
+                        sorted_avg_sc[highest_sc_indexes[i]]))
+        out_string += '\n'
+
     df_smooth = pd.DataFrame(columns=['label',
         'checkpoint', 'return', 'success'], data=data_smooth)
 
+
     fig_dims = (args['figure_width'], args['figure_height'])
+    # Print and save statistics
+    print(out_string)
+
+    labels_str = '-'.join(df['label'].unique().tolist())
+    with open(os.path.join(graphs_directory, labels_str + average_to_use
+        + str(ci) + '_evaluate_') + 'stats.txt', 'w') as outfile:
+        outfile.write(out_string)
+
     for return_or_success in ['return', 'success']:
         for smoothing in [True, False]:
-            plt.clf()
-            fig, ax = plt.subplots(figsize=fig_dims)
-            sns.lineplot(ax=ax, x='checkpoint', y=return_or_success,
-                hue='label', estimator=estimator, ci=ci,
-                data=df_smooth if smoothing else df)
-            plt.xlabel('Gradient steps')  # Model checkpoints
-            labels_str = '-'.join(df['label'].unique().tolist())
             if plotting_skip > 0:
                 save_path = os.path.join(graphs_directory, labels_str
                     + str(plotting_skip) + skipped_checkpoints + '_'
@@ -181,6 +241,19 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
                 save_path = os.path.join(graphs_directory, labels_str
                     + average_to_use + str(ci) + '_evaluate_')
 
+            plt.clf()
+            fig, ax = plt.subplots(figsize=fig_dims)
+
+            sns.lineplot(ax=ax, x='checkpoint', y=return_or_success,
+                hue='label', estimator=estimator, ci=ci,
+                data=df_smooth if smoothing else df)
+            lgd = plt.legend(bbox_to_anchor=(1.0, 1.0))
+            # Remove legend title
+            handles, labels = ax.get_legend_handles_labels()
+            ax.legend(handles=handles[1:], labels=labels[1:])
+            # Draw legend outside of graph
+            #lgd = plt.legend(loc='upper left')
+            plt.xlabel('Gradient steps')  # Model checkpoints
             if return_or_success == 'return':
                 #plt.title('Directory Evaluation Returns')
                 plt.ylabel('Reward') # Average reward per episode
@@ -188,7 +261,7 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
             elif return_or_success == 'success':
                 #plt.title('Directory Evaluation Successes')
                 if successes_fixed_axis:
-                    ax.set_ylim(0.0, 1.0)
+                    ax.set_ylim(-0.01, 1.01)
                 plt.ylabel('Success rate') # Average success per episode
                 save_path += 'successes'
 
@@ -197,8 +270,11 @@ def plot_statistics(df, graphs_directory, average_to_use, json_name=None,
 
             save_path += datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S.%f")
 
-            plt.savefig(save_path + '.png')
-            plt.savefig(save_path + '.eps')
+            # Remove bbox_extra_artists if not drawing legend outside of box
+            plt.savefig(save_path + '.png', bbox_extra_artists=(lgd,),
+                    bbox_inches='tight')
+            plt.savefig(save_path + '.eps', bbox_extra_artists=(lgd,),
+                    bbox_inches='tight')
 
 
 # In a single graph, will graph tuple of (model-directory, evaluation-prefix)
@@ -265,7 +341,13 @@ if __name__=='__main__':
         plotting_skip = args['plotting_skip'],
         skipped_checkpoints = args['skipped_checkpoints'],
         ci = args['ci'], smoothing_std = args['smoothing_std'],
-        successes_fixed_axis = args['successes_fixed_axis'])
+        successes_fixed_axis = args['successes_fixed_axis'],
+        plot_until = args['plot_until'])
+
+    labels_str = '-'.join(df['label'].unique().tolist())
+    if args['data_directory'] is not None:
+        np.save(os.path.join(args['data_directory'], labels_str
+            + '-evaluations.npy'), df.to_numpy())
 
     # TODO(josh): make single JSON plots easier with the magic of pandas dataframes
     '''
