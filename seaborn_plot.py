@@ -30,11 +30,17 @@ def parse_args():
         metavar='GD',
         help='The directory in which to save the graphs')
     parser.add_argument(
-        '--data-directory',
+        '--save-data-path',
         type=str,
         default=None,
-        metavar='DD',
+        metavar='SDP',
         help='The directory in which to save the gathered evaluation data (default is None for no saving)')
+    parser.add_argument(
+        '--load-data-path',
+        type=str,
+        default=None,
+        metavar='LDP',
+        help='The directory in which to load a .npy file of the gathered evaluation data (default is None for no loading)')
     parser.add_argument(
         '--x-axis-factors',
         type=str,
@@ -286,56 +292,60 @@ if __name__=='__main__':
     if not os.path.isdir(args['graphs_directory']):
         os.makedirs(args['graphs_directory'])
 
-    # Entries in data are ordered in: model_directory, evaluation_prefix,
-    # checkpoint, json, single episode return
-    # TODO(josh): see if this is fast or if we should construct dataframe from
-    # dict of dicts, etc
-    data = []
-    model_directory_evaluation_prefix_labels = []
-    for i in range(0, len(args['model_directory_evaluation_prefix_labels']), 3):
-        md = args['model_directory_evaluation_prefix_labels'][i]
-        ep = args['model_directory_evaluation_prefix_labels'][i + 1]
-        label = args['model_directory_evaluation_prefix_labels'][i + 2]
-        model_directory_evaluation_prefix_labels.append((md, ep, label))
-    for model_directory, evaluation_prefix, label in model_directory_evaluation_prefix_labels:
-        # Directories go model -> checkpoints -> JSON -> evaluation_statistics.pth
-        checkpoints_list = [f for f in os.listdir(model_directory) if not os.path.isdir(os.path.join(model_directory, f)) and '.pth' in f]
-        for checkpoint in checkpoints_list:
-            # Assumes checkpoints are of the form 'model.x.pth'
-            checkpoint_number = int(checkpoint.split('.')[1])
-            current_evaluation_directory = os.path.join(model_directory,
-                evaluation_prefix + checkpoint)
+    if args['load_data_path'] is not None:
+        df = pd.DataFrame(data=np.load(args['load_data_path']), columns=[
+            'label', 'checkpoint', 'json', 'return', 'success'])
+    else:
+        # Entries in data are ordered in: model_directory, evaluation_prefix,
+        # checkpoint, json, single episode return
+        # TODO(josh): see if this is fast or if we should construct dataframe from
+        # dict of dicts, etc
+        data = []
+        model_directory_evaluation_prefix_labels = []
+        for i in range(0, len(args['model_directory_evaluation_prefix_labels']), 3):
+            md = args['model_directory_evaluation_prefix_labels'][i]
+            ep = args['model_directory_evaluation_prefix_labels'][i + 1]
+            label = args['model_directory_evaluation_prefix_labels'][i + 2]
+            model_directory_evaluation_prefix_labels.append((md, ep, label))
+        for model_directory, evaluation_prefix, label in model_directory_evaluation_prefix_labels:
+            # Directories go model -> checkpoints -> JSON -> evaluation_statistics.pth
+            checkpoints_list = [f for f in os.listdir(model_directory) if not os.path.isdir(os.path.join(model_directory, f)) and '.pth' in f]
+            for checkpoint in checkpoints_list:
+                # Assumes checkpoints are of the form 'model.x.pth'
+                checkpoint_number = int(checkpoint.split('.')[1])
+                current_evaluation_directory = os.path.join(model_directory,
+                    evaluation_prefix + checkpoint)
 
-            # model_statistics is (checkpoint, (json, (all_episode_returns | all_episode_successes, np array))
-            if os.path.isdir(current_evaluation_directory):
-                # TODO(josh): make this scan over JSONs in the dataset directory (an additional argument), not the evaluations directory
-                for json_subdir in [f for f in os.listdir(current_evaluation_directory) if os.path.isdir(os.path.join(current_evaluation_directory, f))]:
-                    current_evaluation_statistics_path = os.path.join(current_evaluation_directory, json_subdir, 'evaluation_statistics.pth')
+                # model_statistics is (checkpoint, (json, (all_episode_returns | all_episode_successes, np array))
+                if os.path.isdir(current_evaluation_directory):
+                    # TODO(josh): make this scan over JSONs in the dataset directory (an additional argument), not the evaluations directory
+                    for json_subdir in [f for f in os.listdir(current_evaluation_directory) if os.path.isdir(os.path.join(current_evaluation_directory, f))]:
+                        current_evaluation_statistics_path = os.path.join(current_evaluation_directory, json_subdir, 'evaluation_statistics.pth')
 
-                    # Makes the assumption that the json directory is [json filename]+junk
-                    json_name = json_subdir.split('.json')[0]
-                    if os.path.isfile(current_evaluation_statistics_path):
-                        json_evaluation_statistics = torch.load(current_evaluation_statistics_path)
-                        for (rt, sc) in zip(
-                            json_evaluation_statistics['all_episode_returns'],
-                            json_evaluation_statistics['all_episode_successes']):
-                            data.append([label, checkpoint_number, json_name, rt, sc])
-                    else:
-                        print("Directory exists but no evaluation_statistics at " + current_evaluation_statistics_path)
-            else:
-                print("No evaluation yet for model: " + checkpoint + " at "
-                    + current_evaluation_directory)
+                        # Makes the assumption that the json directory is [json filename]+junk
+                        json_name = json_subdir.split('.json')[0]
+                        if os.path.isfile(current_evaluation_statistics_path):
+                            json_evaluation_statistics = torch.load(current_evaluation_statistics_path)
+                            for (rt, sc) in zip(
+                                json_evaluation_statistics['all_episode_returns'],
+                                json_evaluation_statistics['all_episode_successes']):
+                                data.append([label, checkpoint_number, json_name, rt, sc])
+                        else:
+                            print("Directory exists but no evaluation_statistics at " + current_evaluation_statistics_path)
+                else:
+                    print("No evaluation yet for model: " + checkpoint + " at "
+                        + current_evaluation_directory)
 
-    df = pd.DataFrame(columns=['label',
-        'checkpoint', 'json', 'return', 'success'], data=data)
-    if args['x_axis_factors'] is not None:
-        for i in range(0, len(args['x_axis_factors']), 2):
-            label = args['x_axis_factors'][i]
-            factor = int(args['x_axis_factors'][i + 1])
-            is_label = df['label'] == label
-            # Multiplies entries in rows with is_label in column 'checkpoint'
-            # by factor
-            df.loc[is_label, 'checkpoint'] *= factor
+        df = pd.DataFrame(columns=['label',
+            'checkpoint', 'json', 'return', 'success'], data=data)
+        if args['x_axis_factors'] is not None:
+            for i in range(0, len(args['x_axis_factors']), 2):
+                label = args['x_axis_factors'][i]
+                factor = int(args['x_axis_factors'][i + 1])
+                is_label = df['label'] == label
+                # Multiplies entries in rows with is_label in column 'checkpoint'
+                # by factor
+                df.loc[is_label, 'checkpoint'] *= factor
 
     plot_statistics(df, args['graphs_directory'], args['average_to_use'],
         plotting_skip = args['plotting_skip'],
@@ -345,8 +355,8 @@ if __name__=='__main__':
         plot_until = args['plot_until'])
 
     labels_str = '-'.join(df['label'].unique().tolist())
-    if args['data_directory'] is not None:
-        np.save(os.path.join(args['data_directory'], labels_str
+    if args['save_data_path'] is not None:
+        np.save(os.path.join(args['save_data_path'], labels_str
             + '-evaluations.npy'), df.to_numpy())
 
     # TODO(josh): make single JSON plots easier with the magic of pandas dataframes
