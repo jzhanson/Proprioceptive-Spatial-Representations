@@ -87,7 +87,13 @@ if __name__=='__main__':
                 'name' : '--model-directory',
                 'type' : str,
                 'metavar' : 'MD',
-                'help' : 'Directory to load model files from'
+                'help' : 'Directory to load model files from (exclusive of model-path)'
+            },
+            'checkpoint_names' : {
+                'name' : '--checkpoint-names',
+                'type' : str,
+                'metavar' : 'CN',
+                'help' : 'Comma-separated checkpoint names of checkpoints inside model-directory to evaluate (will only evaluate these checkpoints)'
             },
             'num_processes' : {
                 'name' : '--num-processes',
@@ -101,14 +107,13 @@ if __name__=='__main__':
                 'metavar' : 'RV',
                 'help' : 'Whether or not to save videos'
             },
-
-
         },
         additional_default_args={
             'num_episodes' : 100,
             'json_directory' : '',
             'evaluation_prefix' : '',
-            'model_directory' : '',
+            'model_directory' : None,
+            'checkpoint_names' : None,
             'num_processes' : 10,
             'render_video' : False
         }
@@ -120,8 +125,12 @@ if __name__=='__main__':
     processes = []
     # Call directory_evaluate for every model and check whether the evaluations
     # were completed inside directory_evaluate
-    models_list = [f for f in os.listdir(args['model_directory']) if '.pth' in f
-            and not os.path.isdir(os.path.join(args['model_directory'], f))]
+    models_list = []
+    if args['checkpoint_names'] is not None:
+        models_list = args['checkpoint_names'].split(',')
+    else:
+        models_list = [f for f in os.listdir(args['model_directory']) if '.pth' in f
+                and not os.path.isdir(os.path.join(args['model_directory'], f))]
     while len(models_list) > 0:
         if len(processes) < args['num_processes']:
             current_model = models_list.pop()
@@ -129,8 +138,8 @@ if __name__=='__main__':
             current_args = copy.deepcopy(args)
             current_args['load_file'] = os.path.join(args['model_directory'], current_model)
             # Note that output_directory will be subdirectory of model_directory
-            current_args['output_directory'] = os.path.join(
-                    args['evaluation_prefix'] + current_model)
+            current_args['output_directory'] = args['evaluation_prefix']   \
+                + current_model
             # TODO(josh): have to update all_model_statistics from
             # directory_evaluate since we can't return things from mp.Process
             p = mp.Process(target=directory_evaluate, args=(current_args,))
@@ -147,4 +156,3 @@ if __name__=='__main__':
                 print("process " + str(i) + " exitcode: " + str(processes[i].exitcode))
                 processes.pop(i)
                 break
-
