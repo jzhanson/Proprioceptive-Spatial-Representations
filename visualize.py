@@ -7,6 +7,7 @@ from common.environment import create_env
 
 import numpy as np
 import Box2D
+from gym import wrappers
 
 import torch
 from torch.autograd import Variable
@@ -181,13 +182,19 @@ class Visualize():
         if gpu_id >= 0:
             torch.cuda.manual_seed(self.args['seed'])
         reward_sum = 0
-        num_tests = 0
+        episode_count = 0
         reward_total_sum = 0
 
         # Have to call render() for the first time to build viewer
         self.env.render()
         self.env.unwrapped.viewer.window.on_key_press = self.key_press
         #env.unwrapped.viewer.window.on_key_release = key_release
+
+        # Wrap the environment so that it saves a video for each episode
+        if args['videos_directory'] is not None:
+            self.env = wrappers.Monitor(self.env,
+                    self.args['videos_directory'], force=True,
+                    video_callable=lambda episode_id: True)
 
         # start of player removal
 
@@ -204,7 +211,6 @@ class Visualize():
                 state = state.cuda()
         self.model.eval()
 
-        episode_count = 0
         while True:
             if self.quit:
                 self.env.close()
@@ -226,15 +232,7 @@ class Visualize():
                         actiongrid_clip=self.actiongrid_clip, alpha=self.alpha)
                     continue
 
-            if done:
-                episode_count += 1
-                if gpu_id >= 0:
-                    with torch.cuda.device(gpu_id):
-                        self.model.load_state_dict(self.model.state_dict())
-                else:
-                    self.model.load_state_dict(self.model.state_dict())
-                if self.terminate_episode:
-                    self.terminate_episode = False
+
 
             # action_test begin
             with torch.no_grad():
@@ -272,9 +270,9 @@ class Visualize():
             reward_sum += reward
 
             if done:
-                num_tests += 1
+                episode_count += 1
                 reward_total_sum += reward_sum
-                reward_mean = reward_total_sum / num_tests
+                reward_mean = reward_total_sum / episode_count
                 print("Time {0}, episode reward {1}, episode length {2}, reward mean {3:.4f}".
                     format(
                         time.strftime("%Hh %Mm %Ss",
@@ -290,9 +288,34 @@ class Visualize():
                 if gpu_id >= 0:
                     with torch.cuda.device(gpu_id):
                         state = state.cuda()
+                        self.model.load_state_dict(self.model.state_dict())
+                else:
+                    self.model.load_state_dict(self.model.state_dict())
+
+                if self.terminate_episode:
+                    self.terminate_episode = False
+
+                if args['num_episodes'] is not None and episode_count          \
+                    > int(args['num_episodes']):
+                    break
 
 if __name__ == "__main__":
-    args = parse_args()
+    args = parse_args(
+        additional_parser_args={
+            'videos_directory' : {
+                'name' : '--videos-directory',
+                'metavar' : 'VD',
+                'help' : 'Directory to write videos to'
+            },
+            'num_episodes' : {
+                'name' : '--num-episodes',
+                'metavar' : 'NE',
+                'help' : 'Number of episodes to run for (usually useful for saving videos)'
+            }        },
+        additional_default_args={
+            'videos_directory' : None,
+            'num_episodes' : None,
+        })
     print(args)
 
     visualize = Visualize(args)
