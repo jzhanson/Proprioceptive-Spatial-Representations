@@ -28,9 +28,9 @@ class IterateJSONWalker(JSONWalker):
         self.file_iterator = -1
 
         # Load the first json randomly (place-holder)
-        super(IterateJSONWalker, self).__init__(jsonfile=self._next_file(),
-            truncate_state=truncate_state, max_state_dim=max_state_dim,
-            max_action_dim=max_action_dim)
+        super(IterateJSONWalker, self).__init__(jsonfile=join(self.jsondir,
+            self.files_list[0]), truncate_state=truncate_state,
+            max_state_dim=max_state_dim, max_action_dim=max_action_dim)
 
         self.reset()
 
